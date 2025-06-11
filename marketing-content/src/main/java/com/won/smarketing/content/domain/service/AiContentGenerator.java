@@ -1,0 +1,30 @@
+package com.won.smarketing.content.domain.service;
+
+import com.won.smarketing.content.domain.model.Platform;
+import com.won.smarketing.content.presentation.dto.SnsContentCreateRequest;
+
+import java.util.List;
+
+/**
+ * AI 콘텐츠 생성 도메인 서비스 인터페이스
+ * SNS 콘텐츠 생성 및 해시태그 생성 기능 정의
+ */
+public interface AiContentGenerator {
+    
+    /**
+     * SNS 콘텐츠 생성
+     * 
+     * @param request SNS 콘텐츠 생성 요청
+     * @return 생성된 콘텐츠
+     */
+    String generateSnsContent(SnsContentCreateRequest request);
+    
+    /**
+     * 플랫폼별 해시태그 생성
+     * 
+     * @param content 콘텐츠 내용
+     * @param platform 플랫폼
+     * @return 해시태그 목록
+     */
+    List<String> generateHashtags(String content, Platform platform);
+}

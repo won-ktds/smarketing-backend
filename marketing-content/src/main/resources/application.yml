@@ -1,0 +1,38 @@
+server:
+  port: ${SERVER_PORT:8083}
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: marketing-content-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:contentdb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+external:
+  claude-ai:
+    api-key: ${CLAUDE_AI_API_KEY:your-claude-api-key}
+    base-url: ${CLAUDE_AI_BASE_URL:https://api.anthropic.com}
+    model: ${CLAUDE_AI_MODEL:claude-3-sonnet-20240229}
+    max-tokens: ${CLAUDE_AI_MAX_TOKENS:4000}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /api-docs
+
+logging:
+  level:
+    com.won.smarketing.content: ${LOG_LEVEL:DEBUG}
