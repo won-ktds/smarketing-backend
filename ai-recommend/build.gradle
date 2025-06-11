@@ -1,16 +1,4 @@
 dependencies {
     implementation project(':common')
-    implementation 'com.mysql:mysql-connector-j'
-
-    // HTTP Client for external API
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-}
-
-//external:
-//  ai:
-//    api-url: ${EXTERNAL_AI_URL:https://api.openai.com/v1}
-//    api-key: ${EXTERNAL_AI_KEY:your-api-key}
-
-bootJar {
-    archiveFileName = "ai-recommend-service.jar"
+    runtimeOnly 'com.mysql:mysql-connector-j'
 }

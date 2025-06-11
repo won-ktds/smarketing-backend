@@ -1,8 +1,4 @@
 dependencies {
     implementation project(':common')
-    implementation 'com.mysql:mysql-connector-j'
-}
-
-bootJar {
-    archiveFileName = "store-service.jar"
+    runtimeOnly 'com.mysql:mysql-connector-j'
 }
