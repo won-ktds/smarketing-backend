@@ -2,6 +2,7 @@ package com.won.smarketing.common.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -18,19 +19,26 @@ import java.util.Date;
 public class JwtTokenProvider {
 
     private final SecretKey secretKey;
+    /**
+     * -- GETTER --
+     *  액세스 토큰 유효시간 반환
+     *
+     * @return 액세스 토큰 유효시간 (밀리초)
+     */
+    @Getter
     private final long accessTokenValidityTime;
     private final long refreshTokenValidityTime;
 
     /**
      * JWT 토큰 프로바이더 생성자
-     * 
+     *
      * @param secret JWT 서명에 사용할 비밀키
      * @param accessTokenValidityTime 액세스 토큰 유효시간 (밀리초)
      * @param refreshTokenValidityTime 리프레시 토큰 유효시간 (밀리초)
      */
     public JwtTokenProvider(@Value("${jwt.secret}") String secret,
-                           @Value("${jwt.access-token-validity}") long accessTokenValidityTime,
-                           @Value("${jwt.refresh-token-validity}") long refreshTokenValidityTime) {
+                            @Value("${jwt.access-token-validity}") long accessTokenValidityTime,
+                            @Value("${jwt.refresh-token-validity}") long refreshTokenValidityTime) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
         this.accessTokenValidityTime = accessTokenValidityTime;
         this.refreshTokenValidityTime = refreshTokenValidityTime;
@@ -38,7 +46,7 @@ public class JwtTokenProvider {
 
     /**
      * 액세스 토큰 생성
-     * 
+     *
      * @param userId 사용자 ID
      * @return 생성된 액세스 토큰
      */
@@ -47,16 +55,16 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + accessTokenValidityTime);
 
         return Jwts.builder()
-                .setSubject(userId)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
+                .subject(userId)
+                .issuedAt(now)
+                .expiration(expiryDate)
                 .signWith(secretKey)
                 .compact();
     }
 
     /**
      * 리프레시 토큰 생성
-     * 
+     *
      * @param userId 사용자 ID
      * @return 생성된 리프레시 토큰
      */
@@ -65,41 +73,41 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + refreshTokenValidityTime);
 
         return Jwts.builder()
-                .setSubject(userId)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
+                .subject(userId)
+                .issuedAt(now)
+                .expiration(expiryDate)
                 .signWith(secretKey)
                 .compact();
     }
 
     /**
      * 토큰에서 사용자 ID 추출
-     * 
+     *
      * @param token JWT 토큰
      * @return 사용자 ID
      */
     public String getUserIdFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
-        
+                .parseSignedClaims(token)
+                .getPayload();
+
         return claims.getSubject();
     }
 
     /**
      * 토큰 유효성 검증
-     * 
+     *
      * @param token 검증할 토큰
      * @return 유효성 여부
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(secretKey)
+            Jwts.parser()
+                    .verifyWith(secretKey)
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
             return true;
         } catch (SecurityException ex) {
             log.error("Invalid JWT signature: {}", ex.getMessage());
@@ -115,12 +123,4 @@ public class JwtTokenProvider {
         return false;
     }
 
-    /**
-     * 액세스 토큰 유효시간 반환
-     * 
-     * @return 액세스 토큰 유효시간 (밀리초)
-     */
-    public long getAccessTokenValidityTime() {
-        return accessTokenValidityTime;
-    }
 }

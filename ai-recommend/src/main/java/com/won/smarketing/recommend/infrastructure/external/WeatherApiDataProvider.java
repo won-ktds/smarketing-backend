@@ -38,7 +38,7 @@ public class WeatherApiDataProvider implements WeatherDataProvider {
      * @return 날씨 데이터
      */
     @Override
-    public WeatherData getCurrentWeather(String location) {
+    public WeatherApiResponse getCurrentWeather(String location) {
         try {
             log.debug("날씨 정보 조회 시작: location={}", location);
             
