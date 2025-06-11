@@ -29,3 +29,4 @@ public class ErrorResponseDto {
     @Schema(description = "요청 경로", example = "/api/recommendation/marketing-tips")
     private String path;
 }
+

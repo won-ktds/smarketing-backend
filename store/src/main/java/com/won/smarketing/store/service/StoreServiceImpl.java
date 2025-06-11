@@ -8,13 +8,16 @@ import com.won.smarketing.store.dto.StoreUpdateRequest;
 import com.won.smarketing.store.entity.Store;
 import com.won.smarketing.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 매장 관리 서비스 구현체
+ * 매장 서비스 구현체
  * 매장 등록, 조회, 수정 기능 구현
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,7 +26,7 @@ public class StoreServiceImpl implements StoreService {
     private final StoreRepository storeRepository;
 
     /**
-     * 매장 정보 등록
+     * 매장 등록
      * 
      * @param request 매장 등록 요청 정보
      * @return 등록된 매장 정보
@@ -31,50 +34,75 @@ public class StoreServiceImpl implements StoreService {
     @Override
     @Transactional
     public StoreResponse register(StoreCreateRequest request) {
-        // 사용자별 매장 중복 등록 확인
-        if (storeRepository.findByUserId(request.getUserId()).isPresent()) {
+        String currentUserId = getCurrentUserId();
+        Long memberId = Long.valueOf(currentUserId); // 실제로는 Member ID 조회 필요
+        
+        log.info("매장 등록 시작: {} (회원: {})", request.getStoreName(), memberId);
+        
+        // 회원당 하나의 매장만 등록 가능
+        if (storeRepository.existsByMemberId(memberId)) {
             throw new BusinessException(ErrorCode.STORE_ALREADY_EXISTS);
         }
-
+        
         // 매장 엔티티 생성 및 저장
         Store store = Store.builder()
-                .userId(request.getUserId())
+                .memberId(memberId)
                 .storeName(request.getStoreName())
-                .storeImage(request.getStoreImage())
                 .businessType(request.getBusinessType())
                 .address(request.getAddress())
                 .phoneNumber(request.getPhoneNumber())
-                .businessNumber(request.getBusinessNumber())
-                .instaAccount(request.getInstaAccount())
-                .naverBlogAccount(request.getNaverBlogAccount())
-                .openTime(request.getOpenTime())
-                .closeTime(request.getCloseTime())
+                .businessHours(request.getBusinessHours())
                 .closedDays(request.getClosedDays())
                 .seatCount(request.getSeatCount())
+                .snsAccounts(request.getSnsAccounts())
+                .description(request.getDescription())
                 .build();
-
+        
         Store savedStore = storeRepository.save(store);
+        log.info("매장 등록 완료: {} (ID: {})", savedStore.getStoreName(), savedStore.getId());
+        
         return toStoreResponse(savedStore);
     }
 
     /**
-     * 매장 정보 조회
+     * 매장 정보 조회 (현재 로그인 사용자)
      * 
-     * @param storeId 조회할 매장 ID
      * @return 매장 정보
      */
     @Override
-    public StoreResponse getStore(String storeId) {
-        Store store = storeRepository.findByUserId(storeId)
+    public StoreResponse getMyStore() {
+        String currentUserId = getCurrentUserId();
+        Long memberId = Long.valueOf(currentUserId);
+        
+        Store store = storeRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
         
         return toStoreResponse(store);
     }
 
     /**
+     * 매장 정보 조회 (매장 ID)
+     * 
+     * @param storeId 매장 ID
+     * @return 매장 정보
+     */
+    @Override
+    public StoreResponse getStore(String storeId) {
+        try {
+            Long id = Long.valueOf(storeId);
+            Store store = storeRepository.findById(id)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+            
+            return toStoreResponse(store);
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+    }
+
+    /**
      * 매장 정보 수정
      * 
-     * @param storeId 수정할 매장 ID
+     * @param storeId 매장 ID
      * @param request 매장 수정 요청 정보
      * @return 수정된 매장 정보
      */
@@ -83,22 +111,23 @@ public class StoreServiceImpl implements StoreService {
     public StoreResponse updateStore(Long storeId, StoreUpdateRequest request) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
-
+        
         // 매장 정보 업데이트
-        store.updateStoreInfo(
+        store.updateStore(
                 request.getStoreName(),
-                request.getStoreImage(),
+                request.getBusinessType(),
                 request.getAddress(),
                 request.getPhoneNumber(),
-                request.getInstaAccount(),
-                request.getNaverBlogAccount(),
-                request.getOpenTime(),
-                request.getCloseTime(),
+                request.getBusinessHours(),
                 request.getClosedDays(),
-                request.getSeatCount()
+                request.getSeatCount(),
+                request.getSnsAccounts(),
+                request.getDescription()
         );
-
+        
         Store updatedStore = storeRepository.save(store);
+        log.info("매장 정보 수정 완료: {} (ID: {})", updatedStore.getStoreName(), updatedStore.getId());
+        
         return toStoreResponse(updatedStore);
     }
 
@@ -112,19 +141,25 @@ public class StoreServiceImpl implements StoreService {
         return StoreResponse.builder()
                 .storeId(store.getId())
                 .storeName(store.getStoreName())
-                .storeImage(store.getStoreImage())
                 .businessType(store.getBusinessType())
                 .address(store.getAddress())
                 .phoneNumber(store.getPhoneNumber())
-                .businessNumber(store.getBusinessNumber())
-                .instaAccount(store.getInstaAccount())
-                .naverBlogAccount(store.getNaverBlogAccount())
-                .openTime(store.getOpenTime())
-                .closeTime(store.getCloseTime())
+                .businessHours(store.getBusinessHours())
                 .closedDays(store.getClosedDays())
                 .seatCount(store.getSeatCount())
+                .snsAccounts(store.getSnsAccounts())
+                .description(store.getDescription())
                 .createdAt(store.getCreatedAt())
                 .updatedAt(store.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * 현재 로그인된 사용자 ID 조회
+     * 
+     * @return 사용자 ID
+     */
+    private String getCurrentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

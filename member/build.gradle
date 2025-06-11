@@ -1,7 +1,4 @@
 dependencies {
     implementation project(':common')
-}
-
-bootJar {
-    archiveFileName = "member-service.jar"
+    implementation 'com.mysql:mysql-connector-j'
 }

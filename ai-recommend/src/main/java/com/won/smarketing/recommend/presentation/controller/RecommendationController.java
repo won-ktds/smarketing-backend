@@ -6,11 +6,11 @@ import com.won.smarketing.recommend.presentation.dto.MarketingTipRequest;
 import com.won.smarketing.recommend.presentation.dto.MarketingTipResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 
 /**
  * AI 마케팅 추천을 위한 REST API 컨트롤러

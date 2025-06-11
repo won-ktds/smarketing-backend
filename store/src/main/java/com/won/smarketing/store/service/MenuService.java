@@ -7,13 +7,13 @@ import com.won.smarketing.store.dto.MenuUpdateRequest;
 import java.util.List;
 
 /**
- * 메뉴 관리 서비스 인터페이스
- * 메뉴 등록, 조회, 수정, 삭제 기능 정의
+ * 메뉴 서비스 인터페이스
+ * 메뉴 관리 관련 비즈니스 로직 정의
  */
 public interface MenuService {
     
     /**
-     * 메뉴 정보 등록
+     * 메뉴 등록
      * 
      * @param request 메뉴 등록 요청 정보
      * @return 등록된 메뉴 정보
@@ -31,7 +31,7 @@ public interface MenuService {
     /**
      * 메뉴 정보 수정
      * 
-     * @param menuId 수정할 메뉴 ID
+     * @param menuId 메뉴 ID
      * @param request 메뉴 수정 요청 정보
      * @return 수정된 메뉴 정보
      */
@@ -40,7 +40,7 @@ public interface MenuService {
     /**
      * 메뉴 삭제
      * 
-     * @param menuId 삭제할 메뉴 ID
+     * @param menuId 메뉴 ID
      */
     void deleteMenu(Long menuId);
 }

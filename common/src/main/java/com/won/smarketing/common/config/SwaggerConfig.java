@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Swagger 설정 클래스
- * API 문서화를 위한 OpenAPI 설정
+ * Swagger OpenAPI 설정 클래스
+ * API 문서화 및 JWT 인증 설정
  */
 @Configuration
 public class SwaggerConfig {
@@ -18,24 +18,26 @@ public class SwaggerConfig {
     /**
      * OpenAPI 설정
      * 
-     * @return OpenAPI 인스턴스
+     * @return OpenAPI 객체
      */
     @Bean
     public OpenAPI openAPI() {
-        String securitySchemeName = "bearerAuth";
+        String jwtSchemeName = "jwtAuth";
+        SecurityRequirement securityRequirement = new SecurityRequirement().addList(jwtSchemeName);
         
+        Components components = new Components()
+                .addSecuritySchemes(jwtSchemeName, new SecurityScheme()
+                        .name(jwtSchemeName)
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("bearer")
+                        .bearerFormat("JWT"));
+
         return new OpenAPI()
                 .info(new Info()
-                        .title("AI 마케팅 서비스 API")
-                        .description("소상공인을 위한 맞춤형 AI 마케팅 솔루션 API 문서")
-                        .version("v1.0.0"))
-                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
-                .components(new Components()
-                        .addSecuritySchemes(securitySchemeName,
-                                new SecurityScheme()
-                                        .name(securitySchemeName)
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")));
+                        .title("스마케팅 API")
+                        .description("소상공인을 위한 AI 마케팅 서비스 API")
+                        .version("1.0.0"))
+                .addSecurityItem(securityRequirement)
+                .components(components);
     }
 }

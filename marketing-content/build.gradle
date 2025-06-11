@@ -1,6 +1,6 @@
 dependencies {
     implementation project(':common')
-    
+    implementation 'com.mysql:mysql-connector-j'
     // HTTP Client for external AI API
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }

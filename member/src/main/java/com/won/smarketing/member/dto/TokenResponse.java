@@ -8,21 +8,21 @@ import lombok.NoArgsConstructor;
 
 /**
  * 토큰 응답 DTO
- * 토큰 갱신 시 반환되는 새로운 JWT 토큰 정보
+ * 토큰 갱신 시 새로운 토큰 정보를 전달합니다.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "토큰 응답 정보")
+@Schema(description = "토큰 응답")
 public class TokenResponse {
-
-    @Schema(description = "새로운 Access Token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    
+    @Schema(description = "새로운 액세스 토큰", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String accessToken;
-
-    @Schema(description = "새로운 Refresh Token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    
+    @Schema(description = "새로운 리프레시 토큰", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String refreshToken;
-
-    @Schema(description = "토큰 만료 시간 (밀리초)", example = "900000")
+    
+    @Schema(description = "토큰 만료 시간 (초)", example = "3600")
     private long expiresIn;
 }

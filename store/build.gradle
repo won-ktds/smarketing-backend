@@ -1,5 +1,6 @@
 dependencies {
     implementation project(':common')
+    implementation 'com.mysql:mysql-connector-j'
 }
 
 bootJar {

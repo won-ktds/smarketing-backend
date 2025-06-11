@@ -59,3 +59,4 @@ public class Sales {
         createdAt = LocalDateTime.now();
     }
 }
+

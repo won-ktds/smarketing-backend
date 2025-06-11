@@ -17,7 +17,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
      * 사용자 ID로 회원 조회
      * 
      * @param userId 사용자 ID
-     * @return 회원 정보
+     * @return 회원 정보 (Optional)
      */
     Optional<Member> findByUserId(String userId);
     
@@ -38,9 +38,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByEmail(String email);
     
     /**
-     * 사업자 번호 존재 여부 확인
+     * 사업자번호 존재 여부 확인
      * 
-     * @param businessNumber 사업자 번호
+     * @param businessNumber 사업자번호
      * @return 존재 여부
      */
     boolean existsByBusinessNumber(String businessNumber);

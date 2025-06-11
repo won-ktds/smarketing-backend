@@ -8,21 +8,40 @@ import lombok.NoArgsConstructor;
 
 /**
  * 로그인 응답 DTO
- * 로그인 성공 시 반환되는 JWT 토큰 정보
+ * 로그인 성공 시 토큰 정보를 전달합니다.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "로그인 응답 정보")
+@Schema(description = "로그인 응답")
 public class LoginResponse {
-
-    @Schema(description = "Access Token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    
+    @Schema(description = "액세스 토큰", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String accessToken;
-
-    @Schema(description = "Refresh Token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    
+    @Schema(description = "리프레시 토큰", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String refreshToken;
-
-    @Schema(description = "토큰 만료 시간 (밀리초)", example = "900000")
+    
+    @Schema(description = "토큰 만료 시간 (초)", example = "3600")
     private long expiresIn;
+    
+    @Schema(description = "사용자 정보")
+    private UserInfo userInfo;
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @Schema(description = "사용자 정보")
+    public static class UserInfo {
+        @Schema(description = "사용자 ID", example = "user123")
+        private String userId;
+        
+        @Schema(description = "이름", example = "홍길동")
+        private String name;
+        
+        @Schema(description = "이메일", example = "user@example.com")
+        private String email;
+    }
 }

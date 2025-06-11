@@ -18,6 +18,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+ai:
+  service:
+    url: ${AI_SERVICE_URL:http://localhost:8080/ai}
+    timeout: ${AI_SERVICE_TIMEOUT:30000}
 
 external:
   claude-ai:

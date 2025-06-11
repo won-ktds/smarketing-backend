@@ -14,10 +14,29 @@ import java.util.Optional;
 public interface StoreRepository extends JpaRepository<Store, Long> {
     
     /**
-     * 사용자 ID로 매장 조회
+     * 회원 ID로 매장 조회
      * 
-     * @param userId 사용자 ID
-     * @return 매장 정보
+     * @param memberId 회원 ID
+     * @return 매장 정보 (Optional)
      */
-    Optional<Store> findByUserId(String userId);
+    Optional<Store> findByMemberId(Long memberId);
+    
+    /**
+     * 회원의 매장 존재 여부 확인
+     * 
+     * @param memberId 회원 ID
+     * @return 존재 여부
+     */
+    boolean existsByMemberId(Long memberId);
+    
+    /**
+     * 매장명으로 매장 조회
+     * 
+     * @param storeName 매장명
+     * @return 매장 목록
+     */
+    Optional<Store> findByStoreName(String storeName);
 }
+
+
+

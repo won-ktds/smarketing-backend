@@ -1,5 +1,4 @@
 rootProject.name = 'smarketing'
-
 include 'common'
 include 'member'
 include 'store'
