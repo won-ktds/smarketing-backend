@@ -1,312 +1,190 @@
 """
-홍보 포스터 생성 서비스
-AI와 이미지 처리를 활용한 시각적 마케팅 자료 생성
+포스터 생성 서비스
+OpenAI를 사용한 이미지 생성 (한글 프롬프트)
 """
 import os
-import base64
 from typing import Dict, Any
 from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
 from utils.ai_client import AIClient
 from utils.image_processor import ImageProcessor
-from models.request_models import PosterRequest
+from models.request_models import PosterContentGetRequest
 
 
 class PosterService:
-    """홍보 포스터 생성 서비스 클래스"""
+    """포스터 생성 서비스 클래스"""
 
     def __init__(self):
         """서비스 초기화"""
         self.ai_client = AIClient()
         self.image_processor = ImageProcessor()
-        # 포스터 기본 설정
-        self.poster_config = {
-            'width': 1080,
-            'height': 1350,  # 인스타그램 세로 비율
-            'background_color': (255, 255, 255),
-            'text_color': (50, 50, 50),
-            'accent_color': (255, 107, 107)
-        }
-        # 카테고리별 색상 테마
-        self.category_themes = {
-            '음식': {
-                'primary': (255, 107, 107),  # 빨강
-                'secondary': (255, 206, 84),  # 노랑
-                'background': (255, 248, 240)  # 크림
-            },
-            '매장': {
-                'primary': (74, 144, 226),  # 파랑
-                'secondary': (120, 198, 121),  # 초록
-                'background': (248, 251, 255)  # 연한 파랑
-            },
-            '이벤트': {
-                'primary': (156, 39, 176),  # 보라
-                'secondary': (255, 193, 7),  # 금색
-                'background': (252, 248, 255)  # 연한 보라
-            }
+
+        # 포토 스타일별 프롬프트
+        self.photo_styles = {
+            '미니멀': '미니멀하고 깔끔한 디자인, 단순함, 여백 활용',
+            '모던': '현대적이고 세련된 디자인, 깔끔한 레이아웃',
+            '빈티지': '빈티지 느낌, 레트로 스타일, 클래식한 색감',
+            '컬러풀': '다채로운 색상, 밝고 생동감 있는 컬러',
+            '우아한': '우아하고 고급스러운 느낌, 세련된 분위기',
+            '캐주얼': '친근하고 편안한 느낌, 접근하기 쉬운 디자인'
         }
 
-    def generate_poster(self, request: PosterRequest) -> Dict[str, Any]:
+        # 카테고리별 이미지 스타일
+        self.category_styles = {
+            '음식': '음식 사진, 먹음직스러운, 맛있어 보이는',
+            '매장': '레스토랑 인테리어, 아늑한 분위기',
+            '이벤트': '홍보용 디자인, 눈길을 끄는',
+            '메뉴': '메뉴 디자인, 정리된 레이아웃',
+            '할인': '세일 포스터, 할인 디자인'
+        }
+
+        # 톤앤매너별 디자인 스타일
+        self.tone_styles = {
+            '친근한': '따뜻하고 친근한 색감, 부드러운 느낌',
+            '정중한': '격식 있고 신뢰감 있는 디자인',
+            '재미있는': '밝고 유쾌한 분위기, 활기찬 색상',
+            '전문적인': '전문적이고 신뢰할 수 있는 디자인'
+        }
+
+        # 감정 강도별 디자인
+        self.emotion_designs = {
+            '약함': '은은하고 차분한 색감, 절제된 표현',
+            '보통': '적당히 활기찬 색상, 균형잡힌 디자인',
+            '강함': '강렬하고 임팩트 있는 색상, 역동적인 디자인'
+        }
+
+    def generate_poster(self, request: PosterContentGetRequest) -> Dict[str, Any]:
         """
-        홍보 포스터 생성
-        Args:
-            request: 포스터 생성 요청 데이터
-        Returns:
-            생성된 포스터 정보
+        포스터 생성 (OpenAI 이미지 URL 반환)
         """
         try:
-            # 포스터 텍스트 내용 생성
-            poster_text = self._generate_poster_text(request)
-            # 이미지 전처리
-            processed_images = self._process_images(request.image_paths)
-            # 포스터 이미지 생성
-            poster_image = self._create_poster_image(request, poster_text, processed_images)
-            # 이미지를 base64로 인코딩
-            poster_base64 = self._encode_image_to_base64(poster_image)
+            # 참조 이미지 분석 (있는 경우)
+            image_analysis = self._analyze_reference_images(request.images)
+
+            # 포스터 생성 프롬프트 생성
+            prompt = self._create_poster_prompt(request, image_analysis)
+
+            # OpenAI로 이미지 생성
+            image_url = self.ai_client.generate_image_with_openai(prompt, "1024x1024")
+
             return {
                 'success': True,
-                'poster_data': poster_base64,
-                'poster_text': poster_text,
-                'category': request.category,
-                'generated_at': datetime.now().isoformat(),
-                'image_count': len(request.image_paths),
-                'format': 'base64'
+                'content': image_url
             }
+
         except Exception as e:
             return {
                 'success': False,
-                'error': str(e),
-                'generated_at': datetime.now().isoformat()
+                'error': str(e)
             }
 
-    def _generate_poster_text(self, request: PosterRequest) -> Dict[str, str]:
+    def _analyze_reference_images(self, image_urls: list) -> Dict[str, Any]:
         """
-        포스터에 들어갈 텍스트 내용 생성
-        Args:
-            request: 포스터 생성 요청
-        Returns:
-            포스터 텍스트 구성 요소들
+        참조 이미지들 분석
         """
-        # 이미지 분석
-        image_descriptions = []
-        for image_path in request.image_paths:
-            try:
-                description = self.ai_client.analyze_image(image_path)
-                image_descriptions.append(description)
-            except:
-                continue
-        # AI 프롬프트 생성
-        prompt = f"""
-당신은 소상공인을 위한 포스터 카피라이터입니다.
-다음 정보를 바탕으로 매력적인 포스터 문구를 작성해주세요.
-**매장 정보:**
-- 매장명: {request.store_name or '우리 가게'}
-- 카테고리: {request.category}
-- 추가 정보: {request.additional_info or '없음'}
-**이벤트 정보:**
-- 이벤트 제목: {request.event_title or '특별 이벤트'}
-- 할인 정보: {request.discount_info or '특가 진행'}
-- 시작 시간: {request.start_time or '상시'}
-- 종료 시간: {request.end_time or '상시'}
-**이미지 설명:**
-{chr(10).join(image_descriptions) if image_descriptions else '이미지 없음'}
-다음 형식으로 응답해주세요:
-1. 메인 헤드라인 (10글자 이내, 임팩트 있게)
-2. 서브 헤드라인 (20글자 이내, 구체적 혜택)
-3. 설명 문구 (30글자 이내, 친근하고 매력적으로)
-4. 행동 유도 문구 (15글자 이내, 액션 유도)
-각 항목은 줄바꿈으로 구분해서 작성해주세요.
-"""
-        # AI로 텍스트 생성
-        generated_text = self.ai_client.generate_text(prompt)
-        # 생성된 텍스트 파싱
-        lines = generated_text.strip().split('\n')
-        return {
-            'main_headline': lines[0] if len(lines) > 0 else request.event_title or '특별 이벤트',
-            'sub_headline': lines[1] if len(lines) > 1 else request.discount_info or '지금 바로!',
-            'description': lines[2] if len(lines) > 2 else '특별한 혜택을 놓치지 마세요',
-            'call_to_action': lines[3] if len(lines) > 3 else '지금 방문하세요!'
-        }
+        if not image_urls:
+            return {'total_images': 0, 'results': []}
 
-    def _process_images(self, image_paths: list) -> list:
-        """
-        포스터에 사용할 이미지들 전처리
-        Args:
-            image_paths: 원본 이미지 경로 리스트
-        Returns:
-            전처리된 이미지 객체 리스트
-        """
-        processed_images = []
-        for image_path in image_paths:
-            try:
-                # 이미지 로드 및 리사이즈
-                image = Image.open(image_path)
-                # RGBA로 변환 (투명도 처리)
-                if image.mode != 'RGBA':
-                    image = image.convert('RGBA')
-                # 포스터에 맞게 리사이즈 (최대 400x400)
-                image.thumbnail((400, 400), Image.Resampling.LANCZOS)
-                processed_images.append(image)
-            except Exception as e:
-                print(f"이미지 처리 오류 {image_path}: {e}")
-                continue
-        return processed_images
+        analysis_results = []
+        temp_files = []
 
-    def _create_poster_image(self, request: PosterRequest, poster_text: Dict[str, str], images: list) -> Image.Image:
-        """
-        실제 포스터 이미지 생성
-        Args:
-            request: 포스터 생성 요청
-            poster_text: 포스터 텍스트
-            images: 전처리된 이미지 리스트
-        Returns:
-            생성된 포스터 이미지
-        """
-        # 카테고리별 테마 적용
-        theme = self.category_themes.get(request.category, self.category_themes['음식'])
-        # 캔버스 생성
-        poster = Image.new('RGBA',
-                           (self.poster_config['width'], self.poster_config['height']),
-                           theme['background'])
-        draw = ImageDraw.Draw(poster)
-        # 폰트 설정 (시스템 기본 폰트 사용)
         try:
-            # 다양한 폰트 시도
-            title_font = ImageFont.truetype("arial.ttf", 60)
-            subtitle_font = ImageFont.truetype("arial.ttf", 40)
-            text_font = ImageFont.truetype("arial.ttf", 30)
-            small_font = ImageFont.truetype("arial.ttf", 24)
-        except:
-            # 기본 폰트 사용
-            title_font = ImageFont.load_default()
-            subtitle_font = ImageFont.load_default()
-            text_font = ImageFont.load_default()
-            small_font = ImageFont.load_default()
-        # 레이아웃 계산
-        y_pos = 80
-        # 1. 메인 헤드라인
-        main_headline = poster_text['main_headline']
-        bbox = draw.textbbox((0, 0), main_headline, font=title_font)
-        text_width = bbox[2] - bbox[0]
-        x_pos = (self.poster_config['width'] - text_width) // 2
-        draw.text((x_pos, y_pos), main_headline,
-                  fill=theme['primary'], font=title_font)
-        y_pos += 100
-        # 2. 서브 헤드라인
-        sub_headline = poster_text['sub_headline']
-        bbox = draw.textbbox((0, 0), sub_headline, font=subtitle_font)
-        text_width = bbox[2] - bbox[0]
-        x_pos = (self.poster_config['width'] - text_width) // 2
-        draw.text((x_pos, y_pos), sub_headline,
-                  fill=theme['secondary'], font=subtitle_font)
-        y_pos += 80
-        # 3. 이미지 배치 (있는 경우)
-        if images:
-            image_y = y_pos + 30
-            if len(images) == 1:
-                # 단일 이미지: 중앙 배치
-                img = images[0]
-                img_x = (self.poster_config['width'] - img.width) // 2
-                poster.paste(img, (img_x, image_y), img)
-                y_pos = image_y + img.height + 50
-            elif len(images) == 2:
-                # 두 개 이미지: 나란히 배치
-                total_width = sum(img.width for img in images) + 20
-                start_x = (self.poster_config['width'] - total_width) // 2
-                for i, img in enumerate(images):
-                    img_x = start_x + (i * (img.width + 20))
-                    poster.paste(img, (img_x, image_y), img)
-                y_pos = image_y + max(img.height for img in images) + 50
-            else:
-                # 여러 이미지: 그리드 형태
-                cols = 2
-                rows = (len(images) + cols - 1) // cols
-                img_spacing = 20
-                for i, img in enumerate(images[:4]):  # 최대 4개
-                    row = i // cols
-                    col = i % cols
-                    img_x = (self.poster_config['width'] // cols) * col + \
-                            (self.poster_config['width'] // cols - img.width) // 2
-                    img_y = image_y + row * (200 + img_spacing)
-                    poster.paste(img, (img_x, img_y), img)
-                y_pos = image_y + rows * (200 + img_spacing) + 30
-        # 4. 설명 문구
-        description = poster_text['description']
-        # 긴 텍스트는 줄바꿈 처리
-        words = description.split()
-        lines = []
-        current_line = []
-        for word in words:
-            test_line = ' '.join(current_line + [word])
-            bbox = draw.textbbox((0, 0), test_line, font=text_font)
-            if bbox[2] - bbox[0] < self.poster_config['width'] - 100:
-                current_line.append(word)
-            else:
-                if current_line:
-                    lines.append(' '.join(current_line))
-                current_line = [word]
-        if current_line:
-            lines.append(' '.join(current_line))
-        for line in lines:
-            bbox = draw.textbbox((0, 0), line, font=text_font)
-            text_width = bbox[2] - bbox[0]
-            x_pos = (self.poster_config['width'] - text_width) // 2
-            draw.text((x_pos, y_pos), line, fill=(80, 80, 80), font=text_font)
-            y_pos += 40
-        y_pos += 30
-        # 5. 기간 정보 (있는 경우)
-        if request.start_time and request.end_time:
-            period_text = f"기간: {request.start_time} ~ {request.end_time}"
-            bbox = draw.textbbox((0, 0), period_text, font=small_font)
-            text_width = bbox[2] - bbox[0]
-            x_pos = (self.poster_config['width'] - text_width) // 2
-            draw.text((x_pos, y_pos), period_text, fill=(120, 120, 120), font=small_font)
-            y_pos += 50
-        # 6. 행동 유도 문구 (버튼 스타일)
-        cta_text = poster_text['call_to_action']
-        bbox = draw.textbbox((0, 0), cta_text, font=subtitle_font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-        # 버튼 배경
-        button_width = text_width + 60
-        button_height = text_height + 30
-        button_x = (self.poster_config['width'] - button_width) // 2
-        button_y = self.poster_config['height'] - 150
-        draw.rounded_rectangle([button_x, button_y, button_x + button_width, button_y + button_height],
-                               radius=25, fill=theme['primary'])
-        # 버튼 텍스트
-        text_x = button_x + (button_width - text_width) // 2
-        text_y = button_y + (button_height - text_height) // 2
-        draw.text((text_x, text_y), cta_text, fill=(255, 255, 255), font=subtitle_font)
-        # 7. 매장명 (하단)
-        if request.store_name:
-            store_text = request.store_name
-            bbox = draw.textbbox((0, 0), store_text, font=text_font)
-            text_width = bbox[2] - bbox[0]
-            x_pos = (self.poster_config['width'] - text_width) // 2
-            y_pos = self.poster_config['height'] - 50
-            draw.text((x_pos, y_pos), store_text, fill=(100, 100, 100), font=text_font)
-        return poster
+            for image_url in image_urls:
+                # 이미지 다운로드
+                temp_path = self.ai_client.download_image_from_url(image_url)
+                if temp_path:
+                    temp_files.append(temp_path)
 
-    def _encode_image_to_base64(self, image: Image.Image) -> str:
+                    try:
+                        # 이미지 분석
+                        image_description = self.ai_client.analyze_image(temp_path)
+                        # 색상 분석
+                        colors = self.image_processor.analyze_colors(temp_path, 3)
+
+                        analysis_results.append({
+                            'url': image_url,
+                            'description': image_description,
+                            'dominant_colors': colors
+                        })
+                    except Exception as e:
+                        analysis_results.append({
+                            'url': image_url,
+                            'error': str(e)
+                        })
+
+            return {
+                'total_images': len(image_urls),
+                'results': analysis_results
+            }
+
+        finally:
+            # 임시 파일 정리
+            for temp_file in temp_files:
+                try:
+                    os.remove(temp_file)
+                except:
+                    pass
+
+    def _create_poster_prompt(self, request: PosterContentGetRequest, image_analysis: Dict[str, Any]) -> str:
         """
-        PIL 이미지를 base64 문자열로 인코딩
-        Args:
-            image: PIL 이미지 객체
-        Returns:
-            base64 인코딩된 이미지 문자열
+        포스터 생성을 위한 AI 프롬프트 생성 (한글)
         """
-        import io
-        # RGB로 변환 (JPEG 저장을 위해)
-        if image.mode == 'RGBA':
-            # 흰색 배경과 합성
-            background = Image.new('RGB', image.size, (255, 255, 255))
-            background.paste(image, mask=image.split()[-1])
-            image = background
-        # 바이트 스트림으로 변환
-        img_buffer = io.BytesIO()
-        image.save(img_buffer, format='JPEG', quality=90)
-        img_buffer.seek(0)
-        # base64 인코딩
-        img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
-        return f"data:image/jpeg;base64,{img_base64}"
+        # 기본 스타일 설정
+        photo_style = self.photo_styles.get(request.photoStyle, '현대적이고 깔끔한 디자인')
+        category_style = self.category_styles.get(request.category, '홍보용 디자인')
+        tone_style = self.tone_styles.get(request.toneAndManner, '친근하고 따뜻한 느낌')
+        emotion_design = self.emotion_designs.get(request.emotionIntensity, '적당히 활기찬 디자인')
+
+        # 참조 이미지 설명
+        reference_descriptions = []
+        for result in image_analysis.get('results', []):
+            if 'description' in result:
+                reference_descriptions.append(result['description'])
+
+        # 색상 정보
+        color_info = ""
+        if image_analysis.get('results'):
+            colors = image_analysis['results'][0].get('dominant_colors', [])
+            if colors:
+                color_info = f"참조 색상 팔레트: {colors[:3]}을 활용한 조화로운 색감"
+
+        prompt = f"""
+한국의 음식점/카페를 위한 전문적인 홍보 포스터를 디자인해주세요.
+
+**메인 콘텐츠:**
+- 제목: "{request.title}"
+- 카테고리: {request.category}
+- 콘텐츠 타입: {request.contentType}
+
+**디자인 스타일 요구사항:**
+- 포토 스타일: {photo_style}
+- 카테고리 스타일: {category_style}
+- 톤앤매너: {tone_style}
+- 감정 강도: {emotion_design}
+
+**이벤트 정보:**
+- 이벤트명: {request.eventName or '특별 프로모션'}
+- 시작일: {request.startDate or '지금'}
+- 종료일: {request.endDate or '한정 기간'}
+
+**특별 요구사항:**
+{request.requirement or '눈길을 끄는 전문적인 디자인'}
+
+**참조 이미지 설명:**
+{chr(10).join(reference_descriptions) if reference_descriptions else '참조 이미지 없음'}
+
+{color_info}
+
+**디자인 가이드라인:**
+- 한국 음식점/카페에 적합한 깔끔하고 현대적인 레이아웃
+- 한글 텍스트 요소를 자연스럽게 포함
+- 가독성이 좋은 전문적인 타이포그래피
+- 명확한 대비로 읽기 쉽게 구성
+- 소셜미디어 공유에 적합한 크기
+- 저작권이 없는 오리지널 디자인
+- 음식점에 어울리는 맛있어 보이는 색상 조합
+- 고객의 시선을 끄는 매력적인 비주얼
+
+고객들이 음식점을 방문하고 싶게 만드는 시각적으로 매력적인 포스터를 만들어주세요.
+텍스트는 한글로, 전체적인 분위기는 한국적 감성에 맞게 디자인해주세요.
+"""
+        return prompt

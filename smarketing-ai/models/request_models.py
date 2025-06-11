@@ -4,24 +4,61 @@ API 요청 데이터 구조를 정의
 """
 from dataclasses import dataclass
 from typing import List, Optional
+
+
+@dataclass
+class SnsContentGetRequest:
+    """SNS 게시물 생성 요청 모델"""
+    title: str
+    category: str
+    contentType: str
+    platform: str
+    images: List[str]  # 이미지 URL 리스트
+    requirement: Optional[str] = None
+    toneAndManner: Optional[str] = None
+    emotionIntensity: Optional[str] = None
+    eventName: Optional[str] = None
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
+
+
+@dataclass
+class PosterContentGetRequest:
+    """홍보 포스터 생성 요청 모델"""
+    title: str
+    category: str
+    contentType: str
+    images: List[str]  # 이미지 URL 리스트
+    photoStyle: Optional[str] = None
+    requirement: Optional[str] = None
+    toneAndManner: Optional[str] = None
+    emotionIntensity: Optional[str] = None
+    eventName: Optional[str] = None
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
+
+
+# 기존 모델들은 유지
 @dataclass
 class ContentRequest:
-    """마케팅 콘텐츠 생성 요청 모델"""
-    category: str  # 음식, 매장, 이벤트
-    platform: str  # 네이버 블로그, 인스타그램
-    image_paths: List[str]  # 업로드된 이미지 파일 경로들
-    start_time: Optional[str] = None  # 이벤트 시작 시간
-    end_time: Optional[str] = None    # 이벤트 종료 시간
-    store_name: Optional[str] = None  # 매장명
-    additional_info: Optional[str] = None  # 추가 정보
+    """마케팅 콘텐츠 생성 요청 모델 (기존)"""
+    category: str
+    platform: str
+    image_paths: List[str]
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    store_name: Optional[str] = None
+    additional_info: Optional[str] = None
+
+
 @dataclass
 class PosterRequest:
-    """홍보 포스터 생성 요청 모델"""
-    category: str  # 음식, 매장, 이벤트
-    image_paths: List[str]  # 업로드된 이미지 파일 경로들
-    start_time: Optional[str] = None  # 이벤트 시작 시간
-    end_time: Optional[str] = None    # 이벤트 종료 시간
-    store_name: Optional[str] = None  # 매장명
-    event_title: Optional[str] = None  # 이벤트 제목
-    discount_info: Optional[str] = None  # 할인 정보
-    additional_info: Optional[str] = None  # 추가 정보
+    """홍보 포스터 생성 요청 모델 (기존)"""
+    category: str
+    image_paths: List[str]
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    store_name: Optional[str] = None
+    event_title: Optional[str] = None
+    discount_info: Optional[str] = None
+    additional_info: Optional[str] = None
