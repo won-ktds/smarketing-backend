@@ -131,6 +131,9 @@ public class Content {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public Content(ContentId of, ContentType contentType, Platform platform, String title, String content, List<String> strings, List<String> strings1, ContentStatus contentStatus, CreationConditions conditions, Long storeId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    }
+
     // ==================== 비즈니스 로직 메서드 ====================
 
     /**
@@ -210,6 +213,24 @@ public class Content {
      * @throws IllegalArgumentException 날짜가 유효하지 않은 경우
      */
     public void setPromotionPeriod(LocalDateTime startDate, LocalDateTime endDate) {
+        validatePromotionPeriod(startDate, endDate);
+
+        this.promotionStartDate = startDate;
+        this.promotionEndDate = endDate;
+    }
+
+    /**
+     * 홍보 기간 설정
+     *
+     * 비즈니스 규칙:
+     * - 시작일은 종료일보다 이전이어야 함
+     * - 과거 날짜로 설정 불가 (현재 시간 기준)
+     *
+     * @param startDate 홍보 시작일
+     * @param endDate 홍보 종료일
+     * @throws IllegalArgumentException 날짜가 유효하지 않은 경우
+     */
+    public void updatePeriod(LocalDateTime startDate, LocalDateTime endDate) {
         validatePromotionPeriod(startDate, endDate);
 
         this.promotionStartDate = startDate;

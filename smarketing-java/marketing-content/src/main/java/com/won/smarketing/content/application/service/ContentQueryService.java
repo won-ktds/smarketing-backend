@@ -40,18 +40,18 @@ public class ContentQueryService implements ContentQueryUseCase {
 
         // 제목과 기간 업데이트
         content.updateTitle(request.getTitle());
-        content.updatePeriod(request.getStartDate(), request.getEndDate());
+        content.updatePeriod(request.getPromotionStartDate(), request.getPromotionEndDate());
 
         Content updatedContent = contentRepository.save(content);
 
         return ContentUpdateResponse.builder()
-                .contentId(updatedContent.getId().getValue())
-                .contentType(updatedContent.getContentType().name())
-                .platform(updatedContent.getPlatform().name())
+                .contentId(updatedContent.getId())
+                //.contentType(updatedContent.getContentType().name())
+                //.platform(updatedContent.getPlatform().name())
                 .title(updatedContent.getTitle())
                 .content(updatedContent.getContent())
-                .hashtags(updatedContent.getHashtags())
-                .images(updatedContent.getImages())
+                //.hashtags(updatedContent.getHashtags())
+                //.images(updatedContent.getImages())
                 .status(updatedContent.getStatus().name())
                 .updatedAt(updatedContent.getUpdatedAt())
                 .build();
@@ -105,7 +105,7 @@ public class ContentQueryService implements ContentQueryUseCase {
                 .orElseThrow(() -> new BusinessException(ErrorCode.CONTENT_NOT_FOUND));
 
         return ContentDetailResponse.builder()
-                .contentId(content.getId().getValue())
+                .contentId(content.getId())
                 .contentType(content.getContentType().name())
                 .platform(content.getPlatform().name())
                 .title(content.getTitle())
@@ -140,7 +140,7 @@ public class ContentQueryService implements ContentQueryUseCase {
      */
     private ContentResponse toContentResponse(Content content) {
         return ContentResponse.builder()
-                .contentId(content.getId().getValue())
+                .contentId(content.getId())
                 .contentType(content.getContentType().name())
                 .platform(content.getPlatform().name())
                 .title(content.getTitle())
@@ -161,13 +161,13 @@ public class ContentQueryService implements ContentQueryUseCase {
      */
     private OngoingContentResponse toOngoingContentResponse(Content content) {
         return OngoingContentResponse.builder()
-                .contentId(content.getId().getValue())
+                .contentId(content.getId())
                 .contentType(content.getContentType().name())
                 .platform(content.getPlatform().name())
                 .title(content.getTitle())
                 .status(content.getStatus().name())
-                .createdAt(content.getCreatedAt())
-                .viewCount(0) // TODO: 실제 조회 수 구현 필요
+                .promotionStartDate(content.getPromotionStartDate())
+                //.viewCount(0) // TODO: 실제 조회 수 구현 필요
                 .build();
     }
 

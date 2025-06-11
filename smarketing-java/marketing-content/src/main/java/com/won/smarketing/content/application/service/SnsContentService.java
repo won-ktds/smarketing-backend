@@ -39,7 +39,7 @@ public class SnsContentService implements SnsContentUseCase {
      */
     @Override
     @Transactional
-/*    public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request) {
+    public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request) {
         // AI를 사용하여 SNS 콘텐츠 생성
         String generatedContent = aiContentGenerator.generateSnsContent(request);
         
@@ -80,11 +80,11 @@ public class SnsContentService implements SnsContentUseCase {
                 .title(content.getTitle())
                 .content(content.getContent())
                 .hashtags(content.getHashtags())
-                .images(content.getImages())
+                .fixedImages(content.getImages())
                 .status(content.getStatus().name())
                 .createdAt(content.getCreatedAt())
                 .build();
-    }*/
+    }
 
     /**
      * SNS 콘텐츠 저장

@@ -53,4 +53,14 @@ public class CreationConditions {
      * 사진 스타일 (포스터용)
      */
     private String photoStyle;
+
+    /**
+     * 타겟 고객
+     */
+    private String targetAudience;
+
+    /**
+     * 프로모션 타입
+     */
+    private String promotionType;
 }
