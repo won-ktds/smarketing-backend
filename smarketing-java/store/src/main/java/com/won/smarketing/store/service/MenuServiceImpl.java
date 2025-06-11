@@ -83,7 +83,7 @@ public class MenuServiceImpl implements MenuService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
         // 메뉴 정보 업데이트
-        menu.updateMenuInfo(
+        menu.updateMenu(
                 request.getMenuName(),
                 request.getCategory(),
                 request.getPrice(),

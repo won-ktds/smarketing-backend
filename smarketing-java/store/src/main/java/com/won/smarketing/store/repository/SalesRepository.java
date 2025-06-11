@@ -7,6 +7,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * 매출 정보 데이터 접근을 위한 Repository
@@ -14,31 +16,52 @@ import java.math.BigDecimal;
  */
 @Repository
 public interface SalesRepository extends JpaRepository<Sales, Long> {
-    
+
     /**
-     * 매장의 오늘 매출 조회
-     * 
+     * 매장의 특정 날짜 매출 조회
+     *
+     * @param storeId 매장 ID
+     * @param salesDate 매출 날짜
+     * @return 해당 날짜 매출 목록
+     */
+    List<Sales> findByStoreIdAndSalesDate(Long storeId, LocalDate salesDate);
+
+    /**
+     * 매장의 특정 기간 매출 조회
+     *
+     * @param storeId 매장 ID
+     * @param startDate 시작 날짜
+     * @param endDate 종료 날짜
+     * @return 해당 기간 매출 목록
+     */
+    List<Sales> findByStoreIdAndSalesDateBetween(Long storeId, LocalDate startDate, LocalDate endDate);
+
+    /**
+     * 매장의 오늘 매출 조회 (네이티브 쿼리)
+     *
      * @param storeId 매장 ID
      * @return 오늘 매출
      */
-    @Query("SELECT COALESCE(SUM(s.salesAmount), 0) FROM Sales s WHERE s.storeId = :storeId AND s.salesDate = CURRENT_DATE")
-    BigDecimal findTodaySalesByStoreId(@Param("storeId") Long storeId);
-    
+    @Query(value = "SELECT COALESCE(SUM(sales_amount), 0) FROM sales WHERE store_id = :storeId AND sales_date = CURRENT_DATE", nativeQuery = true)
+    BigDecimal findTodaySalesByStoreIdNative(@Param("storeId") Long storeId);
+
     /**
-     * 매장의 이번 달 매출 조회
-     * 
+     * 매장의 어제 매출 조회 (네이티브 쿼리)
+     *
+     * @param storeId 매장 ID
+     * @return 어제 매출
+     */
+    @Query(value = "SELECT COALESCE(SUM(sales_amount), 0) FROM sales WHERE store_id = :storeId AND sales_date = CURRENT_DATE - INTERVAL '1 day'", nativeQuery = true)
+    BigDecimal findYesterdaySalesByStoreIdNative(@Param("storeId") Long storeId);
+
+    /**
+     * 매장의 이번 달 매출 조회 (네이티브 쿼리)
+     *
      * @param storeId 매장 ID
      * @return 이번 달 매출
      */
-    @Query("SELECT COALESCE(SUM(s.salesAmount), 0) FROM Sales s WHERE s.storeId = :storeId AND YEAR(s.salesDate) = YEAR(CURRENT_DATE) AND MONTH(s.salesDate) = MONTH(CURRENT_DATE)")
-    BigDecimal findMonthSalesByStoreId(@Param("storeId") Long storeId);
-    
-    /**
-     * 매장의 전일 대비 매출 변화량 조회
-     * 
-     * @param storeId 매장 ID
-     * @return 전일 대비 매출 변화량
-     */
-    @Query("SELECT COALESCE((SELECT SUM(s1.salesAmount) FROM Sales s1 WHERE s1.storeId = :storeId AND s1.salesDate = CURRENT_DATE) - (SELECT SUM(s2.salesAmount) FROM Sales s2 WHERE s2.storeId = :storeId AND s2.salesDate = CURRENT_DATE - 1), 0)")
-    BigDecimal findPreviousDayComparisonByStoreId(@Param("storeId") Long storeId);
+    @Query(value = "SELECT COALESCE(SUM(sales_amount), 0) FROM sales WHERE store_id = :storeId " +
+            "AND EXTRACT(YEAR FROM sales_date) = EXTRACT(YEAR FROM CURRENT_DATE) " +
+            "AND EXTRACT(MONTH FROM sales_date) = EXTRACT(MONTH FROM CURRENT_DATE)", nativeQuery = true)
+    BigDecimal findMonthSalesByStoreIdNative(@Param("storeId") Long storeId);
 }
