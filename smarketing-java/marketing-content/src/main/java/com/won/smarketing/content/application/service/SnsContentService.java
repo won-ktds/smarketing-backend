@@ -33,13 +33,13 @@ public class SnsContentService implements SnsContentUseCase {
 
     /**
      * SNS 콘텐츠 생성
-     * 
+     *
      * @param request SNS 콘텐츠 생성 요청
      * @return 생성된 SNS 콘텐츠 정보
      */
     @Override
     @Transactional
-    public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request) {
+/*    public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request) {
         // AI를 사용하여 SNS 콘텐츠 생성
         String generatedContent = aiContentGenerator.generateSnsContent(request);
         
@@ -84,7 +84,7 @@ public class SnsContentService implements SnsContentUseCase {
                 .status(content.getStatus().name())
                 .createdAt(content.getCreatedAt())
                 .build();
-    }
+    }*/
 
     /**
      * SNS 콘텐츠 저장

@@ -3,11 +3,7 @@ package com.won.smarketing.content.application.service;
 import com.won.smarketing.common.exception.BusinessException;
 import com.won.smarketing.common.exception.ErrorCode;
 import com.won.smarketing.content.application.usecase.ContentQueryUseCase;
-import com.won.smarketing.content.domain.model.Content;
-import com.won.smarketing.content.domain.model.ContentId;
-import com.won.smarketing.content.domain.model.ContentStatus;
-import com.won.smarketing.content.domain.model.ContentType;
-import com.won.smarketing.content.domain.model.Platform;
+import com.won.smarketing.content.domain.model.*;
 import com.won.smarketing.content.domain.repository.ContentRepository;
 import com.won.smarketing.content.presentation.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -181,20 +177,15 @@ public class ContentQueryService implements ContentQueryUseCase {
      * @param conditions CreationConditions 도메인 객체
      * @return CreationConditionsDto
      */
-    private CreationConditionsDto toCreationConditionsDto(CreationConditions conditions) {
+    private ContentDetailResponse.CreationConditionsDto toCreationConditionsDto(CreationConditions conditions) {
         if (conditions == null) {
             return null;
         }
         
-        return CreationConditionsDto.builder()
-                .category(conditions.getCategory())
-                .requirement(conditions.getRequirement())
+        return ContentDetailResponse.CreationConditionsDto.builder()
                 .toneAndManner(conditions.getToneAndManner())
                 .emotionIntensity(conditions.getEmotionIntensity())
                 .eventName(conditions.getEventName())
-                .startDate(conditions.getStartDate())
-                .endDate(conditions.getEndDate())
-                .photoStyle(conditions.getPhotoStyle())
                 .build();
     }
 }
