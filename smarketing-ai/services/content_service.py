@@ -8,8 +8,11 @@ from datetime import datetime
 from utils.ai_client import AIClient
 from utils.image_processor import ImageProcessor
 from models.request_models import ContentRequest
+
+
 class ContentService:
     """마케팅 콘텐츠 생성 서비스 클래스"""
+
     def __init__(self):
         """서비스 초기화"""
         self.ai_client = AIClient()
@@ -35,6 +38,7 @@ class ContentService:
             '매장': ['분위기', '인테리어', '편안한', '아늑한', '특별한', '방문'],
             '이벤트': ['할인', '이벤트', '특가', '한정', '기간한정', '혜택']
         }
+
     def generate_content(self, request: ContentRequest) -> Dict[str, Any]:
         """
         마케팅 콘텐츠 생성
@@ -54,8 +58,8 @@ class ContentService:
             hashtags = self._generate_hashtags(request)
             # 최종 콘텐츠 포맷팅
             formatted_content = self._format_content(
-                generated_content, 
-                hashtags, 
+                generated_content,
+                hashtags,
                 request.platform
             )
             return {
@@ -73,6 +77,7 @@ class ContentService:
                 'error': str(e),
                 'generated_at': datetime.now().isoformat()
             }
+
     def _analyze_images(self, image_paths: list) -> Dict[str, Any]:
         """
         업로드된 이미지들 분석
@@ -102,6 +107,7 @@ class ContentService:
             'total_images': len(image_paths),
             'results': analysis_results
         }
+
     def _create_content_prompt(self, request: ContentRequest, image_analysis: Dict[str, Any]) -> str:
         """
         AI 콘텐츠 생성을 위한 프롬프트 생성
@@ -143,6 +149,7 @@ class ContentService:
 해시태그는 별도로 생성하므로 본문에는 포함하지 마세요.
 """
         return prompt
+
     def _generate_hashtags(self, request: ContentRequest) -> list:
         """
         카테고리와 플랫폼에 맞는 해시태그 생성
@@ -170,6 +177,7 @@ class ContentService:
         # 최대 개수 제한
         max_count = platform_spec['hashtag_count']
         return hashtags[:max_count]
+
     def _format_content(self, content: str, hashtags: list, platform: str) -> str:
         """
         플랫폼에 맞게 콘텐츠 포맷팅

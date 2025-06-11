@@ -12,6 +12,8 @@ from config.config import Config
 from services.content_service import ContentService
 from services.poster_service import PosterService
 from models.request_models import ContentRequest, PosterRequest
+
+
 def create_app():
     """Flask 애플리케이션 팩토리"""
     app = Flask(__name__)
@@ -25,6 +27,7 @@ def create_app():
     # 서비스 인스턴스 생성
     content_service = ContentService()
     poster_service = PosterService()
+
     @app.route('/health', methods=['GET'])
     def health_check():
         """헬스 체크 API"""
@@ -33,6 +36,7 @@ def create_app():
             'timestamp': datetime.now().isoformat(),
             'service': 'AI Marketing Service'
         })
+
     @app.route('/api/content/generate', methods=['POST'])
     def generate_content():
         """
@@ -84,6 +88,7 @@ def create_app():
             app.logger.error(f"콘텐츠 생성 중 오류 발생: {str(e)}")
             app.logger.error(traceback.format_exc())
             return jsonify({'error': f'콘텐츠 생성 중 오류가 발생했습니다: {str(e)}'}), 500
+
     @app.route('/api/poster/generate', methods=['POST'])
     def generate_poster():
         """
@@ -136,15 +141,20 @@ def create_app():
             app.logger.error(f"포스터 생성 중 오류 발생: {str(e)}")
             app.logger.error(traceback.format_exc())
             return jsonify({'error': f'포스터 생성 중 오류가 발생했습니다: {str(e)}'}), 500
+
     @app.errorhandler(413)
     def too_large(e):
         """파일 크기 초과 에러 처리"""
         return jsonify({'error': '업로드된 파일이 너무 큽니다. (최대 16MB)'}), 413
+
     @app.errorhandler(500)
     def internal_error(error):
         """내부 서버 에러 처리"""
         return jsonify({'error': '내부 서버 오류가 발생했습니다.'}), 500
+
     return app
+
+
 if __name__ == '__main__':
     app = create_app()
     app.run(host='0.0.0.0', port=5000, debug=True)
