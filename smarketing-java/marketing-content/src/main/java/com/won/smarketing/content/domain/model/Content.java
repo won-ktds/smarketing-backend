@@ -217,6 +217,24 @@ public class Content {
     }
 
     /**
+     * 홍보 기간 설정
+     *
+     * 비즈니스 규칙:
+     * - 시작일은 종료일보다 이전이어야 함
+     * - 과거 날짜로 설정 불가 (현재 시간 기준)
+     *
+     * @param startDate 홍보 시작일
+     * @param endDate 홍보 종료일
+     * @throws IllegalArgumentException 날짜가 유효하지 않은 경우
+     */
+    public void updatePeriod(LocalDateTime startDate, LocalDateTime endDate) {
+        validatePromotionPeriod(startDate, endDate);
+
+        this.promotionStartDate = startDate;
+        this.promotionEndDate = endDate;
+    }
+
+    /**
      * 해시태그 추가
      *
      * @param hashtag 추가할 해시태그 (# 없이)

@@ -98,6 +98,9 @@ public class ContentResponse {
     @Schema(description = "해시태그 개수", example = "8")
     private Integer hashtagCount;
 
+    @Schema(description = "조회수", example = "8")
+    private Integer viewCount;
+
     // ==================== 비즈니스 메서드 ====================
 
     /**
@@ -227,7 +230,7 @@ public class ContentResponse {
      */
     public static ContentResponse fromDomain(com.won.smarketing.content.domain.model.Content content) {
         ContentResponseBuilder builder = ContentResponse.builder()
-                .contentId(content.getId().getValue())
+                .contentId(content.getId())
                 .contentType(content.getContentType().name())
                 .platform(content.getPlatform().name())
                 .title(content.getTitle())

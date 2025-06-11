@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 포스터 콘텐츠 생성 응답 DTO
@@ -27,8 +28,11 @@ public class PosterContentCreateResponse {
     @Schema(description = "생성된 포스터 텍스트 내용")
     private String content;
 
-    @Schema(description = "포스터 이미지 URL 목록")
-    private List<String> posterImages;
+    @Schema(description = "생성된 포스터 타입")
+    private String contentType;
+
+    @Schema(description = "포스터 이미지 URL")
+    private String posterImage;
 
     @Schema(description = "원본 이미지 URL 목록")
     private List<String> originalImages;
@@ -38,4 +42,8 @@ public class PosterContentCreateResponse {
 
     @Schema(description = "생성 상태", example = "DRAFT")
     private String status;
+    
+    @Schema(description = "포스터사이즈", example = "800x600")
+    private Map<String, String> posterSizes;
+    
 }

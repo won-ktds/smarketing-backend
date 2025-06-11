@@ -61,10 +61,10 @@ public class PosterContentService implements PosterContentUseCase {
                 .contentId(null) // 임시 생성이므로 ID 없음
                 .contentType(ContentType.POSTER.name())
                 .title(request.getTitle())
-                .image(generatedPoster)
+                .posterImage(generatedPoster)
                 .posterSizes(posterSizes)
                 .status(ContentStatus.DRAFT.name())
-                .createdAt(LocalDateTime.now())
+                //.createdAt(LocalDateTime.now())
                 .build();
     }
 

@@ -93,6 +93,9 @@ public class SnsContentCreateResponse {
     @Schema(description = "콘텐츠 카테고리", example = "음식/메뉴소개")
     private String category;
 
+    @Schema(description = "보정된 이미지 URL 목록")
+    private List<String> fixedImages;
+
     // ==================== 편집 가능 여부 ====================
 
     @Schema(description = "제목 편집 가능 여부", example = "true")

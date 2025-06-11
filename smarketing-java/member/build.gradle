@@ -1,4 +1,5 @@
 dependencies {
     implementation project(':common')
-    runtimeOnly 'com.mysql:mysql-connector-j'
+    // 데이터베이스 의존성
+    runtimeOnly 'org.postgresql:postgresql'
 }
