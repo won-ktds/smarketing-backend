@@ -10,8 +10,11 @@ from PIL import Image, ImageDraw, ImageFont
 from utils.ai_client import AIClient
 from utils.image_processor import ImageProcessor
 from models.request_models import PosterRequest
+
+
 class PosterService:
     """홍보 포스터 생성 서비스 클래스"""
+
     def __init__(self):
         """서비스 초기화"""
         self.ai_client = AIClient()
@@ -27,21 +30,22 @@ class PosterService:
         # 카테고리별 색상 테마
         self.category_themes = {
             '음식': {
-                'primary': (255, 107, 107),    # 빨강
-                'secondary': (255, 206, 84),   # 노랑
+                'primary': (255, 107, 107),  # 빨강
+                'secondary': (255, 206, 84),  # 노랑
                 'background': (255, 248, 240)  # 크림
             },
             '매장': {
-                'primary': (74, 144, 226),     # 파랑
+                'primary': (74, 144, 226),  # 파랑
                 'secondary': (120, 198, 121),  # 초록
                 'background': (248, 251, 255)  # 연한 파랑
             },
             '이벤트': {
-                'primary': (156, 39, 176),     # 보라
-                'secondary': (255, 193, 7),    # 금색
+                'primary': (156, 39, 176),  # 보라
+                'secondary': (255, 193, 7),  # 금색
                 'background': (252, 248, 255)  # 연한 보라
             }
         }
+
     def generate_poster(self, request: PosterRequest) -> Dict[str, Any]:
         """
         홍보 포스터 생성
@@ -74,6 +78,7 @@ class PosterService:
                 'error': str(e),
                 'generated_at': datetime.now().isoformat()
             }
+
     def _generate_poster_text(self, request: PosterRequest) -> Dict[str, str]:
         """
         포스터에 들어갈 텍스트 내용 생성
@@ -122,6 +127,7 @@ class PosterService:
             'description': lines[2] if len(lines) > 2 else '특별한 혜택을 놓치지 마세요',
             'call_to_action': lines[3] if len(lines) > 3 else '지금 방문하세요!'
         }
+
     def _process_images(self, image_paths: list) -> list:
         """
         포스터에 사용할 이미지들 전처리
@@ -145,6 +151,7 @@ class PosterService:
                 print(f"이미지 처리 오류 {image_path}: {e}")
                 continue
         return processed_images
+
     def _create_poster_image(self, request: PosterRequest, poster_text: Dict[str, str], images: list) -> Image.Image:
         """
         실제 포스터 이미지 생성
@@ -158,9 +165,9 @@ class PosterService:
         # 카테고리별 테마 적용
         theme = self.category_themes.get(request.category, self.category_themes['음식'])
         # 캔버스 생성
-        poster = Image.new('RGBA', 
-                          (self.poster_config['width'], self.poster_config['height']), 
-                          theme['background'])
+        poster = Image.new('RGBA',
+                           (self.poster_config['width'], self.poster_config['height']),
+                           theme['background'])
         draw = ImageDraw.Draw(poster)
         # 폰트 설정 (시스템 기본 폰트 사용)
         try:
@@ -182,16 +189,16 @@ class PosterService:
         bbox = draw.textbbox((0, 0), main_headline, font=title_font)
         text_width = bbox[2] - bbox[0]
         x_pos = (self.poster_config['width'] - text_width) // 2
-        draw.text((x_pos, y_pos), main_headline, 
-                 fill=theme['primary'], font=title_font)
+        draw.text((x_pos, y_pos), main_headline,
+                  fill=theme['primary'], font=title_font)
         y_pos += 100
         # 2. 서브 헤드라인
         sub_headline = poster_text['sub_headline']
         bbox = draw.textbbox((0, 0), sub_headline, font=subtitle_font)
         text_width = bbox[2] - bbox[0]
         x_pos = (self.poster_config['width'] - text_width) // 2
-        draw.text((x_pos, y_pos), sub_headline, 
-                 fill=theme['secondary'], font=subtitle_font)
+        draw.text((x_pos, y_pos), sub_headline,
+                  fill=theme['secondary'], font=subtitle_font)
         y_pos += 80
         # 3. 이미지 배치 (있는 경우)
         if images:
@@ -219,7 +226,7 @@ class PosterService:
                     row = i // cols
                     col = i % cols
                     img_x = (self.poster_config['width'] // cols) * col + \
-                           (self.poster_config['width'] // cols - img.width) // 2
+                            (self.poster_config['width'] // cols - img.width) // 2
                     img_y = image_y + row * (200 + img_spacing)
                     poster.paste(img, (img_x, img_y), img)
                 y_pos = image_y + rows * (200 + img_spacing) + 30
@@ -266,7 +273,7 @@ class PosterService:
         button_x = (self.poster_config['width'] - button_width) // 2
         button_y = self.poster_config['height'] - 150
         draw.rounded_rectangle([button_x, button_y, button_x + button_width, button_y + button_height],
-                              radius=25, fill=theme['primary'])
+                               radius=25, fill=theme['primary'])
         # 버튼 텍스트
         text_x = button_x + (button_width - text_width) // 2
         text_y = button_y + (button_height - text_height) // 2
@@ -280,6 +287,7 @@ class PosterService:
             y_pos = self.poster_config['height'] - 50
             draw.text((x_pos, y_pos), store_text, fill=(100, 100, 100), font=text_font)
         return poster
+
     def _encode_image_to_base64(self, image: Image.Image) -> str:
         """
         PIL 이미지를 base64 문자열로 인코딩
