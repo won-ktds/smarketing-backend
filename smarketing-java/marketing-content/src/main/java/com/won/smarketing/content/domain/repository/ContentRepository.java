@@ -4,6 +4,7 @@ import com.won.smarketing.content.domain.model.Content;
 import com.won.smarketing.content.domain.model.ContentId;
 import com.won.smarketing.content.domain.model.ContentType;
 import com.won.smarketing.content.domain.model.Platform;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import java.util.Optional;
  * 콘텐츠 저장소 인터페이스
  * 콘텐츠 도메인의 데이터 접근 추상화
  */
+@Repository
 public interface ContentRepository {
     
     /**

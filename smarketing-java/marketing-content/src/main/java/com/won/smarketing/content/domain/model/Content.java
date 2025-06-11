@@ -131,6 +131,9 @@ public class Content {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public Content(ContentId of, ContentType contentType, Platform platform, String title, String content, List<String> strings, List<String> strings1, ContentStatus contentStatus, CreationConditions conditions, Long storeId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    }
+
     // ==================== 비즈니스 로직 메서드 ====================
 
     /**
