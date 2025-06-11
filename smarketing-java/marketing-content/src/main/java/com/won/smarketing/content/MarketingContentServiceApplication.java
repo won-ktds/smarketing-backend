@@ -9,9 +9,16 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * 마케팅 콘텐츠 서비스 메인 애플리케이션 클래스
  * Clean Architecture 패턴을 적용한 마케팅 콘텐츠 관리 서비스
  */
-@SpringBootApplication(scanBasePackages = {"com.won.smarketing.content", "com.won.smarketing.common"})
-@EntityScan(basePackages = {"com.won.smarketing.content.infrastructure.entity"})
-@EnableJpaRepositories(basePackages = {"com.won.smarketing.content.infrastructure.repository"})
+@SpringBootApplication(scanBasePackages = {
+        "com.won.smarketing.content",
+        "com.won.smarketing.common"
+})
+@EnableJpaRepositories(basePackages = {
+        "com.won.smarketing.content.infrastructure.repository"
+})
+@EntityScan(basePackages = {
+        "com.won.smarketing.content.domain.model"
+})
 public class MarketingContentServiceApplication {
 
     public static void main(String[] args) {
