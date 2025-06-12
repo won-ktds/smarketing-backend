@@ -28,10 +28,10 @@ public interface StoreService {
     /**
      * 매장 정보 조회 (매장 ID)
      * 
-     * @param storeId 매장 ID
+     * //@param userId 매장 ID
      * @return 매장 정보
      */
-    StoreResponse getStore(String storeId);
+    StoreResponse getStore();
     
     /**
      * 매장 정보 수정

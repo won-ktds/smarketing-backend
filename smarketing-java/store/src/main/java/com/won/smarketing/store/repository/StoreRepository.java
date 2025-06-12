@@ -16,18 +16,18 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     /**
      * 회원 ID로 매장 조회
      * 
-     * @param memberId 회원 ID
+     * @param userId 회원 ID
      * @return 매장 정보 (Optional)
      */
-    Optional<Store> findByMemberId(Long memberId);
+    Optional<Store> findByUserId(String userId);
     
     /**
      * 회원의 매장 존재 여부 확인
      * 
-     * @param memberId 회원 ID
+     * @param userId 회원 ID
      * @return 존재 여부
      */
-    boolean existsByMemberId(Long memberId);
+    boolean existsByUserId(String userId);
     
     /**
      * 매장명으로 매장 조회

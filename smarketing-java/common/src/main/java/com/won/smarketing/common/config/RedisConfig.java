@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -21,6 +22,12 @@ public class RedisConfig {
     @Value("${spring.data.redis.port}")
     private int redisPort;
 
+    @Value("${spring.data.redis.password:}")
+    private String redisPassword;
+
+    @Value("${spring.data.redis.ssl:true}")
+    private boolean useSsl;
+
     /**
      * Redis 연결 팩토리 설정
      * 
@@ -28,7 +35,22 @@ public class RedisConfig {
      */
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory(redisHost, redisPort);
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+        config.setHostName(redisHost);
+        config.setPort(redisPort);
+
+        // Azure Redis는 패스워드 인증 필수
+        if (redisPassword != null && !redisPassword.isEmpty()) {
+            config.setPassword(redisPassword);
+        }
+
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(config);
+
+        // Azure Redis는 SSL 사용 (6380 포트)
+        factory.setUseSsl(useSsl);
+        factory.setValidateConnection(true);
+
+        return factory;
     }
 
     /**

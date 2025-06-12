@@ -30,8 +30,8 @@ public class Store {
     @Column(name = "store_id")
     private Long id;
 
-    @Column(name = "member_id", nullable = false)
-    private Long memberId;
+    @Column(name = "user_id", nullable = false)
+    private String userId;
 
     @Column(name = "store_name", nullable = false, length = 100)
     private String storeName;

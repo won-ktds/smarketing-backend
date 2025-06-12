@@ -7,6 +7,8 @@ import com.won.smarketing.store.dto.StoreResponse;
 import com.won.smarketing.store.dto.StoreUpdateRequest;
 import com.won.smarketing.store.entity.Store;
 import com.won.smarketing.store.repository.StoreRepository;
+import jakarta.xml.bind.annotation.XmlType;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,19 +36,19 @@ public class StoreServiceImpl implements StoreService {
     @Override
     @Transactional
     public StoreResponse register(StoreCreateRequest request) {
-        String currentUserId = getCurrentUserId();
-        Long memberId = Long.valueOf(currentUserId); // 실제로는 Member ID 조회 필요
+        String memberId = getCurrentUserId();
+      //  Long memberId = Long.valueOf(currentUserId); // 실제로는 Member ID 조회 필요
         
         log.info("매장 등록 시작: {} (회원: {})", request.getStoreName(), memberId);
         
         // 회원당 하나의 매장만 등록 가능
-        if (storeRepository.existsByMemberId(memberId)) {
+        if (storeRepository.existsByUserId(memberId)) {
             throw new BusinessException(ErrorCode.STORE_ALREADY_EXISTS);
         }
         
         // 매장 엔티티 생성 및 저장
         Store store = Store.builder()
-                .memberId(memberId)
+                .userId(memberId)
                 .storeName(request.getStoreName())
                 .businessType(request.getBusinessType())
                 .address(request.getAddress())
@@ -71,10 +73,10 @@ public class StoreServiceImpl implements StoreService {
      */
     @Override
     public StoreResponse getMyStore() {
-        String currentUserId = getCurrentUserId();
-        Long memberId = Long.valueOf(currentUserId);
+        String memberId = getCurrentUserId();
+       // Long memberId = Long.valueOf(currentUserId);
         
-        Store store = storeRepository.findByMemberId(memberId)
+        Store store = storeRepository.findByUserId(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
         
         return toStoreResponse(store);
@@ -83,14 +85,14 @@ public class StoreServiceImpl implements StoreService {
     /**
      * 매장 정보 조회 (매장 ID)
      * 
-     * @param storeId 매장 ID
+     * //@param storeId 매장 ID
      * @return 매장 정보
      */
     @Override
-    public StoreResponse getStore(String storeId) {
+    public StoreResponse getStore() {
         try {
-            Long id = Long.valueOf(storeId);
-            Store store = storeRepository.findById(id)
+            String userId = getCurrentUserId();
+            Store store = storeRepository.findByUserId(userId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
             
             return toStoreResponse(store);

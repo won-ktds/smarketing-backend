@@ -42,15 +42,16 @@ public class StoreController {
     /**
      * 매장 정보 조회
      * 
-     * @param storeId 조회할 매장 ID
+     * //@param userId 조회할 매장 ID
      * @return 매장 정보
      */
-    @Operation(summary = "매장 조회", description = "매장 ID로 매장 정보를 조회합니다.")
+    @Operation(summary = "매장 조회", description = "유저 ID로 매장 정보를 조회합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<StoreResponse>> getStore(
-            @Parameter(description = "매장 ID", required = true)
-            @RequestParam String storeId) {
-        StoreResponse response = storeService.getStore(storeId);
+//            @Parameter(description = "유저 ID", required = true)
+//            @RequestParam String userId
+    ) {
+        StoreResponse response = storeService.getStore();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
