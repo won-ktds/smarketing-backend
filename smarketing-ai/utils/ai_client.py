@@ -99,7 +99,7 @@ class AIClient:
         if self.claude_client:
             try:
                 response = self.claude_client.messages.create(
-                    model="claude-3-sonnet-20240229",
+                    model="claude-3-5-sonnet-20240620",
                     max_tokens=max_tokens,
                     messages=[
                         {"role": "user", "content": prompt}
@@ -113,7 +113,7 @@ class AIClient:
         if self.openai_client:
             try:
                 response = self.openai_client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4o",
                     messages=[
                         {"role": "user", "content": prompt}
                     ],
@@ -138,7 +138,7 @@ class AIClient:
             if self.claude_client:
                 try:
                     response = self.claude_client.messages.create(
-                        model="claude-3-sonnet-20240229",
+                        model="claude-3-5-sonnet-20240620",
                         max_tokens=500,
                         messages=[
                             {
@@ -168,7 +168,7 @@ class AIClient:
             if self.openai_client:
                 try:
                     response = self.openai_client.chat.completions.create(
-                        model="gpt-4-vision-preview",
+                        model="gpt-4o",
                         messages=[
                             {
                                 "role": "user",

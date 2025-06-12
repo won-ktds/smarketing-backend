@@ -161,6 +161,9 @@ class PosterService:
 - 톤앤매너: {tone_style}
 - 감정 강도: {emotion_design}
 
+**메뉴 정보:**
+- 메뉴명: {request.menuName or '없음'}
+
 **이벤트 정보:**
 - 이벤트명: {request.eventName or '특별 프로모션'}
 - 시작일: {request.startDate or '지금'}
