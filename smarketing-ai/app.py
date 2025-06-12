@@ -12,6 +12,7 @@ from config.config import Config
 from services.poster_service import PosterService
 from services.sns_content_service import SnsContentService
 from models.request_models import ContentRequest, PosterRequest, SnsContentGetRequest, PosterContentGetRequest
+from services.poster_service_v2 import PosterServiceV2
 
 
 def create_app():
@@ -29,6 +30,7 @@ def create_app():
 
     # 서비스 인스턴스 생성
     poster_service = PosterService()
+    poster_service_v2 = PosterServiceV2()
     sns_content_service = SnsContentService()
 
     @app.route('/health', methods=['GET'])
@@ -92,11 +94,11 @@ def create_app():
             app.logger.error(traceback.format_exc())
             return jsonify({'error': f'SNS 콘텐츠 생성 중 오류가 발생했습니다: {str(e)}'}), 500
 
-    @app.route('/api/ai/poster', methods=['POST'])
+    @app.route('/api/ai/poster', methods=['GET'])
     def generate_poster_content():
         """
-        홍보 포스터 생성 API (새로운 요구사항)
-        Java 서버에서 JSON 형태로 요청받아 OpenAI 이미지 URL 반환
+        홍보 포스터 생성 API (개선된 버전)
+        원본 이미지 보존 + 한글 텍스트 오버레이
         """
         try:
             # JSON 요청 데이터 검증
@@ -130,7 +132,8 @@ def create_app():
             )
 
             # 포스터 생성
-            result = poster_service.generate_poster(poster_request)
+            # result = poster_service.generate_poster(poster_request)
+            result = poster_service_v2.generate_poster(poster_request)
 
             if result['success']:
                 return jsonify({'content': result['content']})

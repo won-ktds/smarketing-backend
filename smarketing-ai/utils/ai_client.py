@@ -80,8 +80,9 @@ class AIClient:
             response = self.openai_client.images.generate(
                 model="dall-e-3",
                 prompt=prompt,
-                size=size,
-                quality="standard",
+                size="1024x1024",
+                quality="hd",  # 고품질 설정
+                style="vivid",  # 또는 "natural"
                 n=1,
             )
 
