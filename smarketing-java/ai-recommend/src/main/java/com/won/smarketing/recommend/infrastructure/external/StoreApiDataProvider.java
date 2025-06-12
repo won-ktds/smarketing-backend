@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Service;  // 이 어노테이션이 누락되어 있었음
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -18,7 +18,7 @@ import java.time.Duration;
  * 매장 API 데이터 제공자 구현체
  */
 @Slf4j
-@Service
+@Service  // 추가된 어노테이션
 @RequiredArgsConstructor
 public class StoreApiDataProvider implements StoreDataProvider {
 

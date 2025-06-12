@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 /**
- * 마케팅 팁 레포지토리 인터페이스
+ * 마케팅 팁 레포지토리 인터페이스 (순수한 도메인 인터페이스)
  */
 public interface MarketingTipRepository {
 
