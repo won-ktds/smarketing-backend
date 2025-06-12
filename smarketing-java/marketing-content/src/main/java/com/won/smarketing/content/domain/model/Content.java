@@ -46,7 +46,7 @@ public class Content {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "content_id")
+    @Column(name = "id")
     private Long id;
 
     // ==================== 콘텐츠 분류 ====================
@@ -97,8 +97,7 @@ public class Content {
     private ContentStatus status = ContentStatus.DRAFT;
 
     // ==================== AI 생성 조건 (Embedded) ====================
-
-    @Embedded
+    //@Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "toneAndManner", column = @Column(name = "tone_and_manner", length = 50)),
             @AttributeOverride(name = "promotionType", column = @Column(name = "promotion_type", length = 50)),
@@ -191,15 +190,15 @@ public class Content {
      * @param status 새로운 상태
      * @throws IllegalStateException 잘못된 상태 전환인 경우
      */
-    public void changeStatus(ContentStatus status) {
-        validateStatusTransition(this.status, status);
-
-        if (status == ContentStatus.PUBLISHED) {
-            validateForPublication();
-        }
-
-        this.status = status;
-    }
+//    public void changeStatus(ContentStatus status) {
+//        validateStatusTransition(this.status, status);
+//
+//        if (status == ContentStatus.PUBLISHED) {
+//            validateForPublication();
+//        }
+//
+//        this.status = status;
+//    }
 
     /**
      * 홍보 기간 설정
@@ -352,9 +351,9 @@ public class Content {
      *
      * @return SNS 게시물이면 true
      */
-    public boolean isSnsContent() {
-        return this.contentType == ContentType.SNS_POST;
-    }
+//    public boolean isSnsContent() {
+//        return this.contentType == ContentType.SNS_POST;
+//    }
 
     /**
      * 포스터 콘텐츠 여부 확인
@@ -424,11 +423,11 @@ public class Content {
     /**
      * 상태 전환 유효성 검증
      */
-    private void validateStatusTransition(ContentStatus from, ContentStatus to) {
-        if (from == ContentStatus.ARCHIVED && to != ContentStatus.PUBLISHED) {
-            throw new IllegalStateException("보관된 콘텐츠는 발행 상태로만 변경할 수 있습니다.");
-        }
-    }
+//    private void validateStatusTransition(ContentStatus from, ContentStatus to) {
+//        if (from == ContentStatus.ARCHIVED && to != ContentStatus.PUBLISHED) {
+//            throw new IllegalStateException("보관된 콘텐츠는 발행 상태로만 변경할 수 있습니다.");
+//        }
+//    }
 
     /**
      * 발행을 위한 유효성 검증
@@ -502,7 +501,7 @@ public class Content {
     public static Content createSnsContent(String title, String content, Platform platform,
                                            Long storeId, CreationConditions conditions) {
         Content snsContent = Content.builder()
-                .contentType(ContentType.SNS_POST)
+//                .contentType(ContentType.SNS_POST)
                 .platform(platform)
                 .title(title)
                 .content(content)

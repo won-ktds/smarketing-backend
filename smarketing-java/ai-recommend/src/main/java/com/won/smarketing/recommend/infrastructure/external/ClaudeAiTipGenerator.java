@@ -151,7 +151,7 @@ public class ClaudeAiTipGenerator implements AiTipGenerator {
         }
         
         // 업종별 기본 팁
-        String businessCategory = storeData.getBusinessCategory();
+        String businessCategory = storeData.getBusinessType();
         switch (businessCategory) {
             case "카페":
                 tip.append("인스타그램용 예쁜 음료 사진을 올려보세요.");

@@ -42,7 +42,7 @@ public class SnsContentService implements SnsContentUseCase {
     public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request) {
         // AI를 사용하여 SNS 콘텐츠 생성
         String generatedContent = aiContentGenerator.generateSnsContent(request);
-        
+
         // 플랫폼에 맞는 해시태그 생성
         Platform platform = Platform.fromString(request.getPlatform());
         List<String> hashtags = aiContentGenerator.generateHashtags(generatedContent, platform);
@@ -60,7 +60,7 @@ public class SnsContentService implements SnsContentUseCase {
 
         // 임시 콘텐츠 생성 (저장하지 않음)
         Content content = Content.builder()
-                .contentType(ContentType.SNS_POST)
+//                .contentType(ContentType.SNS_POST)
                 .platform(platform)
                 .title(request.getTitle())
                 .content(generatedContent)
@@ -88,7 +88,7 @@ public class SnsContentService implements SnsContentUseCase {
 
     /**
      * SNS 콘텐츠 저장
-     * 
+     *
      * @param request SNS 콘텐츠 저장 요청
      */
     @Override
@@ -107,7 +107,7 @@ public class SnsContentService implements SnsContentUseCase {
 
         // 콘텐츠 엔티티 생성 및 저장
         Content content = Content.builder()
-                .contentType(ContentType.SNS_POST)
+//                .contentType(ContentType.SNS_POST)
                 .platform(Platform.fromString(request.getPlatform()))
                 .title(request.getTitle())
                 .content(request.getContent())

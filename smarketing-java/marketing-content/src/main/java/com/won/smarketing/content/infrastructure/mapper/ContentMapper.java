@@ -91,7 +91,7 @@ public class ContentMapper {
                     entity.getConditions().getStartDate(),
                     entity.getConditions().getEndDate(),
                     entity.getConditions().getPhotoStyle(),
-                    entity.getConditions().getTargetAudience(),
+                  //  entity.getConditions().getTargetAudience(),
                     entity.getConditions().getPromotionType()
             );
         }

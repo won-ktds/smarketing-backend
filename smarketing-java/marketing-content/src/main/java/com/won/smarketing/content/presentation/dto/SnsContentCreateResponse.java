@@ -306,7 +306,7 @@ public class SnsContentCreateResponse {
         // 생성 조건 정보 설정
         if (content.getCreationConditions() != null) {
             builder.generationConditions(GenerationConditionsDto.builder()
-                    .targetAudience(content.getCreationConditions().getTargetAudience())
+                    //.targetAudience(content.getCreationConditions().getTargetAudience())
                     .eventName(content.getCreationConditions().getEventName())
                     .toneAndManner(content.getCreationConditions().getToneAndManner())
                     .promotionType(content.getCreationConditions().getPromotionType())

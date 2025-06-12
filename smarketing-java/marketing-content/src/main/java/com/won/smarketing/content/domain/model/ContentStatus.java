@@ -1,3 +1,4 @@
+// marketing-content/src/main/java/com/won/smarketing/content/domain/model/ContentStatus.java
 package com.won.smarketing.content.domain.model;
 
 import lombok.Getter;
@@ -5,35 +6,35 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * 콘텐츠 상태 열거형
- * 콘텐츠의 생명주기 상태 정의
+ * Clean Architecture의 Domain Layer에 위치하는 비즈니스 규칙
  */
 @Getter
 @RequiredArgsConstructor
 public enum ContentStatus {
-    
+
     DRAFT("임시저장"),
-    PUBLISHED("발행됨"),
-    ARCHIVED("보관됨");
+    PUBLISHED("게시됨"),
+    SCHEDULED("예약됨"),
+    DELETED("삭제됨"),
+    PROCESSING("처리중");
 
     private final String displayName;
 
     /**
      * 문자열로부터 ContentStatus 변환
-     * 
-     * @param status 상태 문자열
-     * @return ContentStatus
+     * @param value 문자열 값
+     * @return ContentStatus enum
+     * @throws IllegalArgumentException 유효하지 않은 값인 경우
      */
-    public static ContentStatus fromString(String status) {
-        if (status == null) {
-            return DRAFT;
+    public static ContentStatus fromString(String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("ContentStatus 값은 null일 수 없습니다.");
         }
-        
-        for (ContentStatus s : ContentStatus.values()) {
-            if (s.name().equalsIgnoreCase(status)) {
-                return s;
-            }
+
+        try {
+            return ContentStatus.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("유효하지 않은 ContentStatus 값입니다: " + value);
         }
-        
-        throw new IllegalArgumentException("알 수 없는 콘텐츠 상태: " + status);
     }
 }
