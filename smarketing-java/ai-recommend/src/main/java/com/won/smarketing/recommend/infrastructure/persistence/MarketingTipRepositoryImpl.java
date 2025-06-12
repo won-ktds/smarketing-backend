@@ -1,6 +1,7 @@
+package com.won.smarketing.recommend.infrastructure.persistence;
+
 import com.won.smarketing.recommend.domain.model.MarketingTip;
 import com.won.smarketing.recommend.domain.repository.MarketingTipRepository;
-import com.won.smarketing.recommend.infrastructure.persistence.MarketingTipJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,18 +10,18 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 /**
- * JPA 마케팅 팁 레포지토리 구현체
+ * 마케팅 팁 레포지토리 구현체
  */
 @Repository
 @RequiredArgsConstructor
-public class JpaMarketingTipRepository implements MarketingTipRepository {
+public class MarketingTipRepositoryImpl implements MarketingTipRepository {
 
     private final MarketingTipJpaRepository jpaRepository;
 
     @Override
     public MarketingTip save(MarketingTip marketingTip) {
-        com.won.smarketing.recommend.entity.MarketingTipEntity entity = MarketingTipEntity.fromDomain(marketingTip);
-        com.won.smarketing.recommend.entity.MarketingTipEntity savedEntity = jpaRepository.save(entity);
+        MarketingTipEntity entity = MarketingTipEntity.fromDomain(marketingTip);
+        MarketingTipEntity savedEntity = jpaRepository.save(entity);
         return savedEntity.toDomain();
     }
 

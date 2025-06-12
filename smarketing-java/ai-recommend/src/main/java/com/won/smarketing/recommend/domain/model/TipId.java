@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TipId {
     private Long value;
-
+    
     public static TipId of(Long value) {
         return new TipId(value);
     }

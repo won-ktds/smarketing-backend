@@ -11,6 +11,7 @@ import java.time.LocalDate;
 
 /**
  * 콘텐츠 생성 조건 JPA 엔티티
+ * Infrastructure Layer에서 데이터베이스 매핑을 담당
  */
 @Entity
 @Table(name = "content_conditions")
@@ -50,9 +51,34 @@ public class ContentConditionsJpaEntity {
     @Column(name = "photo_style", length = 100)
     private String photoStyle;
 
-    @Column(name = "target_audience", length = 200)
-    private String targetAudience;
-
     @Column(name = "promotion_type", length = 100)
     private String promotionType;
+
+    // 생성자
+    public ContentConditionsJpaEntity(ContentJpaEntity content, String category, String requirement,
+                                      String toneAndManner, String emotionIntensity, String eventName,
+                                      LocalDate startDate, LocalDate endDate, String photoStyle, String promotionType) {
+        this.content = content;
+        this.category = category;
+        this.requirement = requirement;
+        this.toneAndManner = toneAndManner;
+        this.emotionIntensity = emotionIntensity;
+        this.eventName = eventName;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.photoStyle = photoStyle;
+        this.promotionType = promotionType;
+    }
+
+    public ContentConditionsJpaEntity() {
+
+    }
+
+    // 팩토리 메서드
+    public static ContentConditionsJpaEntity create(ContentJpaEntity content, String category, String requirement,
+                                                    String toneAndManner, String emotionIntensity, String eventName,
+                                                    LocalDate startDate, LocalDate endDate, String photoStyle, String promotionType) {
+        return new ContentConditionsJpaEntity(content, category, requirement, toneAndManner, emotionIntensity,
+                eventName, startDate, endDate, photoStyle, promotionType);
+    }
 }

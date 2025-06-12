@@ -1,53 +1,51 @@
 // marketing-content/src/main/java/com/won/smarketing/content/domain/model/ContentId.java
 package com.won.smarketing.content.domain.model;
 
-import jakarta.persistence.Embeddable;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 콘텐츠 ID 값 객체
- * Clean Architecture의 Domain Layer에 위치하는 식별자
+ * Clean Architecture의 Domain Layer에서 식별자를 타입 안전하게 관리
  */
-@Embeddable
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@RequiredArgsConstructor
+@EqualsAndHashCode
 public class ContentId {
 
-    private Long value;
+    private final Long value;
 
     /**
-     * ContentId 생성 팩토리 메서드
+     * Long 값으로부터 ContentId 생성
      * @param value ID 값
      * @return ContentId 인스턴스
      */
     public static ContentId of(Long value) {
         if (value == null || value <= 0) {
-            throw new IllegalArgumentException("ContentId 값은 양수여야 합니다.");
+            throw new IllegalArgumentException("ContentId는 양수여야 합니다.");
         }
         return new ContentId(value);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ContentId contentId = (ContentId) o;
-        return Objects.equals(value, contentId.value);
+    /**
+     * 새로운 ContentId 생성 (ID가 없는 경우)
+     * @return null 값을 가진 ContentId
+     */
+    public static ContentId newId() {
+        return new ContentId(null);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
+    /**
+     * ID 값 존재 여부 확인
+     * @return ID가 null이 아니면 true
+     */
+    public boolean hasValue() {
+        return value != null;
     }
 
     @Override
     public String toString() {
-        return "ContentId{" + value + '}';
+        return "ContentId{" + "value=" + value + '}';
     }
 }

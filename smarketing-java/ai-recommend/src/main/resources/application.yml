@@ -24,23 +24,23 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
 
-ai:
-  service:
-    url: ${AI_SERVICE_URL:http://localhost:8080/ai}
-    timeout: ${AI_SERVICE_TIMEOUT:30000}
-
-
 external:
-  claude-ai:
-    api-key: ${CLAUDE_AI_API_KEY:your-claude-api-key}
-    base-url: ${CLAUDE_AI_BASE_URL:https://api.anthropic.com}
-    model: ${CLAUDE_AI_MODEL:claude-3-sonnet-20240229}
-    max-tokens: ${CLAUDE_AI_MAX_TOKENS:2000}
-  weather-api:
-    api-key: ${WEATHER_API_KEY:your-weather-api-key}
-    base-url: ${WEATHER_API_BASE_URL:https://api.openweathermap.org/data/2.5}
   store-service:
     base-url: ${STORE_SERVICE_URL:http://localhost:8082}
+    timeout: ${STORE_SERVICE_TIMEOUT:5000}
+  python-ai-service:
+    base-url: ${PYTHON_AI_SERVICE_URL:http://localhost:8090}
+    api-key: ${PYTHON_AI_API_KEY:dummy-key}
+    timeout: ${PYTHON_AI_TIMEOUT:30000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
 
 springdoc:
   swagger-ui:

@@ -27,29 +27,11 @@ public class MarketingTipResponse {
     @Schema(description = "AI 생성 마케팅 팁 내용")
     private String tipContent;
 
-    @Schema(description = "날씨 정보")
-    private WeatherInfo weatherInfo;
-
     @Schema(description = "매장 정보")
     private StoreInfo storeInfo;
 
     @Schema(description = "생성 일시")
     private LocalDateTime createdAt;
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class WeatherInfo {
-        @Schema(description = "온도", example = "25.5")
-        private Double temperature;
-
-        @Schema(description = "날씨 상태", example = "맑음")
-        private String condition;
-
-        @Schema(description = "습도", example = "60.0")
-        private Double humidity;
-    }
 
     @Data
     @Builder

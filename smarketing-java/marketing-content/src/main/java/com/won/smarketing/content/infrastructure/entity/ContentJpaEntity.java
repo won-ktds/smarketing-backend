@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * 콘텐츠 JPA 엔티티
@@ -36,6 +37,12 @@ public class ContentJpaEntity {
 
     @Column(name = "title", length = 500)
     private String title;
+
+    @Column(name = "PromotionStartDate")
+    private LocalDateTime PromotionStartDate;
+
+    @Column(name = "PromotionEndDate")
+    private LocalDateTime PromotionEndDate;
 
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;

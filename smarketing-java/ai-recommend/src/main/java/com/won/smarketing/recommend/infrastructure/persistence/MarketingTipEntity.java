@@ -1,5 +1,8 @@
-package com.won.smarketing.recommend.entity;
+package com.won.smarketing.recommend.infrastructure.persistence;
 
+import com.won.smarketing.recommend.domain.model.MarketingTip;
+import com.won.smarketing.recommend.domain.model.StoreData;
+import com.won.smarketing.recommend.domain.model.TipId;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,7 +14,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * 마케팅 팁 JPA 엔티티
+ * 마케팅 팁 JPA 엔티티 (날씨 정보 제거)
  */
 @Entity
 @Table(name = "marketing_tips")
@@ -29,20 +32,10 @@ public class MarketingTipEntity {
     @Column(name = "store_id", nullable = false)
     private Long storeId;
 
-    @Column(name = "tip_content", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "tip_content", nullable = false, length = 2000)
     private String tipContent;
 
-    // WeatherData 임베디드
-    @Column(name = "weather_temperature")
-    private Double weatherTemperature;
-
-    @Column(name = "weather_condition", length = 100)
-    private String weatherCondition;
-
-    @Column(name = "weather_humidity")
-    private Double weatherHumidity;
-
-    // StoreData 임베디드
+    // 매장 정보만 저장
     @Column(name = "store_name", length = 200)
     private String storeName;
 
@@ -55,4 +48,32 @@ public class MarketingTipEntity {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public static MarketingTipEntity fromDomain(MarketingTip marketingTip) {
+        return MarketingTipEntity.builder()
+                .id(marketingTip.getId() != null ? marketingTip.getId().getValue() : null)
+                .storeId(marketingTip.getStoreId())
+                .tipContent(marketingTip.getTipContent())
+                .storeName(marketingTip.getStoreData().getStoreName())
+                .businessType(marketingTip.getStoreData().getBusinessType())
+                .storeLocation(marketingTip.getStoreData().getLocation())
+                .createdAt(marketingTip.getCreatedAt())
+                .build();
+    }
+
+    public MarketingTip toDomain() {
+        StoreData storeData = StoreData.builder()
+                .storeName(this.storeName)
+                .businessType(this.businessType)
+                .location(this.storeLocation)
+                .build();
+
+        return MarketingTip.builder()
+                .id(this.id != null ? TipId.of(this.id) : null)
+                .storeId(this.storeId)
+                .tipContent(this.tipContent)
+                .storeData(storeData)
+                .createdAt(this.createdAt)
+                .build();
+    }
 }

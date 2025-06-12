@@ -1,8 +1,10 @@
 // marketing-content/src/main/java/com/won/smarketing/content/infrastructure/external/ClaudeAiContentGenerator.java
 package com.won.smarketing.content.infrastructure.external;
 
+// 수정: domain 패키지의 인터페이스를 import
+import com.won.smarketing.content.domain.service.AiContentGenerator;
 import com.won.smarketing.content.domain.model.Platform;
-import com.won.smarketing.content.domain.model.CreationConditions;
+import com.won.smarketing.content.presentation.dto.SnsContentCreateRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,105 +23,73 @@ public class ClaudeAiContentGenerator implements AiContentGenerator {
 
     /**
      * SNS 콘텐츠 생성
-     * Claude AI API를 호출하여 SNS 게시물을 생성합니다.
-     *
-     * @param title 제목
-     * @param category 카테고리
-     * @param platform 플랫폼
-     * @param conditions 생성 조건
-     * @return 생성된 콘텐츠 텍스트
      */
     @Override
-    public String generateSnsContent(String title, String category, Platform platform, CreationConditions conditions) {
+    public String generateSnsContent(SnsContentCreateRequest request) {
         try {
-            // Claude AI API 호출 로직 (실제 구현에서는 HTTP 클라이언트를 사용)
-            String prompt = buildContentPrompt(title, category, platform, conditions);
-
-            // TODO: 실제 Claude AI API 호출
-            // 현재는 더미 데이터 반환
-            return generateDummySnsContent(title, platform);
-
+            String prompt = buildContentPrompt(request);
+            return generateDummySnsContent(request.getTitle(), Platform.fromString(request.getPlatform()));
         } catch (Exception e) {
             log.error("AI 콘텐츠 생성 실패: {}", e.getMessage(), e);
-            return generateFallbackContent(title, platform);
+            return generateFallbackContent(request.getTitle(), Platform.fromString(request.getPlatform()));
         }
     }
 
     /**
-     * 해시태그 생성
-     * 콘텐츠 내용을 분석하여 관련 해시태그를 생성합니다.
-     *
-     * @param content 콘텐츠 내용
-     * @param platform 플랫폼
-     * @return 생성된 해시태그 목록
+     * 플랫폼별 해시태그 생성
      */
     @Override
     public List<String> generateHashtags(String content, Platform platform) {
         try {
-            // TODO: 실제 Claude AI API 호출하여 해시태그 생성
-            // 현재는 더미 데이터 반환
             return generateDummyHashtags(platform);
-
         } catch (Exception e) {
             log.error("해시태그 생성 실패: {}", e.getMessage(), e);
-            return Arrays.asList("#맛집", "#신메뉴", "#추천");
+            return generateFallbackHashtags();
         }
     }
 
-    /**
-     * AI 프롬프트 생성
-     */
-    private String buildContentPrompt(String title, String category, Platform platform, CreationConditions conditions) {
+    private String buildContentPrompt(SnsContentCreateRequest request) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("다음 조건에 맞는 ").append(platform.getDisplayName()).append(" 게시물을 작성해주세요:\n");
-        prompt.append("제목: ").append(title).append("\n");
-        prompt.append("카테고리: ").append(category).append("\n");
+        prompt.append("제목: ").append(request.getTitle()).append("\n");
+        prompt.append("카테고리: ").append(request.getCategory()).append("\n");
+        prompt.append("플랫폼: ").append(request.getPlatform()).append("\n");
 
-        if (conditions.getRequirement() != null) {
-            prompt.append("요구사항: ").append(conditions.getRequirement()).append("\n");
+        if (request.getRequirement() != null) {
+            prompt.append("요구사항: ").append(request.getRequirement()).append("\n");
         }
-        if (conditions.getToneAndManner() != null) {
-            prompt.append("톤앤매너: ").append(conditions.getToneAndManner()).append("\n");
-        }
-        if (conditions.getEmotionIntensity() != null) {
-            prompt.append("감정 강도: ").append(conditions.getEmotionIntensity()).append("\n");
+
+        if (request.getToneAndManner() != null) {
+            prompt.append("톤앤매너: ").append(request.getToneAndManner()).append("\n");
         }
 
         return prompt.toString();
     }
 
-    /**
-     * 더미 SNS 콘텐츠 생성 (개발용)
-     */
     private String generateDummySnsContent(String title, Platform platform) {
-        switch (platform) {
-            case INSTAGRAM:
-                return String.format("🎉 %s\n\n맛있는 순간을 놓치지 마세요! 새로운 맛의 경험이 여러분을 기다리고 있어요. 따뜻한 분위기에서 즐기는 특별한 시간을 만들어보세요.\n\n📍 지금 바로 방문해보세요!", title);
-            case NAVER_BLOG:
-                return String.format("안녕하세요! 오늘은 %s에 대해 소개해드리려고 해요.\n\n정성스럽게 준비한 새로운 메뉴로 고객 여러분께 더 나은 경험을 선사하고 싶습니다. 많은 관심과 사랑 부탁드려요!", title);
-            default:
-                return String.format("%s - 새로운 경험을 만나보세요!", title);
+        String baseContent = "🌟 " + title + "를 소개합니다! 🌟\n\n" +
+                "저희 매장에서 특별한 경험을 만나보세요.\n" +
+                "고객 여러분의 소중한 시간을 더욱 특별하게 만들어드리겠습니다.\n\n";
+
+        if (platform == Platform.INSTAGRAM) {
+            return baseContent + "더 많은 정보는 프로필 링크에서 확인하세요! 📸";
+        } else {
+            return baseContent + "자세한 내용은 저희 블로그를 방문해 주세요! ✨";
         }
     }
 
-    /**
-     * 더미 해시태그 생성 (개발용)
-     */
-    private List<String> generateDummyHashtags(Platform platform) {
-        switch (platform) {
-            case INSTAGRAM:
-                return Arrays.asList("#맛집", "#신메뉴", "#인스타그램", "#데일리", "#추천", "#음식스타그램");
-            case NAVER_BLOG:
-                return Arrays.asList("#맛집", "#리뷰", "#추천", "#신메뉴", "#블로그");
-            default:
-                return Arrays.asList("#맛집", "#신메뉴", "#추천");
-        }
-    }
-
-    /**
-     * 폴백 콘텐츠 생성 (AI 서비스 실패 시)
-     */
     private String generateFallbackContent(String title, Platform platform) {
-        return String.format("🎉 %s\n\n새로운 소식을 전해드립니다. 많은 관심 부탁드려요!", title);
+        return title + "에 대한 멋진 콘텐츠입니다. 많은 관심 부탁드립니다!";
+    }
+
+    private List<String> generateDummyHashtags(Platform platform) {
+        if (platform == Platform.INSTAGRAM) {
+            return Arrays.asList("#맛집", "#데일리", "#소상공인", "#추천", "#인스타그램");
+        } else {
+            return Arrays.asList("#맛집추천", "#블로그", "#리뷰", "#맛있는곳", "#소상공인응원");
+        }
+    }
+
+    private List<String> generateFallbackHashtags() {
+        return Arrays.asList("#소상공인", "#마케팅", "#홍보");
     }
 }
