@@ -123,7 +123,7 @@ class SnsContentService:
         SNS 콘텐츠 생성을 위한 AI 프롬프트 생성
         """
         platform_spec = self.platform_specs.get(request.platform, self.platform_specs['인스타그램'])
-        tone_style = self.tone_styles.get(request.toneAndManner, '친근한 어조')
+        tone_style = self.tone_styles.get(request.toneAndManner, '정중하고 재밌는 어조')
         emotion_level = self.emotion_levels.get(request.emotionIntensity, '적당한 강도')
 
         # 이미지 설명 추출
@@ -146,6 +146,9 @@ class SnsContentService:
 - 감정 강도: {request.emotionIntensity} ({emotion_level})
 - 특별 요구사항: {request.requirement or '없음'}
 
+**메뉴 정보:**
+- 메뉴명: {request.menuName or '없음'}
+
 **이벤트 정보:**
 - 이벤트명: {request.eventName or '없음'}
 - 시작일: {request.startDate or '없음'}
@@ -160,7 +163,7 @@ class SnsContentService:
 - 형식: {platform_spec['format']}
 
 **요구사항:**
-1. {request.platform}의 특성에 맞는 톤앤매너 사용
+1. 중요 => {request.platform}의 특성에 맞는 내용 구성
 2. {request.category} 카테고리에 적합한 내용 구성
 3. 고객의 관심을 끌 수 있는 매력적인 문구 사용
 4. 이미지와 연관된 내용으로 작성
@@ -174,29 +177,36 @@ class SnsContentService:
         """
         생성된 콘텐츠를 HTML 형식으로 포맷팅
         """
-        # 줄바꿈을 <br> 태그로 변환
+        # 1. literal \n 문자열을 실제 줄바꿈으로 변환
+        content = content.replace('\\n', '\n')
+
+        # 2. 실제 줄바꿈을 <br> 태그로 변환
         content = content.replace('\n', '<br>')
 
-        # 해시태그를 파란색으로 스타일링
-        import re
-        content = re.sub(r'(#[\w가-힣]+)', r'<span style="color: #1DA1F2; font-weight: bold;">\1</span>', content)
+        # 3. 추가 정리: \r, 여러 공백 정리
+        content = content.replace('\\r', '').replace('\r', '')
 
-        # 이모티콘은 그대로 유지
+        # 4. 여러 개의 <br> 태그를 하나로 정리
+        import re
+        content = re.sub(r'(<br>\s*){3,}', '<br><br>', content)
+
+        # 5. 해시태그를 파란색으로 스타일링
+        content = re.sub(r'(#[\w가-힣]+)', r'<span style="color: #1DA1F2; font-weight: bold;">\1</span>', content)
 
         # 전체 HTML 구조
         html_content = f"""
-<div style="font-family: 'Noto Sans KR', Arial, sans-serif; line-height: 1.6; padding: 20px; max-width: 600px;">
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px 10px 0 0; text-align: center;">
-        <h3 style="margin: 0; font-size: 18px;">{request.platform} 게시물</h3>
-    </div>
-    <div style="background: white; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid #e1e8ed;">
-        <div style="font-size: 16px; color: #333;">
-            {content}
+    <div style="font-family: 'Noto Sans KR', Arial, sans-serif; line-height: 1.6; padding: 20px; max-width: 600px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h3 style="margin: 0; font-size: 18px;">{request.platform} 게시물</h3>
         </div>
-        {self._add_metadata_html(request)}
+        <div style="background: white; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid #e1e8ed;">
+            <div style="font-size: 16px; color: #333; line-height: 1.8;">
+                {content}
+            </div>
+            {self._add_metadata_html(request)}
+        </div>
     </div>
-</div>
-"""
+    """
         return html_content
 
     def _add_metadata_html(self, request: SnsContentGetRequest) -> str:
