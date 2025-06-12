@@ -9,10 +9,8 @@ import os
 from datetime import datetime
 import traceback
 from config.config import Config
-# from services.content_service import ContentService
 from services.poster_service import PosterService
 from services.sns_content_service import SnsContentService
-# from services.poster_generation_service import PosterGenerationService
 from models.request_models import ContentRequest, PosterRequest, SnsContentGetRequest, PosterContentGetRequest
 
 
@@ -75,6 +73,7 @@ def create_app():
                 requirement=data.get('requirement'),
                 toneAndManner=data.get('toneAndManner'),
                 emotionIntensity=data.get('emotionIntensity'),
+                menuName=data.get('menuName'),
                 eventName=data.get('eventName'),
                 startDate=data.get('startDate'),
                 endDate=data.get('endDate')
@@ -124,6 +123,7 @@ def create_app():
                 requirement=data.get('requirement'),
                 toneAndManner=data.get('toneAndManner'),
                 emotionIntensity=data.get('emotionIntensity'),
+                menuName=data.get('menuName'),
                 eventName=data.get('eventName'),
                 startDate=data.get('startDate'),
                 endDate=data.get('endDate')
