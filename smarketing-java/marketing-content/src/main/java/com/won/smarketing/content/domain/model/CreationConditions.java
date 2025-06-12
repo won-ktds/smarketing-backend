@@ -1,66 +1,58 @@
+// marketing-content/src/main/java/com/won/smarketing/content/domain/model/CreationConditions.java
 package com.won.smarketing.content.domain.model;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 /**
  * 콘텐츠 생성 조건 도메인 모델
- * AI 콘텐츠 생성 시 사용되는 조건 정보
+ * Clean Architecture의 Domain Layer에 위치하는 값 객체
+ *
+ * JPA 애노테이션을 제거하여 순수 도메인 모델로 유지
+ * Infrastructure Layer의 JPA 엔티티는 별도로 관리
  */
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)
+@Builder
 public class CreationConditions {
 
-    /**
-     * 홍보 대상 카테고리
-     */
+    private String id;
     private String category;
-
-    /**
-     * 특별 요구사항
-     */
     private String requirement;
-
-    /**
-     * 톤앤매너
-     */
     private String toneAndManner;
-
-    /**
-     * 감정 강도
-     */
     private String emotionIntensity;
-
-    /**
-     * 이벤트명
-     */
     private String eventName;
-
-    /**
-     * 홍보 시작일
-     */
     private LocalDate startDate;
-
-    /**
-     * 홍보 종료일
-     */
     private LocalDate endDate;
-
-    /**
-     * 사진 스타일 (포스터용)
-     */
     private String photoStyle;
-
-    /**
-     * 타겟 고객
-     */
-    private String targetAudience;
-
-    /**
-     * 프로모션 타입
-     */
     private String promotionType;
+
+    public CreationConditions(String category, String requirement, String toneAndManner, String emotionIntensity, String eventName, LocalDate startDate, LocalDate endDate, String photoStyle, String promotionType) {
+    }
+
+    /**
+     * 이벤트 기간 유효성 검증
+     * @return 시작일이 종료일보다 이전이거나 같으면 true
+     */
+    public boolean isValidEventPeriod() {
+        if (startDate == null || endDate == null) {
+            return true;
+        }
+        return !startDate.isAfter(endDate);
+    }
+
+    /**
+     * 이벤트 조건 유무 확인
+     * @return 이벤트명이나 날짜가 설정되어 있으면 true
+     */
+    public boolean hasEventInfo() {
+        return eventName != null && !eventName.trim().isEmpty()
+                || startDate != null
+                || endDate != null;
+    }
 }

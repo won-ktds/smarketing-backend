@@ -17,6 +17,7 @@ class SnsContentGetRequest:
     requirement: Optional[str] = None
     toneAndManner: Optional[str] = None
     emotionIntensity: Optional[str] = None
+    menuName: Optional[str] = None
     eventName: Optional[str] = None
     startDate: Optional[str] = None
     endDate: Optional[str] = None
@@ -33,6 +34,7 @@ class PosterContentGetRequest:
     requirement: Optional[str] = None
     toneAndManner: Optional[str] = None
     emotionIntensity: Optional[str] = None
+    menuName: Optional[str] = None
     eventName: Optional[str] = None
     startDate: Optional[str] = None
     endDate: Optional[str] = None

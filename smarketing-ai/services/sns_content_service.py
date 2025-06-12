@@ -205,6 +205,9 @@ class SnsContentService:
         """
         metadata_html = '<div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e1e8ed; font-size: 12px; color: #666;">'
 
+        if request.menuName:
+            metadata_html += f'<div><strong>메뉴:</strong> {request.menuName}</div>'
+
         if request.eventName:
             metadata_html += f'<div><strong>이벤트:</strong> {request.eventName}</div>'
 

@@ -11,27 +11,23 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
-    show-sql: ${JPA_SHOW_SQL:true}
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:true}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-ai:
-  service:
-    url: ${AI_SERVICE_URL:http://localhost:8080/ai}
-    timeout: ${AI_SERVICE_TIMEOUT:30000}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
 
-external:
-  claude-ai:
-    api-key: ${CLAUDE_AI_API_KEY:your-claude-api-key}
-    base-url: ${CLAUDE_AI_BASE_URL:https://api.anthropic.com}
-    model: ${CLAUDE_AI_MODEL:claude-3-sonnet-20240229}
-    max-tokens: ${CLAUDE_AI_MAX_TOKENS:4000}
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidation123456789}
   access-token-validity: ${JWT_ACCESS_VALIDITY:3600000}
   refresh-token-validity: ${JWT_REFRESH_VALIDITY:604800000}
+
 logging:
   level:
-    com.won.smarketing.content: ${LOG_LEVEL:DEBUG}
+    com.won.smarketing: ${LOG_LEVEL:DEBUG}
