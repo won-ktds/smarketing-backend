@@ -104,14 +104,16 @@ public class StoreServiceImpl implements StoreService {
     /**
      * 매장 정보 수정
      * 
-     * @param storeId 매장 ID
+     * //@param storeId 매장 ID
      * @param request 매장 수정 요청 정보
      * @return 수정된 매장 정보
      */
     @Override
     @Transactional
-    public StoreResponse updateStore(Long storeId, StoreUpdateRequest request) {
-        Store store = storeRepository.findById(storeId)
+    public StoreResponse updateStore(StoreUpdateRequest request) {
+        String userId = getCurrentUserId();
+
+        Store store = storeRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
         
         // 매장 정보 업데이트

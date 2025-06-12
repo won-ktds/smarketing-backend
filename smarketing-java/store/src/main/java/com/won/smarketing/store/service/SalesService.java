@@ -13,5 +13,5 @@ public interface SalesService {
      * 
      * @return 매출 정보
      */
-    SalesResponse getSales();
+    SalesResponse getSales(Long storeId);
 }

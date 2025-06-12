@@ -3,6 +3,7 @@ package com.won.smarketing.store.service;
 import com.won.smarketing.store.dto.SalesResponse;
 import com.won.smarketing.store.entity.Sales;
 import com.won.smarketing.store.repository.SalesRepository;
+import com.won.smarketing.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.util.List;
 public class SalesServiceImpl implements SalesService {
 
     private final SalesRepository salesRepository;
+    private final StoreRepository storeRepository;
 
     /**
      * 매출 정보 조회
@@ -28,10 +30,7 @@ public class SalesServiceImpl implements SalesService {
      * @return 매출 정보 (오늘, 월간, 전일 대비)
      */
     @Override
-    public SalesResponse getSales() {
-        // TODO: 현재는 더미 데이터 반환, 실제로는 현재 로그인한 사용자의 매장 ID를 사용해야 함
-        Long storeId = 1L; // 임시로 설정
-
+    public SalesResponse getSales(Long storeId) {
         // 오늘 매출 계산
         BigDecimal todaySales = calculateSalesByDate(storeId, LocalDate.now());
 

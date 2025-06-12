@@ -36,9 +36,9 @@ public interface StoreService {
     /**
      * 매장 정보 수정
      * 
-     * @param storeId 매장 ID
+     * //@param storeId 매장 ID
      * @param request 매장 수정 요청 정보
      * @return 수정된 매장 정보
      */
-    StoreResponse updateStore(Long storeId, StoreUpdateRequest request);
+    StoreResponse updateStore(StoreUpdateRequest request);
 }

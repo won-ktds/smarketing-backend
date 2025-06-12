@@ -58,17 +58,17 @@ public class StoreController {
     /**
      * 매장 정보 수정
      * 
-     * @param storeId 수정할 매장 ID
+     * //@param storeId 수정할 매장 ID
      * @param request 매장 수정 요청 정보
      * @return 수정된 매장 정보
      */
     @Operation(summary = "매장 수정", description = "매장 정보를 수정합니다.")
-    @PutMapping("/{storeId}")
+    @PutMapping()
     public ResponseEntity<ApiResponse<StoreResponse>> updateStore(
             @Parameter(description = "매장 ID", required = true)
-            @PathVariable Long storeId,
+           // @PathVariable Long storeId,
             @Valid @RequestBody StoreUpdateRequest request) {
-        StoreResponse response = storeService.updateStore(storeId, request);
+        StoreResponse response = storeService.updateStore(request);
         return ResponseEntity.ok(ApiResponse.success(response, "매장 정보가 성공적으로 수정되었습니다."));
     }
 }

@@ -79,6 +79,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public MenuResponse updateMenu(Long menuId, MenuUpdateRequest request) {
+
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
@@ -117,7 +118,7 @@ public class MenuServiceImpl implements MenuService {
      */
     private MenuResponse toMenuResponse(Menu menu) {
         return MenuResponse.builder()
-                .menuId(menu.getId())
+                .menuId(menu.getMenuId())
                 .menuName(menu.getMenuName())
                 .category(menu.getCategory())
                 .price(menu.getPrice())
