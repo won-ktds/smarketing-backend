@@ -1,7 +1,8 @@
 // marketing-content/src/main/java/com/won/smarketing/content/infrastructure/external/ClaudeAiPosterGenerator.java
 package com.won.smarketing.content.infrastructure.external;
 
-import com.won.smarketing.content.domain.model.CreationConditions;
+import com.won.smarketing.content.domain.service.AiPosterGenerator; // 도메인 인터페이스 import
+import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,23 +20,20 @@ import java.util.Map;
 public class ClaudeAiPosterGenerator implements AiPosterGenerator {
 
     /**
-     * 포스터 이미지 생성
-     * Claude AI API를 호출하여 홍보 포스터를 생성합니다.
+     * 포스터 생성
      *
-     * @param title 제목
-     * @param category 카테고리
-     * @param conditions 생성 조건
+     * @param request 포스터 생성 요청
      * @return 생성된 포스터 이미지 URL
      */
     @Override
-    public String generatePoster(String title, String category, CreationConditions conditions) {
+    public String generatePoster(PosterContentCreateRequest request) {
         try {
-            // Claude AI API 호출 로직 (실제 구현에서는 HTTP 클라이언트를 사용)
-            String prompt = buildPosterPrompt(title, category, conditions);
+            // Claude AI API 호출 로직
+            String prompt = buildPosterPrompt(request);
 
             // TODO: 실제 Claude AI API 호출
             // 현재는 더미 데이터 반환
-            return generateDummyPosterUrl(title);
+            return generateDummyPosterUrl(request.getTitle());
 
         } catch (Exception e) {
             log.error("AI 포스터 생성 실패: {}", e.getMessage(), e);
@@ -44,75 +42,45 @@ public class ClaudeAiPosterGenerator implements AiPosterGenerator {
     }
 
     /**
-     * 포스터 다양한 사이즈 생성
-     * 원본 포스터를 기반으로 다양한 사이즈의 포스터를 생성합니다.
+     * 다양한 사이즈의 포스터 생성
      *
-     * @param originalImage 원본 이미지 URL
-     * @return 사이즈별 이미지 URL 맵
+     * @param baseImage 기본 이미지
+     * @return 사이즈별 포스터 URL 맵
      */
     @Override
-    public Map<String, String> generatePosterSizes(String originalImage) {
-        try {
-            // TODO: 실제 이미지 리사이징 API 호출
-            // 현재는 더미 데이터 반환
-            return generateDummyPosterSizes(originalImage);
+    public Map<String, String> generatePosterSizes(String baseImage) {
+        Map<String, String> sizes = new HashMap<>();
 
-        } catch (Exception e) {
-            log.error("포스터 사이즈 생성 실패: {}", e.getMessage(), e);
-            return new HashMap<>();
-        }
+        // 다양한 사이즈 생성 (더미 구현)
+        sizes.put("instagram_square", baseImage + "_1080x1080.jpg");
+        sizes.put("instagram_story", baseImage + "_1080x1920.jpg");
+        sizes.put("facebook_post", baseImage + "_1200x630.jpg");
+        sizes.put("a4_poster", baseImage + "_2480x3508.jpg");
+
+        return sizes;
     }
 
-    /**
-     * AI 포스터 프롬프트 생성
-     */
-    private String buildPosterPrompt(String title, String category, CreationConditions conditions) {
+    private String buildPosterPrompt(PosterContentCreateRequest request) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("다음 조건에 맞는 홍보 포스터를 생성해주세요:\n");
-        prompt.append("제목: ").append(title).append("\n");
-        prompt.append("카테고리: ").append(category).append("\n");
+        prompt.append("포스터 제목: ").append(request.getTitle()).append("\n");
+        prompt.append("카테고리: ").append(request.getCategory()).append("\n");
 
-        if (conditions.getPhotoStyle() != null) {
-            prompt.append("사진 스타일: ").append(conditions.getPhotoStyle()).append("\n");
+        if (request.getRequirement() != null) {
+            prompt.append("요구사항: ").append(request.getRequirement()).append("\n");
         }
-        if (conditions.getRequirement() != null) {
-            prompt.append("요구사항: ").append(conditions.getRequirement()).append("\n");
-        }
-        if (conditions.getToneAndManner() != null) {
-            prompt.append("톤앤매너: ").append(conditions.getToneAndManner()).append("\n");
+
+        if (request.getToneAndManner() != null) {
+            prompt.append("톤앤매너: ").append(request.getToneAndManner()).append("\n");
         }
 
         return prompt.toString();
     }
 
-    /**
-     * 더미 포스터 URL 생성 (개발용)
-     */
     private String generateDummyPosterUrl(String title) {
-        return String.format("https://example.com/posters/%s-poster.jpg",
-                title.replaceAll("\\s+", "-").toLowerCase());
+        return "https://dummy-ai-service.com/posters/" + title.hashCode() + ".jpg";
     }
 
-    /**
-     * 더미 포스터 사이즈별 URL 생성 (개발용)
-     */
-    private Map<String, String> generateDummyPosterSizes(String originalImage) {
-        Map<String, String> sizes = new HashMap<>();
-        String baseUrl = originalImage.substring(0, originalImage.lastIndexOf("."));
-        String extension = originalImage.substring(originalImage.lastIndexOf("."));
-
-        sizes.put("small", baseUrl + "-small" + extension);
-        sizes.put("medium", baseUrl + "-medium" + extension);
-        sizes.put("large", baseUrl + "-large" + extension);
-        sizes.put("xlarge", baseUrl + "-xlarge" + extension);
-
-        return sizes;
-    }
-
-    /**
-     * 폴백 포스터 URL 생성 (AI 서비스 실패 시)
-     */
     private String generateFallbackPosterUrl() {
-        return "https://example.com/posters/default-poster.jpg";
+        return "https://dummy-ai-service.com/posters/fallback.jpg";
     }
 }
