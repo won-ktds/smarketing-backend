@@ -36,9 +36,9 @@ public class RegisterRequest {
     @NotBlank(message = "이름은 필수입니다")
     @Size(max = 50, message = "이름은 50자 이하여야 합니다")
     private String name;
-    
-    @Schema(description = "사업자등록번호", example = "123-45-67890")
-    @Pattern(regexp = "^\\d{3}-\\d{2}-\\d{5}$", message = "사업자등록번호 형식이 올바르지 않습니다 (000-00-00000)")
+
+    @Schema(description = "사업자등록번호", example = "1234567890")
+    @Pattern(regexp = "^\\d{10}$", message = "사업자등록번호는 10자리 숫자여야 합니다")
     private String businessNumber;
     
     @Schema(description = "이메일", example = "user@example.com", required = true)
