@@ -57,7 +57,8 @@ public class StoreServiceImpl implements StoreService {
                 .businessHours(request.getBusinessHours())
                 .closedDays(request.getClosedDays())
                 .seatCount(request.getSeatCount())
-                .snsAccounts(request.getSnsAccounts())
+                .blogAccounts(request.getBlogAccounts())
+                .instaAccounts(request.getInstaAccounts())
                 .description(request.getDescription())
                 .build();
         
@@ -126,7 +127,8 @@ public class StoreServiceImpl implements StoreService {
                 request.getBusinessHours(),
                 request.getClosedDays(),
                 request.getSeatCount(),
-                request.getSnsAccounts(),
+                request.getInstaAccounts(),
+                request.getBlogAccounts(),
                 request.getDescription()
         );
         
@@ -152,7 +154,8 @@ public class StoreServiceImpl implements StoreService {
                 .businessHours(store.getBusinessHours())
                 .closedDays(store.getClosedDays())
                 .seatCount(store.getSeatCount())
-                .snsAccounts(store.getSnsAccounts())
+                .blogAccounts(store.getBlogAccounts())
+                .instaAccounts(store.getInstaAccounts())
                 .description(store.getDescription())
                 .createdAt(store.getCreatedAt())
                 .updatedAt(store.getUpdatedAt())

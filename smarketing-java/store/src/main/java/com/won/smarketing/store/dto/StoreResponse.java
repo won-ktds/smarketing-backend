@@ -47,8 +47,11 @@ public class StoreResponse {
     @Schema(description = "좌석 수", example = "20")
     private Integer seatCount;
 
-    @Schema(description = "SNS 계정 정보", example = "인스타그램: @mystore")
-    private String snsAccounts;
+    @Schema(description = "블로그 계정 정보", example = "블로그: mystore")
+    private String blogAccounts;
+
+    @Schema(description = "인스타 계정 정보", example = "인스타그램: @mystore")
+    private String instaAccounts;
 
     @Schema(description = "매장 설명", example = "따뜻한 분위기의 동네 카페입니다.")
     private String description;

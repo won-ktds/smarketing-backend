@@ -54,8 +54,11 @@ public class Store {
     @Column(name = "seat_count")
     private Integer seatCount;
 
-    @Column(name = "sns_accounts", length = 500)
-    private String snsAccounts;
+    @Column(name = "insta_accounts", length = 500)
+    private String instaAccounts;
+
+    @Column(name = "blog_accounts", length = 500)
+    private String blogAccounts;
 
     @Column(name = "description", length = 1000)
     private String description;
@@ -81,12 +84,13 @@ public class Store {
      * @param businessHours 영업시간
      * @param closedDays 휴무일
      * @param seatCount 좌석 수
-     * @param snsAccounts SNS 계정 정보
+     * @param instaAccounts SNS 계정 정보
+*      @param blogAccounts SNS 계정 정보
      * @param description 설명
      */
     public void updateStore(String storeName, String businessType, String address,
                            String phoneNumber, String businessHours, String closedDays,
-                           Integer seatCount, String snsAccounts, String description) {
+                           Integer seatCount, String instaAccounts, String blogAccounts, String description) {
         if (storeName != null && !storeName.trim().isEmpty()) {
             this.storeName = storeName;
         }
@@ -100,7 +104,8 @@ public class Store {
         this.businessHours = businessHours;
         this.closedDays = closedDays;
         this.seatCount = seatCount;
-        this.snsAccounts = snsAccounts;
+        this.instaAccounts = instaAccounts;
+        this.blogAccounts = blogAccounts;
         this.description = description;
     }
 
