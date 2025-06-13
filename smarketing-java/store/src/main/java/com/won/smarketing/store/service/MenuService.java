@@ -23,10 +23,10 @@ public interface MenuService {
     /**
      * 메뉴 목록 조회
      * 
-     * @param category 메뉴 카테고리 (선택사항)
+     * @param storeId 가게 ID
      * @return 메뉴 목록
      */
-    List<MenuResponse> getMenus(String category);
+    List<MenuResponse> getMenus(Long storeId);
     
     /**
      * 메뉴 정보 수정

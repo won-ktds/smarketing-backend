@@ -2,6 +2,7 @@ package com.won.smarketing.store.controller;
 
 import com.won.smarketing.common.dto.ApiResponse;
 import com.won.smarketing.store.dto.StoreCreateRequest;
+import com.won.smarketing.store.dto.StoreCreateResponse;
 import com.won.smarketing.store.dto.StoreResponse;
 import com.won.smarketing.store.dto.StoreUpdateRequest;
 import com.won.smarketing.store.service.StoreService;
@@ -34,8 +35,8 @@ public class StoreController {
      */
     @Operation(summary = "매장 등록", description = "새로운 매장 정보를 등록합니다.")
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<StoreResponse>> register(@Valid @RequestBody StoreCreateRequest request) {
-        StoreResponse response = storeService.register(request);
+    public ResponseEntity<ApiResponse<StoreCreateResponse>> register(@Valid @RequestBody StoreCreateRequest request) {
+        StoreCreateResponse response = storeService.register(request);
         return ResponseEntity.ok(ApiResponse.success(response, "매장이 성공적으로 등록되었습니다."));
     }
 

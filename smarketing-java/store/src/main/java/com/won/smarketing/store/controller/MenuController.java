@@ -43,15 +43,15 @@ public class MenuController {
     /**
      * 메뉴 목록 조회
      * 
-     * @param category 메뉴 카테고리 (선택사항)
+     * @param storeId 메뉴 카테고리
      * @return 메뉴 목록
      */
     @Operation(summary = "메뉴 목록 조회", description = "메뉴 목록을 조회합니다. 카테고리별 필터링 가능합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<List<MenuResponse>>> getMenus(
-            @Parameter(description = "메뉴 카테고리")
-            @RequestParam(required = false) String category) {
-        List<MenuResponse> response = menuService.getMenus(category);
+            @Parameter(description = "가게 ID")
+            @RequestParam(required = true) Long storeId) {
+        List<MenuResponse> response = menuService.getMenus(storeId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

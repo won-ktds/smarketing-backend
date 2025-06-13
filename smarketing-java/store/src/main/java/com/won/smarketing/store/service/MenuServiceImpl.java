@@ -51,18 +51,14 @@ public class MenuServiceImpl implements MenuService {
     /**
      * 메뉴 목록 조회
      * 
-     * @param category 메뉴 카테고리 (선택사항)
+     * @param storeId 가게 ID
      * @return 메뉴 목록
      */
     @Override
-    public List<MenuResponse> getMenus(String category) {
+    public List<MenuResponse> getMenus(Long storeId) {
         List<Menu> menus;
-        
-        if (category != null && !category.trim().isEmpty()) {
-            menus = menuRepository.findByCategoryOrderByMenuNameAsc(category);
-        } else {
-            menus = menuRepository.findAllByOrderByMenuNameAsc();
-        }
+
+        menus = menuRepository.findByStoreId(storeId);
 
         return menus.stream()
                 .map(this::toMenuResponse)

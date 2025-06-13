@@ -14,21 +14,12 @@ import java.util.Optional;
  */
 @Repository
 public interface MenuRepository extends JpaRepository<Menu, Long> {
-    
-    /**
-     * 카테고리별 메뉴 조회 (메뉴명 오름차순)
-     * 
-     * @param category 메뉴 카테고리
-     * @return 메뉴 목록
-     */
-    List<Menu> findByCategoryOrderByMenuNameAsc(String category);
-    
-    /**
-     * 전체 메뉴 조회 (메뉴명 오름차순)
-     * 
-     * @return 메뉴 목록
-     */
-    List<Menu> findAllByOrderByMenuNameAsc();
+//    /**
+//     * 전체 메뉴 조회 (메뉴명 오름차순)
+//     *
+//     * @return 메뉴 목록
+//     */
+//    List<Menu> findAllByOrderByMenuNameAsc(Long );
     
     /**
      * 매장별 메뉴 조회

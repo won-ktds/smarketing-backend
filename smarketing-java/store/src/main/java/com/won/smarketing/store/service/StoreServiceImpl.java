@@ -3,6 +3,7 @@ package com.won.smarketing.store.service;
 import com.won.smarketing.common.exception.BusinessException;
 import com.won.smarketing.common.exception.ErrorCode;
 import com.won.smarketing.store.dto.StoreCreateRequest;
+import com.won.smarketing.store.dto.StoreCreateResponse;
 import com.won.smarketing.store.dto.StoreResponse;
 import com.won.smarketing.store.dto.StoreUpdateRequest;
 import com.won.smarketing.store.entity.Store;
@@ -35,7 +36,7 @@ public class StoreServiceImpl implements StoreService {
      */
     @Override
     @Transactional
-    public StoreResponse register(StoreCreateRequest request) {
+    public StoreCreateResponse register(StoreCreateRequest request) {
         String memberId = getCurrentUserId();
       //  Long memberId = Long.valueOf(currentUserId); // 실제로는 Member ID 조회 필요
         
@@ -63,7 +64,7 @@ public class StoreServiceImpl implements StoreService {
         Store savedStore = storeRepository.save(store);
         log.info("매장 등록 완료: {} (ID: {})", savedStore.getStoreName(), savedStore.getId());
         
-        return toStoreResponse(savedStore);
+        return toStoreCreateResponse(savedStore);
     }
 
     /**
@@ -155,6 +156,23 @@ public class StoreServiceImpl implements StoreService {
                 .description(store.getDescription())
                 .createdAt(store.getCreatedAt())
                 .updatedAt(store.getUpdatedAt())
+                .build();
+    }
+
+    private StoreCreateResponse toStoreCreateResponse(Store store) {
+        return StoreCreateResponse.builder()
+                .storeId(store.getId())
+//                .storeName(store.getStoreName())
+//                .businessType(store.getBusinessType())
+//                .address(store.getAddress())
+//                .phoneNumber(store.getPhoneNumber())
+//                .businessHours(store.getBusinessHours())
+//                .closedDays(store.getClosedDays())
+//                .seatCount(store.getSeatCount())
+//                .snsAccounts(store.getSnsAccounts())
+//                .description(store.getDescription())
+//                .createdAt(store.getCreatedAt())
+//                .updatedAt(store.getUpdatedAt())
                 .build();
     }
 
