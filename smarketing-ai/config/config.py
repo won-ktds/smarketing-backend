@@ -4,7 +4,10 @@ Flask 애플리케이션 설정
 """
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
+
+
 class Config:
     """애플리케이션 설정 클래스"""
     # Flask 기본 설정
@@ -19,8 +22,9 @@ class Config:
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     # 템플릿 설정
     POSTER_TEMPLATE_PATH = 'templates/poster_templates'
+
     @staticmethod
     def allowed_file(filename):
         """업로드 파일 확장자 검증"""
         return '.' in filename and \
-               filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
+            filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS

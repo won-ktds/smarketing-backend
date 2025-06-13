@@ -4,6 +4,7 @@ API 요청 데이터 구조를 정의
 """
 from dataclasses import dataclass
 from typing import List, Optional
+from datetime import date
 
 
 @dataclass
@@ -19,8 +20,8 @@ class SnsContentGetRequest:
     emotionIntensity: Optional[str] = None
     menuName: Optional[str] = None
     eventName: Optional[str] = None
-    startDate: Optional[str] = None
-    endDate: Optional[str] = None
+    startDate: Optional[date] = None  # LocalDate -> date
+    endDate: Optional[date] = None  # LocalDate -> date
 
 
 @dataclass
@@ -36,8 +37,8 @@ class PosterContentGetRequest:
     emotionIntensity: Optional[str] = None
     menuName: Optional[str] = None
     eventName: Optional[str] = None
-    startDate: Optional[str] = None
-    endDate: Optional[str] = None
+    startDate: Optional[date] = None  # LocalDate -> date
+    endDate: Optional[date] = None  # LocalDate -> date
 
 
 # 기존 모델들은 유지
