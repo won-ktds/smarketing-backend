@@ -1,18 +1,27 @@
 package com.won.smarketing.store.controller;
 
 import com.won.smarketing.common.dto.ApiResponse;
+import com.won.smarketing.store.dto.ImageUploadResponse;
 import com.won.smarketing.store.dto.MenuCreateRequest;
 import com.won.smarketing.store.dto.MenuResponse;
 import com.won.smarketing.store.dto.MenuUpdateRequest;
+import com.won.smarketing.store.service.BlobStorageService;
 import com.won.smarketing.store.service.MenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 /**

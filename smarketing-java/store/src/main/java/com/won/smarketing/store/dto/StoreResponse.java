@@ -1,6 +1,7 @@
 package com.won.smarketing.store.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,6 +28,9 @@ public class StoreResponse {
 
     @Schema(description = "업종", example = "카페")
     private String businessType;
+
+    @Schema(description = "가게 사진")
+    private String storeImage;
 
     @Schema(description = "주소", example = "서울시 강남구 테헤란로 123")
     private String address;

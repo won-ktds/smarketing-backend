@@ -62,10 +62,9 @@ public class Menu {
      * @param category 카테고리
      * @param price 가격
      * @param description 설명
-     * @param image 이미지 URL
      */
     public void updateMenu(String menuName, String category, Integer price, 
-                          String description, String image) {
+                          String description) {
         if (menuName != null && !menuName.trim().isEmpty()) {
             this.menuName = menuName;
         }
@@ -76,6 +75,16 @@ public class Menu {
             this.price = price;
         }
         this.description = description;
-        this.image = image;
     }
+
+    /**
+     * 메뉴 이미지 URL 업데이트
+     *
+     * @param imageUrl 새로운 이미지 URL
+     */
+    public void updateImage(String imageUrl) {
+        this.image = imageUrl;
+        this.updatedAt = LocalDateTime.now();
+    }
+
 }

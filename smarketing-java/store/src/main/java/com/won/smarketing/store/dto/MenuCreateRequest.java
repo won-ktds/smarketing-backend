@@ -39,10 +39,6 @@ public class MenuCreateRequest {
     @Schema(description = "메뉴 설명", example = "진한 맛의 아메리카노")
     @Size(max = 500, message = "메뉴 설명은 500자 이하여야 합니다")
     private String description;
-    
-    @Schema(description = "이미지 URL", example = "https://example.com/americano.jpg")
-    @Size(max = 500, message = "이미지 URL은 500자 이하여야 합니다")
-    private String image;
 }
 
 

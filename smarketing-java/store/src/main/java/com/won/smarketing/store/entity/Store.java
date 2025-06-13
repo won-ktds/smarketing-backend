@@ -60,6 +60,9 @@ public class Store {
     @Column(name = "description", length = 1000)
     private String description;
 
+    @Column(name = "store_image", length = 1000)
+    private String storeImage;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -99,5 +102,15 @@ public class Store {
         this.seatCount = seatCount;
         this.snsAccounts = snsAccounts;
         this.description = description;
+    }
+
+    /**
+     * 메뉴 이미지 URL 업데이트
+     *
+     * @param imageUrl 새로운 이미지 URL
+     */
+    public void updateImage(String imageUrl) {
+        this.storeImage = imageUrl;
+        this.updatedAt = LocalDateTime.now();
     }
 }
