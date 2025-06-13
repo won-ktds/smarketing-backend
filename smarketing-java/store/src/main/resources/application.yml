@@ -1,0 +1,33 @@
+server:
+  port: ${SERVER_PORT:8082}
+
+spring:
+  application:
+    name: store-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:StoreDB}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+logging:
+  level:
+    com.won.smarketing.store: ${LOG_LEVEL:DEBUG}
+
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidation123456789}
+  access-token-validity: ${JWT_ACCESS_VALIDITY:3600000}
+  refresh-token-validity: ${JWT_REFRESH_VALIDITY:604800000}

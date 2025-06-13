@@ -1,7 +1,0 @@
-rootProject.name = 'smarketing'
-
-include 'common'
-include 'member'
-include 'store'
-include 'marketing-content'
-include 'ai-recommend'

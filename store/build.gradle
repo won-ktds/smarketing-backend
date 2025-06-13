@@ -1,7 +1,0 @@
-dependencies {
-    implementation project(':common')
-}
-
-bootJar {
-    archiveFileName = "store-service.jar"
-}
