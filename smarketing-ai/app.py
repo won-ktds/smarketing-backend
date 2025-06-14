@@ -12,7 +12,7 @@ from config.config import Config
 from services.poster_service import PosterService
 from services.sns_content_service import SnsContentService
 from models.request_models import ContentRequest, PosterRequest, SnsContentGetRequest, PosterContentGetRequest
-from services.poster_service_v2 import PosterServiceV2
+from services.poster_service_v3 import PosterServiceV3
 
 
 def create_app():
@@ -30,7 +30,7 @@ def create_app():
 
     # 서비스 인스턴스 생성
     poster_service = PosterService()
-    poster_service_v2 = PosterServiceV2()
+    poster_service_v3 = PosterServiceV3()
     sns_content_service = SnsContentService()
 
     @app.route('/health', methods=['GET'])
@@ -97,8 +97,8 @@ def create_app():
     @app.route('/api/ai/poster', methods=['GET'])
     def generate_poster_content():
         """
-        홍보 포스터 생성 API (개선된 버전)
-        원본 이미지 보존 + 한글 텍스트 오버레이
+        홍보 포스터 생성 API
+        실제 제품 이미지를 포함한 분위기 배경 포스터 생성
         """
         try:
             # JSON 요청 데이터 검증
@@ -115,6 +115,23 @@ def create_app():
                 if field not in data:
                     return jsonify({'error': f'필수 필드가 누락되었습니다: {field}'}), 400
 
+            # 날짜 변환 처리
+            start_date = None
+            end_date = None
+            if data.get('startDate'):
+                try:
+                    from datetime import datetime
+                    start_date = datetime.strptime(data['startDate'], '%Y-%m-%d').date()
+                except ValueError:
+                    return jsonify({'error': 'startDate 형식이 올바르지 않습니다. YYYY-MM-DD 형식을 사용하세요.'}), 400
+
+            if data.get('endDate'):
+                try:
+                    from datetime import datetime
+                    end_date = datetime.strptime(data['endDate'], '%Y-%m-%d').date()
+                except ValueError:
+                    return jsonify({'error': 'endDate 형식이 올바르지 않습니다. YYYY-MM-DD 형식을 사용하세요.'}), 400
+
             # 요청 모델 생성
             poster_request = PosterContentGetRequest(
                 title=data.get('title'),
@@ -127,16 +144,18 @@ def create_app():
                 emotionIntensity=data.get('emotionIntensity'),
                 menuName=data.get('menuName'),
                 eventName=data.get('eventName'),
-                startDate=data.get('startDate'),
-                endDate=data.get('endDate')
+                startDate=start_date,
+                endDate=end_date
             )
 
-            # 포스터 생성
-            # result = poster_service.generate_poster(poster_request)
-            result = poster_service_v2.generate_poster(poster_request)
+            # 포스터 생성 (V3 사용)
+            result = poster_service_v3.generate_poster(poster_request)
 
             if result['success']:
-                return jsonify({'content': result['content']})
+                return jsonify({
+                    'content': result['content'],
+                    'analysis': result.get('analysis', {})
+                })
             else:
                 return jsonify({'error': result['error']}), 500
 

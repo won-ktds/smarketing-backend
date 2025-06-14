@@ -52,12 +52,17 @@ public class AuthServiceImpl implements AuthService {
 
                 // 패스워드 검증
                 if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+                        System.out.println(passwordEncoder.encode(request.getPassword()));
+                        System.out.println(passwordEncoder.encode(member.getPassword()));
+
                         throw new BusinessException(ErrorCode.INVALID_PASSWORD);
                 }
 
                 // 토큰 생성
                 String accessToken = jwtTokenProvider.generateAccessToken(member.getUserId());
                 String refreshToken = jwtTokenProvider.generateRefreshToken(member.getUserId());
+
+                log.info("{} access token 발급: {}", request.getUserId(), accessToken);
 
                 // 리프레시 토큰을 Redis에 저장 (7일)
                 redisTemplate.opsForValue().set(
@@ -93,16 +98,7 @@ public class AuthServiceImpl implements AuthService {
                         if (jwtTokenProvider.validateToken(refreshToken)) {
                                 String userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
 
-                                // Redis에서 리프레시 토큰 삭제
                                 redisTemplate.delete(REFRESH_TOKEN_PREFIX + userId);
-
-                                // 리프레시 토큰을 블랙리스트에 추가
-                                redisTemplate.opsForValue().set(
-                                        BLACKLIST_PREFIX + refreshToken,
-                                        "logout",
-                                        7,
-                                        TimeUnit.DAYS
-                                );
 
                                 log.info("로그아웃 완료: {}", userId);
                         }
@@ -156,13 +152,8 @@ public class AuthServiceImpl implements AuthService {
                         TimeUnit.DAYS
                 );
 
-                // 기존 리프레시 토큰을 블랙리스트에 추가
-                redisTemplate.opsForValue().set(
-                        BLACKLIST_PREFIX + refreshToken,
-                        "refreshed",
-                        7,
-                        TimeUnit.DAYS
-                );
+                // 기존 리프레시 토큰 삭제
+                redisTemplate.delete(REFRESH_TOKEN_PREFIX + userId);
 
                 log.info("토큰 갱신 완료: {}", userId);
 

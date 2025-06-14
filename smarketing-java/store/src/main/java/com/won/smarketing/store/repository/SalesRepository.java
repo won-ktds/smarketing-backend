@@ -8,7 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 매출 정보 데이터 접근을 위한 Repository
@@ -64,4 +66,20 @@ public interface SalesRepository extends JpaRepository<Sales, Long> {
             "AND EXTRACT(YEAR FROM sales_date) = EXTRACT(YEAR FROM CURRENT_DATE) " +
             "AND EXTRACT(MONTH FROM sales_date) = EXTRACT(MONTH FROM CURRENT_DATE)", nativeQuery = true)
     BigDecimal findMonthSalesByStoreIdNative(@Param("storeId") Long storeId);
+
+    /**
+     * 매장의 최근 365일 매출 데이터 조회 (날짜와 함께)
+     *
+     * @param storeId 매장 ID
+     * @return 최근 365일 매출 데이터 (날짜 오름차순)
+     */
+    @Query("SELECT s FROM Sales s " +
+            "WHERE s.storeId = :storeId " +
+            "AND s.salesDate >= :startDate " +
+            "AND s.salesDate <= :endDate " +
+            "ORDER BY s.salesDate ASC")
+    List<Sales> findSalesDataLast365Days(
+            @Param("storeId") Long storeId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }

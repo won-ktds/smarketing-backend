@@ -3,6 +3,7 @@ package com.won.smarketing.store.service;
 import com.won.smarketing.common.exception.BusinessException;
 import com.won.smarketing.common.exception.ErrorCode;
 import com.won.smarketing.store.dto.StoreCreateRequest;
+import com.won.smarketing.store.dto.StoreCreateResponse;
 import com.won.smarketing.store.dto.StoreResponse;
 import com.won.smarketing.store.dto.StoreUpdateRequest;
 import com.won.smarketing.store.entity.Store;
@@ -35,7 +36,7 @@ public class StoreServiceImpl implements StoreService {
      */
     @Override
     @Transactional
-    public StoreResponse register(StoreCreateRequest request) {
+    public StoreCreateResponse register(StoreCreateRequest request) {
         String memberId = getCurrentUserId();
       //  Long memberId = Long.valueOf(currentUserId); // 실제로는 Member ID 조회 필요
         
@@ -56,14 +57,15 @@ public class StoreServiceImpl implements StoreService {
                 .businessHours(request.getBusinessHours())
                 .closedDays(request.getClosedDays())
                 .seatCount(request.getSeatCount())
-                .snsAccounts(request.getSnsAccounts())
+                .blogAccounts(request.getBlogAccounts())
+                .instaAccounts(request.getInstaAccounts())
                 .description(request.getDescription())
                 .build();
         
         Store savedStore = storeRepository.save(store);
         log.info("매장 등록 완료: {} (ID: {})", savedStore.getStoreName(), savedStore.getId());
         
-        return toStoreResponse(savedStore);
+        return toStoreCreateResponse(savedStore);
     }
 
     /**
@@ -104,14 +106,16 @@ public class StoreServiceImpl implements StoreService {
     /**
      * 매장 정보 수정
      * 
-     * @param storeId 매장 ID
+     * //@param storeId 매장 ID
      * @param request 매장 수정 요청 정보
      * @return 수정된 매장 정보
      */
     @Override
     @Transactional
-    public StoreResponse updateStore(Long storeId, StoreUpdateRequest request) {
-        Store store = storeRepository.findById(storeId)
+    public StoreResponse updateStore(StoreUpdateRequest request) {
+        String userId = getCurrentUserId();
+
+        Store store = storeRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
         
         // 매장 정보 업데이트
@@ -123,7 +127,8 @@ public class StoreServiceImpl implements StoreService {
                 request.getBusinessHours(),
                 request.getClosedDays(),
                 request.getSeatCount(),
-                request.getSnsAccounts(),
+                request.getInstaAccounts(),
+                request.getBlogAccounts(),
                 request.getDescription()
         );
         
@@ -149,10 +154,28 @@ public class StoreServiceImpl implements StoreService {
                 .businessHours(store.getBusinessHours())
                 .closedDays(store.getClosedDays())
                 .seatCount(store.getSeatCount())
-                .snsAccounts(store.getSnsAccounts())
+                .blogAccounts(store.getBlogAccounts())
+                .instaAccounts(store.getInstaAccounts())
                 .description(store.getDescription())
                 .createdAt(store.getCreatedAt())
                 .updatedAt(store.getUpdatedAt())
+                .build();
+    }
+
+    private StoreCreateResponse toStoreCreateResponse(Store store) {
+        return StoreCreateResponse.builder()
+                .storeId(store.getId())
+//                .storeName(store.getStoreName())
+//                .businessType(store.getBusinessType())
+//                .address(store.getAddress())
+//                .phoneNumber(store.getPhoneNumber())
+//                .businessHours(store.getBusinessHours())
+//                .closedDays(store.getClosedDays())
+//                .seatCount(store.getSeatCount())
+//                .snsAccounts(store.getSnsAccounts())
+//                .description(store.getDescription())
+//                .createdAt(store.getCreatedAt())
+//                .updatedAt(store.getUpdatedAt())
                 .build();
     }
 

@@ -1,4 +1,8 @@
 dependencies {
     implementation project(':common')
     runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // Azure Blob Storage 의존성 추가
+    implementation 'com.azure:azure-storage-blob:12.25.0'
+    implementation 'com.azure:azure-identity:1.11.1'
 }
