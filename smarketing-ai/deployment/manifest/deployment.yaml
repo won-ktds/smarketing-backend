@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smarketing
+  namespace: smarketing
+  labels:
+    app: smarketing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smarketing
+  template:
+    metadata:
+      labels:
+        app: smarketing
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      containers:
+      - name: smarketing
+        image: dg0408cr.azurecr.io/smarketing-ai:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5001
+        resources:
+          requests:
+            cpu: 256m
+            memory: 512Mi
+          limits:
+            cpu: 1024m
+            memory: 2048Mi
+        envFrom:
+        - configMapRef:
+            name: smarketing-config
+        - secretRef:
+            name: smarketing-secret
+        volumeMounts:
+        - name: upload-storage
+          mountPath: /app/uploads
+        - name: temp-storage
+          mountPath: /app/uploads/temp
+      volumes:
+      - name: upload-storage
+        emptyDir: {}
+      - name: temp-storage
+        emptyDir: {}

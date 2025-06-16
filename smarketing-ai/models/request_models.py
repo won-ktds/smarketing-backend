@@ -19,8 +19,8 @@ class SnsContentGetRequest:
     emotionIntensity: Optional[str] = None
     menuName: Optional[str] = None
     eventName: Optional[str] = None
-    startDate: Optional[str] = None
-    endDate: Optional[str] = None
+    startDate: Optional[date] = None  # LocalDate -> date
+    endDate: Optional[date] = None  # LocalDate -> date
 
 
 @dataclass
@@ -36,8 +36,8 @@ class PosterContentGetRequest:
     emotionIntensity: Optional[str] = None
     menuName: Optional[str] = None
     eventName: Optional[str] = None
-    startDate: Optional[str] = None
-    endDate: Optional[str] = None
+    startDate: Optional[date] = None  # LocalDate -> date
+    endDate: Optional[date] = None  # LocalDate -> date
 
 
 # 기존 모델들은 유지

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smarketing-config
+  namespace: smarketing
+data:
+  SERVER_HOST: "0.0.0.0"
+  SERVER_PORT: "5001"
+  UPLOAD_FOLDER: "/app/uploads"
+  MAX_CONTENT_LENGTH: "16777216"  # 16MB
+  ALLOWED_EXTENSIONS: "png,jpg,jpeg,gif,webp"

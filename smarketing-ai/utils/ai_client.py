@@ -78,19 +78,36 @@ class AIClient:
                 raise Exception("OpenAI API 키가 설정되지 않았습니다.")
 
             response = self.openai_client.images.generate(
-                model="dall-e-3",
+                model="gpt-image-1",
                 prompt=prompt,
-                size="1024x1024",
-                quality="hd",  # 고품질 설정
-                style="vivid",  # 또는 "natural"
+                size=size,
                 n=1,
             )
 
-            return response.data[0].url
+            # base64를 파일로 저장
+            import base64
+            from datetime import datetime
+
+            b64_data = response.data[0].b64_json
+            image_data = base64.b64decode(b64_data)
+
+            # 로컬 파일 저장
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"poster_{timestamp}.png"
+            filepath = os.path.join('uploads', 'temp', filename)
+
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+            with open(filepath, 'wb') as f:
+                f.write(image_data)
+
+            print(f"✅ 이미지 저장 완료: {filepath}")
+
+            # 그냥 파일 경로만 반환
+            return filepath
 
         except Exception as e:
-            print(f"OpenAI 이미지 생성 실패: {e}")
-            raise Exception(f"이미지 생성 중 오류가 발생했습니다: {str(e)}")
+            raise Exception(f"이미지 생성 실패: {str(e)}")
 
     def generate_text(self, prompt: str, max_tokens: int = 1000) -> str:
         """
