@@ -13,6 +13,9 @@ from services.poster_service import PosterService
 from services.sns_content_service import SnsContentService
 from models.request_models import ContentRequest, PosterRequest, SnsContentGetRequest, PosterContentGetRequest
 from services.poster_service_v2 import PosterServiceV2
+from api.marketing_tip_api import marketing_tip_bp
+
+
 
 
 def create_app():
@@ -32,6 +35,9 @@ def create_app():
     poster_service = PosterService()
     poster_service_v2 = PosterServiceV2()
     sns_content_service = SnsContentService()
+
+    # Blueprint 등록
+    app.register_blueprint(marketing_tip_bp)
 
     @app.route('/health', methods=['GET'])
     def health_check():
