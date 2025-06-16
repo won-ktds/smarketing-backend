@@ -12,14 +12,23 @@ class Config:
     """애플리케이션 설정 클래스"""
     # Flask 기본 설정
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+
     # 파일 업로드 설정
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or 'uploads'
-    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH') or 16 * 1024 * 1024)  # 16MB
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH') or 16 * 1024 * 1536)  # 16MB
+
     # AI API 설정
     CLAUDE_API_KEY = os.environ.get('CLAUDE_API_KEY')
     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+
+    # Azure Blob Storage 설정
+    AZURE_STORAGE_ACCOUNT_NAME = os.environ.get('AZURE_STORAGE_ACCOUNT_NAME') or 'stdigitalgarage02'
+    AZURE_STORAGE_ACCOUNT_KEY = os.environ.get('AZURE_STORAGE_ACCOUNT_KEY')
+    AZURE_STORAGE_CONTAINER_NAME = os.environ.get('AZURE_STORAGE_CONTAINER_NAME') or 'ai-content'
+
     # 지원되는 파일 확장자
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
     # 템플릿 설정
     POSTER_TEMPLATE_PATH = 'templates/poster_templates'
 
