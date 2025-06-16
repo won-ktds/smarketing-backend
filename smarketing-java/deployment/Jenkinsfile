@@ -37,7 +37,6 @@ podTemplate(
             namespace = "${props.namespace}"
         }
 
-        
         stage('Build Application') {
             container('gradle') {
                 sh """
@@ -49,6 +48,9 @@ podTemplate(
                     ./gradlew :store:clean :store:build -x test
                     ./gradlew :marketing-content:clean :marketing-content:build -x test
                     ./gradlew :ai-recommend:clean :ai-recommend:build -x test
+                    
+                    echo "=== 빌드 결과 확인 ==="
+                    find . -name "*.jar" -path "*/build/libs/*"
                 """
             }
         }
@@ -63,19 +65,43 @@ podTemplate(
                     sh "podman login ${props.registry} --username \$USERNAME --password \$PASSWORD"
 
                     services.each { service ->
+                        script {
+                            // 🔧 핵심 수정: smarketing-java 경로 포함
+                            def buildDir = "smarketing-java/${service}"
+                            def jarFile = "${service}.jar"
+                            def fullImageName = "${props.registry}/${props.image_org}/${service}:${imageTag}"
 
-                        def buildDir = service
-                        def jarFile = "${service}.jar"
+                            echo "Building image for ${service}: ${fullImageName}"
+                            echo "JAR 파일 경로: ${buildDir}/build/libs/${jarFile}"
+                            
+                            // JAR 파일 존재 확인
+                            sh """
+                                echo "=== ${service} JAR 파일 확인 ==="
+                                if [ -f "${buildDir}/build/libs/${jarFile}" ]; then
+                                    echo "JAR 파일 발견: ${buildDir}/build/libs/${jarFile}"
+                                    ls -la ${buildDir}/build/libs/${jarFile}
+                                else
+                                    echo "오류: JAR 파일을 찾을 수 없습니다: ${buildDir}/build/libs/${jarFile}"
+                                    echo "실제 존재하는 파일들:"
+                                    find . -name "*.jar" -path "*${service}*" || echo "JAR 파일이 없습니다"
+                                    exit 1
+                                fi
+                            """
 
-                        sh """
-                            podman build \
-                                --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \
-                                --build-arg ARTIFACTORY_FILE="${jarFile}" \
-                                -f smarketing-java/deployment/container/Dockerfile \
-                                -t ${props.registry}/${props.image_org}/${service}:${imageTag} .
+                            sh """
+                                echo "=== ${service} 이미지 빌드 ==="
+                                podman build \\
+                                    --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \\
+                                    --build-arg ARTIFACTORY_FILE="${jarFile}" \\
+                                    -f smarketing-java/deployment/container/Dockerfile \\
+                                    -t ${fullImageName} .
 
-                            podman push ${props.registry}/${props.image_org}/${service}:${imageTag}
-                        """
+                                echo "=== ${service} 이미지 푸시 ==="
+                                podman push ${fullImageName}
+                                
+                                echo "Successfully built and pushed: ${fullImageName}"
+                            """
+                        }
                     }
                 }
             }
@@ -115,10 +141,10 @@ podTemplate(
                     kubectl apply -f smarketing-java/deployment/${manifest}
 
                     echo "Waiting for deployments to be ready..."
-                    kubectl -n ${namespace} wait --for=condition=available smarketing-java/deployment/member --timeout=300s
-                    kubectl -n ${namespace} wait --for=condition=available smarketing-java/deployment/store --timeout=300s
-                    kubectl -n ${namespace} wait --for=condition=available smarketing-java/deployment/marketing-content --timeout=300s
-                    kubectl -n ${namespace} wait --for=condition=available smarketing-java/deployment/ai-recommend --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available deployment/member --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available deployment/store --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available deployment/marketing-content --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available deployment/ai-recommend --timeout=300s
                 """
             }
         }
