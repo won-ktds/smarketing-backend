@@ -66,33 +66,32 @@ podTemplate(
 
                     services.each { service ->
                         script {
-                            // 🔧 핵심 수정: smarketing-java 경로 포함
                             def buildDir = "smarketing-java/${service}"
-                            def jarFile = "${service}.jar"
                             def fullImageName = "${props.registry}/${props.image_org}/${service}:${imageTag}"
 
                             echo "Building image for ${service}: ${fullImageName}"
-                            echo "JAR 파일 경로: ${buildDir}/build/libs/${jarFile}"
                             
-                            // JAR 파일 존재 확인
-                            sh """
-                                echo "=== ${service} JAR 파일 확인 ==="
-                                if [ -f "${buildDir}/build/libs/${jarFile}" ]; then
-                                    echo "JAR 파일 발견: ${buildDir}/build/libs/${jarFile}"
-                                    ls -la ${buildDir}/build/libs/${jarFile}
-                                else
-                                    echo "오류: JAR 파일을 찾을 수 없습니다: ${buildDir}/build/libs/${jarFile}"
-                                    echo "실제 존재하는 파일들:"
-                                    find . -name "*.jar" -path "*${service}*" || echo "JAR 파일이 없습니다"
-                                    exit 1
-                                fi
-                            """
+                            // 🔧 실제 JAR 파일명 동적 탐지
+                            def actualJarFile = sh(
+                                script: """
+                                    cd ${buildDir}/build/libs
+                                    # -plain.jar 파일 제외하고 메인 JAR 파일 찾기
+                                    ls *.jar | grep -v 'plain.jar' | head -1
+                                """,
+                                returnStdout: true
+                            ).trim()
+                            
+                            if (!actualJarFile) {
+                                error "${service} JAR 파일을 찾을 수 없습니다"
+                            }
+                            
+                            echo "발견된 JAR 파일: ${actualJarFile}"
 
                             sh """
                                 echo "=== ${service} 이미지 빌드 ==="
                                 podman build \\
                                     --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \\
-                                    --build-arg ARTIFACTORY_FILE="${jarFile}" \\
+                                    --build-arg ARTIFACTORY_FILE="${actualJarFile}" \\
                                     -f smarketing-java/deployment/container/Dockerfile \\
                                     -t ${fullImageName} .
 
