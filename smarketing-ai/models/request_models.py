@@ -4,6 +4,8 @@ API 요청 데이터 구조를 정의
 """
 from dataclasses import dataclass
 from typing import List, Optional
+from datetime import date
+
 
 
 @dataclass
