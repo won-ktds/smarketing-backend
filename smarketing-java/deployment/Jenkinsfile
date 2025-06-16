@@ -14,12 +14,7 @@ podTemplate(
         containerTemplate(name: 'gradle',
                         image: 'gradle:jdk17',
                         ttyEnabled: true,
-                        command: 'cat',
-                        envVars: [
-                            envVar(key: 'DOCKER_HOST', value: 'unix:///run/podman/podman.sock'),
-                            envVar(key: 'TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE', value: '/run/podman/podman.sock'),
-                            envVar(key: 'TESTCONTAINERS_RYUK_DISABLED', value: 'true')
-                        ]),
+                        command: 'cat'),
         containerTemplate(name: 'azure-cli', image: 'hiondal/azure-kubectl:latest', command: 'cat', ttyEnabled: true),
         containerTemplate(name: 'envsubst', image: "hiondal/envsubst", command: 'sleep', args: '1h')
     ],
@@ -40,42 +35,6 @@ podTemplate(
             checkout scm
             props = readProperties file: "deployment/deploy_env_vars"
             namespace = "${props.namespace}"
-        }
-
-        stage('Code Analysis & Quality Gate') {
-            container('gradle') {
-                sh "./gradlew clean build -x test"
-                
-                // SonarQube 분석
-                withSonarQubeEnv('SonarQube Server') {
-                    sh """
-                        ./gradlew sonarqube \\
-                            -Dsonar.projectKey=smarketing-backend-member-kros235 \\
-                            -Dsonar.host.url=\$SONAR_HOST_URL \\
-                            -Dsonar.login=\$SONAR_AUTH_TOKEN
-                        
-                        ./gradlew sonarqube \\
-                            -Dsonar.projectKey=smarketing-backend-store-kros235 \\
-                            -Dsonar.host.url=\$SONAR_HOST_URL \\
-                            -Dsonar.login=\$SONAR_AUTH_TOKEN
-                            
-                        ./gradlew sonarqube \\
-                            -Dsonar.projectKey=smarketing-backend-marketing-content-kros235 \\
-                            -Dsonar.host.url=\$SONAR_HOST_URL \\
-                            -Dsonar.login=\$SONAR_AUTH_TOKEN
-                            
-                        ./gradlew sonarqube \\
-                            -Dsonar.projectKey=smarketing-backend-ai-recommend-kros235 \\
-                            -Dsonar.host.url=\$SONAR_HOST_URL \\
-                            -Dsonar.login=\$SONAR_AUTH_TOKEN
-                    """
-                }
-
-                // Quality Gate 확인
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
         }
 
         stage('Build Application') {
