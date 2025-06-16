@@ -12,7 +12,7 @@ from config.config import Config
 from services.sns_content_service import SnsContentService
 from services.poster_service import PosterService
 from models.request_models import ContentRequest, PosterRequest, SnsContentGetRequest, PosterContentGetRequest
-
+from api.marketing_tip_api import marketing_tip_bp
 
 def create_app():
     """Flask 애플리케이션 팩토리"""
