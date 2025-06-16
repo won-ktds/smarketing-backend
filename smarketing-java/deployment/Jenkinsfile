@@ -40,6 +40,7 @@ podTemplate(
         stage('Build Application') {
             container('gradle') {
                 sh """
+                     chmod +x gradlew
                     ./gradlew :member:clean :member:build -x test
                     ./gradlew :store:clean :store:build -x test
                     ./gradlew :marketing-content:clean :marketing-content:build -x test
@@ -50,18 +51,23 @@ podTemplate(
 
         stage('Build & Push Images') {
             container('podman') {
-                services.each { service ->
-                    script {
-                        // mysub 서비스 특별 처리 (요구사항에 없지만 참고용 주석)
-                        // def buildDir = service == 'mysub' ? 'mysub-infra' : service
+                withCredentials([usernamePassword(
+                    credentialsId: 'acr-credentials',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'PASSWORD'
+                )]) {
+                    sh "podman login ${props.registry} --username \$USERNAME --password \$PASSWORD"
+
+                    services.each { service ->
+
                         def buildDir = service
                         def jarFile = "${service}.jar"
 
                         sh """
-                            podman build \\
-                                --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \\
-                                --build-arg ARTIFACTORY_FILE="${jarFile}" \\
-                                -f deployment/container/Dockerfile \\
+                            podman build \
+                                --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \
+                                --build-arg ARTIFACTORY_FILE="${jarFile}" \
+                                -f deployment/container/Dockerfile \
                                 -t ${props.registry}/${props.image_org}/${service}:${imageTag} .
 
                             podman push ${props.registry}/${props.image_org}/${service}:${imageTag}
