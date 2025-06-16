@@ -1774,12 +1774,6 @@ class SnsContentService:
 - 필수 키워드: {', '.join(seo_keywords[:8])}
 - 카테고리 키워드: {', '.join(category_keywords[:5])}
 
-**📖 블로그 포스트 구조 (이미지 배치 포함):**
-1. **인트로**: 방문 동기와 첫인상 + [IMAGE_1] 배치
-2. **매장 정보**: 위치, 운영시간, 분위기 + [IMAGE_2, IMAGE_3] 배치  
-3. **메뉴 소개**: 주문한 메뉴와 상세 후기 + [IMAGE_4, IMAGE_5] 배치
-4. **총평**: 재방문 의향과 추천 이유 + [IMAGE_6] 배치
-
 **💡 콘텐츠 작성 지침:**
 1. 검색자의 궁금증을 해결하는 정보 중심 작성
 2. 구체적인 가격, 위치, 운영시간 등 실용 정보 포함
@@ -1886,12 +1880,28 @@ class SnsContentService:
         # 4. 추가 정리: \r, 여러 공백 정리
         content = content.replace('\\r', '').replace('\r', '')
 
-        # 5. 여러 개의 <br> 태그를 하나로 정리
+        # 6. 여러 개의 <br> 태그를 하나로 정리
         import re
         content = re.sub(r'(<br>\s*){3,}', '<br><br>', content)
 
-        # 6. 해시태그를 파란색으로 스타일링
-        content = re.sub(r'(#[\w가-힣]+)', r'<span style="color: #1DA1F2; font-weight: bold;">\1</span>', content)
+        # 7. ⭐ 간단한 해시태그 스타일링 (CSS 충돌 방지)
+        import re
+        # style="..." 패턴을 먼저 찾아서 보호
+        style_patterns = re.findall(r'style="[^"]*"', content)
+        protected_content = content
+
+        for i, pattern in enumerate(style_patterns):
+            protected_content = protected_content.replace(pattern, f'___STYLE_{i}___')
+
+        # 이제 안전하게 해시태그 스타일링
+        protected_content = re.sub(r'(#[\w가-힣]+)', r'<span style="color: #1DA1F2; font-weight: bold;">\1</span>',
+                                   protected_content)
+
+        # 보호된 스타일 복원
+        for i, pattern in enumerate(style_patterns):
+            protected_content = protected_content.replace(f'___STYLE_{i}___', pattern)
+
+        content = protected_content
 
         # 플랫폼별 헤더 스타일
         platform_style = ""
