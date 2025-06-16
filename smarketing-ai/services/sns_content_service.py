@@ -16,8 +16,8 @@ class SnsContentService:
         self.ai_client = AIClient()
         self.image_processor = ImageProcessor()
 
-        # 콘텐츠 글 예시
-        self.contents_example = [
+        # 블로그 글 예시
+        self.blog_example = [
             {
                 "raw_html": """<div class="se-main-container">
                     <div class="se-component se-text se-l-default" id="SE-80d4c6a7-4a37-11f0-b773-29c6aad03a11">
@@ -517,7 +517,7 @@ class SnsContentService:
                         <script type="text/data" class="__se_module_data" data-module-v2="{&quot;type&quot;: &quot;v2_text&quot;, &quot;id&quot;: &quot;SE-c54634a2-5583-4340-b2a6-eb593294a025&quot;, &quot;data&quot;: {&quot;ctype&quot;: &quot;text&quot;  }}"></script>
                     </div>    <div class="ssp-adcontent align_center"><div id="ssp-adcontent" class="ssp_adcontent_inner"><div style="width: 100%; height: auto; margin: 0px auto; line-height: 0;"><iframe id="ssp-adcontent_tgtLREC" frameborder="no" scrolling="no" tabindex="0" name="" title="AD" style="width: 100%; height: 211px; visibility: inherit; border: 0px; vertical-align: bottom;"></iframe></div></div></div></div>""",
                 "title": "팔공",
-                "summary": "중화요리 맛집 리뷰"
+                "summary": "중화요리 맛집 홍보"
             },
             {
                 "raw_html":
@@ -832,7 +832,7 @@ class SnsContentService:
                             <script type="text/data" class="__se_module_data" data-module-v2="{&quot;type&quot;: &quot;v2_text&quot;, &quot;id&quot;: &quot;SE-4cc48a44-4666-4e23-8292-7b28a3fa3b81&quot;, &quot;data&quot;: {&quot;ctype&quot;: &quot;text&quot;  }}"></script>
                         </div>    <div class="ssp-adcontent align_center"><div id="ssp-adcontent" class="ssp_adcontent_inner"><div style="width: 100%; height: auto; margin: 0px auto; line-height: 0;"><iframe id="ssp-adcontent_tgtLREC" frameborder="no" scrolling="no" tabindex="0" name="" title="AD" style="width: 100%; height: 211px; visibility: inherit; border: 0px; vertical-align: bottom;"></iframe></div></div></div></div>""",
                 "title": "안목",
-                "summary": "국밥 맛집 리뷰"
+                "summary": "국밥 맛집 홍보"
             },
             {
                 "raw_html": """<div class="se-main-container">
@@ -1276,11 +1276,65 @@ class SnsContentService:
                     <script type="text/data" class="__se_module_data" data-module-v2="{&quot;type&quot;: &quot;v2_text&quot;, &quot;id&quot;: &quot;SE-ec0a8e92-f1da-4dd2-8e82-db0bb01925d2&quot;, &quot;data&quot;: {&quot;ctype&quot;: &quot;text&quot;  }}"></script>
                 </div>    <div class="ssp-adcontent align_center"><div id="ssp-adcontent" class="ssp_adcontent_inner"><div style="width: 100%; height: auto; margin: 0px auto; line-height: 0;"><iframe id="ssp-adcontent_tgtLREC" frameborder="no" scrolling="no" tabindex="0" name="" title="AD" style="width: 100%; height: 211px; visibility: inherit; border: 0px; vertical-align: bottom;"></iframe></div></div></div></div>""",
                 "title": "목멱산방",
-                "summary": "한식 맛집 리뷰"
+                "summary": "한식 맛집 홍보"
             }
         ]
+        # 인스타 글 예시
+        self.insta_example = [
+            {
+                "caption": """힘든 월요일 잘 이겨내신 여러분~~~
+                            소나기도 내리고 힘드셨을텐데
+                            오늘 하루 고생 많으셨어요~~^^
+                            고생한 나를 위해 시원한 맥주에
+                            낙곱새~~기가 막히죠??낙지에 대창올리고
+                            그 위에 새우~화룡점정으로 생와사비~
+                            그 맛은 뭐 말씀 안드려도 여러분들이
+                            더 잘 아실거예요~~그럼 다들 낙곱새 고고~~""",
+                "title": "국민 낙곱새",
+                "summary": "낙곱새 맛집 홍보"
+             },
+            {
+                "caption": """안녕하세요! 타코몰리김포점입니다!
+                                타코몰리는 멕시코 문화와 풍부한맛을 경험할 수 있는 특별한 공간입니다.🎉
+                                
+                                🌶 대표 메뉴를 맛보세요
+                                수제 타코, 바삭한 퀘사디아, 풍성한 부리또로 다양한 맛을 즐길 수 있습니다.
+                                
+                                📸 특별한 순간을 담아보세요
+                                #타코몰리김포 해시태그와 함께 여러분의 멋진 사진을 공유해주세요.
+                                이벤트가 기다리고 있답니다!!
+                                (새우링/치즈스틱/음료 택1)
+                                
+                                📍 위치
+                                김포한강 11로 140번길 15-2
+                                
+                                멕시코의 맛과 전통에 푹 빠져보세요!
+                                언제든지 여러분을 기다리고 있겠습니다🌟""",
+                "title": "타코몰리",
+                "summary": "멕시칸 맛집 홍보"
+            },
+            {
+                "caption":"""📣명륜진사갈비 신메뉴 3종 출시!
 
-
+                            특제 고추장 양념에 마늘과 청양고추를 더해
+                            매콤한 불맛이 일품인 #매콤불고기 🌶️
+                            
+                            특제 간장 양념에 마늘과 청양고추를 더해
+                            달콤한 감칠맛이 있는 #달콤불고기 🍯
+                            
+                            갈비뼈에 붙어있는 부위로 일반 삼겹살보다
+                            더욱 깊은 맛과 풍미를 가진 #삼겹갈비 까지🍖
+                            
+                            신메뉴로 더욱 풍성해진 명륜진사갈비에서
+                            연말 가족/단체모임을 즐겨보세요!
+                            
+                            ※ 신메뉴는 지점에 따라 탄력적으로 운영되고 있으니,
+                            자세한 문의는 방문하실 매장으로 확인 부탁드립니다.""",
+                "title": "명륜진사갈비",
+                "summary": "갈비 맛집 홍보"
+            }
+        ]
+        
         # 플랫폼별 콘텐츠 특성 정의 (대폭 개선)
         self.platform_specs = {
             '인스타그램': {
@@ -1334,24 +1388,24 @@ class SnsContentService:
         }
 
         # 톤앤매너별 스타일 (플랫폼별 세분화)
-        self.tone_styles = {
-            '친근한': {
-                '인스타그램': '반말, 친구같은 느낌, 이모티콘 많이 사용',
-                '네이버 블로그': '존댓말이지만 따뜻하고 친근한 어조'
-            },
-            '정중한': {
-                '인스타그램': '정중하지만 접근하기 쉬운 어조',
-                '네이버 블로그': '격식 있고 신뢰감 있는 리뷰 스타일'
-            },
-            '재미있는': {
-                '인스타그램': '유머러스하고 트렌디한 표현',
-                '네이버 블로그': '재미있는 에피소드가 포함된 후기'
-            },
-            '전문적인': {
-                '인스타그램': '전문성을 어필하되 딱딱하지 않게',
-                '네이버 블로그': '전문가 관점의 상세한 분석과 평가'
-            }
-        }
+        # self.tone_styles = {
+        #     '친근한': {
+        #         '인스타그램': '반말, 친구같은 느낌, 이모티콘 많이 사용',
+        #         '네이버 블로그': '존댓말이지만 따뜻하고 친근한 어조'
+        #     },
+        #     '정중한': {
+        #         '인스타그램': '정중하지만 접근하기 쉬운 어조',
+        #         '네이버 블로그': '격식 있고 신뢰감 있는 리뷰 스타일'
+        #     },
+        #     '재미있는': {
+        #         '인스타그램': '유머러스하고 트렌디한 표현',
+        #         '네이버 블로그': '재미있는 에피소드가 포함된 후기'
+        #     },
+        #     '전문적인': {
+        #         '인스타그램': '전문성을 어필하되 딱딱하지 않게',
+        #         '네이버 블로그': '전문가 관점의 상세한 분석과 평가'
+        #     }
+        # }
 
         # 카테고리별 플랫폼 특화 키워드
         self.category_keywords = {
@@ -1370,11 +1424,11 @@ class SnsContentService:
         }
 
         # 감정 강도별 표현
-        self.emotion_levels = {
-            '약함': '은은하고 차분한 표현',
-            '보통': '적당히 활기찬 표현',
-            '강함': '매우 열정적이고 강렬한 표현'
-        }
+        # self.emotion_levels = {
+        #     '약함': '은은하고 차분한 표현',
+        #     '보통': '적당히 활기찬 표현',
+        #     '강함': '매우 열정적이고 강렬한 표현'
+        # }
 
         # 이미지 타입 분류를 위한 키워드
         self.image_type_keywords = {
@@ -1403,8 +1457,10 @@ class SnsContentService:
             prompt = self._create_platform_specific_prompt(request, image_analysis, image_placement_plan)
 
             # blog_example을 프롬프트에 추가
-            if hasattr(self, 'contents_example') and self.contents_example:
-                prompt += f"\n\n**참고 예시:**\n{str(self.contents_example)}\n위 예시를 참고하여 비슷한 스타일로 작성해주세요."
+            if request.platform == '네이버 블로그' and hasattr(self, 'blog_example') and self.blog_example:
+                prompt += f"\n\n**참고 예시:**\n{str(self.blog_example)}\n위 예시를 참고하여 점주의 입장에서 가게 홍보 게시물을 작성해주세요."
+            elif hasattr(self, 'insta_example') and self.insta_example :
+                prompt += f"\n\n**참고 예시:**\n{str(self.insta_example)}\n위 예시를 참고하여 점주의 입장에서 가게 홍보 게시물을 작성해주세요."
 
             # AI로 콘텐츠 생성
             generated_content = self.ai_client.generate_text(prompt, max_tokens=1500)
@@ -1594,7 +1650,7 @@ class SnsContentService:
         플랫폼별 특화 프롬프트 생성
         """
         platform_spec = self.platform_specs.get(request.platform, self.platform_specs['인스타그램'])
-        tone_style = self.tone_styles.get(request.toneAndManner, {}).get(request.platform, '친근하고 자연스러운 어조')
+        #tone_style = self.tone_styles.get(request.toneAndManner, {}).get(request.platform, '친근하고 자연스러운 어조')
 
         # 이미지 설명 추출
         image_descriptions = []
@@ -1604,14 +1660,14 @@ class SnsContentService:
 
         # 플랫폼별 특화 프롬프트 생성
         if request.platform == '인스타그램':
-            return self._create_instagram_prompt(request, platform_spec, tone_style, image_descriptions)
+            return self._create_instagram_prompt(request, platform_spec, image_descriptions)
         elif request.platform == '네이버 블로그':
-            return self._create_naver_blog_prompt(request, platform_spec, tone_style, image_descriptions,
+            return self._create_naver_blog_prompt(request, platform_spec, image_descriptions,
                                                   image_placement_plan)
         else:
-            return self._create_instagram_prompt(request, platform_spec, tone_style, image_descriptions)
+            return self._create_instagram_prompt(request, platform_spec, image_descriptions)
 
-    def _create_instagram_prompt(self, request: SnsContentGetRequest, platform_spec: dict, tone_style: str,
+    def _create_instagram_prompt(self, request: SnsContentGetRequest, platform_spec: dict,
                                  image_descriptions: list) -> str:
         """
         인스타그램 특화 프롬프트
@@ -1627,12 +1683,12 @@ class SnsContentService:
 - 콘텐츠 타입: {request.contentType}
 - 메뉴명: {request.menuName or '특별 메뉴'}
 - 이벤트: {request.eventName or '특별 이벤트'}
+- 독자층: {request.target}
 
 **📱 인스타그램 특화 요구사항:**
 - 글 구조: {platform_spec['content_structure']}
 - 최대 길이: {platform_spec['max_length']}자
 - 해시태그: {platform_spec['hashtag_count']}개 내외
-- 톤앤매너: {tone_style}
 
 **✨ 인스타그램 작성 가이드라인:**
 {chr(10).join([f"- {tip}" for tip in platform_spec['writing_tips']])}
@@ -1654,14 +1710,16 @@ class SnsContentService:
 5. 줄바꿈을 활용하여 가독성 향상
 6. 해시태그는 본문과 자연스럽게 연결되도록 배치
 
-**특별 요구사항:**
-{request.requirement or '고객의 관심을 끌고 방문을 유도하는 매력적인 게시물'}
+**필수 요구사항:**
+{request.requirement #or '고객의 관심을 끌고 방문을 유도하는 매력적인 게시물'
+}
 
 인스타그램 사용자들이 "저장하고 싶다", "친구에게 공유하고 싶다"라고 생각할 만한 매력적인 게시물을 작성해주세요.
+필수 요구사항을 반드시 참고하여 작성해주세요.
 """
         return prompt
 
-    def _create_naver_blog_prompt(self, request: SnsContentGetRequest, platform_spec: dict, tone_style: str,
+    def _create_naver_blog_prompt(self, request: SnsContentGetRequest, platform_spec: dict,
                                   image_descriptions: list, image_placement_plan: Dict[str, Any]) -> str:
         """
         네이버 블로그 특화 프롬프트 (이미지 배치 계획 포함)
@@ -1690,11 +1748,11 @@ class SnsContentService:
 - 콘텐츠 타입: {request.contentType}
 - 메뉴명: {request.menuName or '대표 메뉴'}
 - 이벤트: {request.eventName or '특별 이벤트'}
+- 독자층: {request.target}
 
 **🔍 네이버 블로그 특화 요구사항:**
 - 글 구조: {platform_spec['content_structure']}
 - 최대 길이: {platform_spec['max_length']}자
-- 톤앤매너: {tone_style}
 - SEO 최적화 필수
 
 **📚 블로그 작성 가이드라인:**
@@ -1728,10 +1786,13 @@ class SnsContentService:
 - [IMAGE_2]: 두 번째 이미지 배치 위치  
 - 각 이미지 태그 다음 줄에 이미지 설명 문구 작성
 
-**특별 요구사항:**
-{request.requirement or '유용한 정보를 제공하여 방문을 유도하는 신뢰성 있는 후기'}
+**필수 요구사항:**
+{request.requirement 
+ # or '유용한 정보를 제공하여 방문을 유도하는 신뢰성 있는 후기'
+}
 
 네이버 검색에서 상위 노출되고, 실제로 도움이 되는 정보를 제공하는 블로그 포스트를 작성해주세요.
+필수 요구사항을 반드시 참고하여 작성해주세요.
 이미지 배치 위치를 [IMAGE_X] 태그로 명확히 표시해주세요.
 """
         return prompt
@@ -1796,8 +1857,20 @@ class SnsContentService:
         # 1. literal \n 문자열을 실제 줄바꿈으로 변환
         content = content.replace('\\n', '\n')
 
+        # 2. 인스타그램인 경우 첫 번째 이미지를 맨 위에 배치 ⭐ 새로 추가!
+        images_html_content = ""
+        if request.platform == '인스타그램' and request.images and len(request.images) > 0:
+            # 모든 이미지를 통일된 크기로 HTML 변환 (한 줄로 작성!)
+            for i, image_url in enumerate(request.images):
+                # ⭐ 핵심: 모든 HTML을 한 줄로 작성해서 <br> 변환 문제 방지
+                image_html = f'<div style="text-align: center; margin: 0 0 15px 0;"><img src="{image_url}" alt="이미지 {i + 1}" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>'
+                images_html_content += image_html + "\n"
+
+            # 이미지를 콘텐츠 맨 앞에 추가
+            content = images_html_content + content
+
         # 2. 네이버 블로그인 경우 이미지 태그를 실제 이미지로 변환
-        if request.platform == '네이버 블로그' and image_placement_plan:
+        elif request.platform == '네이버 블로그' and image_placement_plan:
             content = self._replace_image_tags_with_html(content, image_placement_plan, request.images)
 
         # 3. 실제 줄바꿈을 <br> 태그로 변환
