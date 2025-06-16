@@ -1,7 +1,7 @@
 package com.won.smarketing.recommend.infrastructure.persistence;
 
 import com.won.smarketing.recommend.domain.model.MarketingTip;
-import com.won.smarketing.recommend.domain.model.StoreData;
+import com.won.smarketing.recommend.domain.model.StoreWithMenuData;
 import com.won.smarketing.recommend.domain.repository.MarketingTipRepository;
 import com.won.smarketing.recommend.domain.service.StoreDataProvider;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +28,8 @@ public class MarketingTipRepositoryImpl implements MarketingTipRepository {
         MarketingTipEntity savedEntity = jpaRepository.save(entity);
 
         // Store 정보는 다시 조회해서 Domain에 설정
-        StoreData storeData = storeDataProvider.getStoreDataByUserId(userId);
-        return savedEntity.toDomain(storeData);
+        StoreWithMenuData storeWithMenuData = storeDataProvider.getStoreWithMenuData(userId);
+        return savedEntity.toDomain(storeWithMenuData.getStoreData());
     }
 
     @Override
@@ -37,8 +37,8 @@ public class MarketingTipRepositoryImpl implements MarketingTipRepository {
         return jpaRepository.findById(tipId)
                 .map(entity -> {
                     // Store 정보를 API로 조회
-                    StoreData storeData = storeDataProvider.getStoreDataByUserId(entity.getUserId());
-                    return entity.toDomain(storeData);
+                    StoreWithMenuData storeWithMenuData = storeDataProvider.getStoreWithMenuData(entity.getUserId());
+                    return entity.toDomain(storeWithMenuData.getStoreData());
                 });
     }
 
@@ -56,9 +56,9 @@ public class MarketingTipRepositoryImpl implements MarketingTipRepository {
         Page<MarketingTipEntity> entities = jpaRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
 
         // Store 정보는 한 번만 조회 (같은 userId이므로)
-        StoreData storeData = storeDataProvider.getStoreDataByUserId(userId);
+        StoreWithMenuData storeWithMenuData = storeDataProvider.getStoreWithMenuData(userId);
 
-        return entities.map(entity -> entity.toDomain(storeData));
+        return entities.map(entity -> entity.toDomain(storeWithMenuData.getStoreData()));
     }
 
     /**
@@ -67,8 +67,8 @@ public class MarketingTipRepositoryImpl implements MarketingTipRepository {
     public Optional<MarketingTip> findMostRecentByUserId(String userId) {
         return jpaRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
                 .map(entity -> {
-                    StoreData storeData = storeDataProvider.getStoreDataByUserId(userId);
-                    return entity.toDomain(storeData);
+                    StoreWithMenuData storeWithMenuData = storeDataProvider.getStoreWithMenuData(userId);
+                    return entity.toDomain(storeWithMenuData.getStoreData());
                 });
     }
 

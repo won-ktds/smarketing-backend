@@ -1,18 +1,27 @@
 package com.won.smarketing.store.controller;
 
 import com.won.smarketing.common.dto.ApiResponse;
+import com.won.smarketing.store.dto.ImageUploadResponse;
 import com.won.smarketing.store.dto.MenuCreateRequest;
 import com.won.smarketing.store.dto.MenuResponse;
 import com.won.smarketing.store.dto.MenuUpdateRequest;
+import com.won.smarketing.store.service.BlobStorageService;
 import com.won.smarketing.store.service.MenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 /**
@@ -43,15 +52,15 @@ public class MenuController {
     /**
      * 메뉴 목록 조회
      * 
-     * @param category 메뉴 카테고리 (선택사항)
+     * @param storeId 메뉴 카테고리
      * @return 메뉴 목록
      */
     @Operation(summary = "메뉴 목록 조회", description = "메뉴 목록을 조회합니다. 카테고리별 필터링 가능합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<List<MenuResponse>>> getMenus(
-            @Parameter(description = "메뉴 카테고리")
-            @RequestParam(required = false) String category) {
-        List<MenuResponse> response = menuService.getMenus(category);
+            @Parameter(description = "가게 ID")
+            @RequestParam(required = true) Long storeId) {
+        List<MenuResponse> response = menuService.getMenus(storeId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

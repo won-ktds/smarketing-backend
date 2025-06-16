@@ -1,6 +1,8 @@
 package com.won.smarketing.recommend.infrastructure.external;
 
+import com.won.smarketing.recommend.domain.model.MenuData;
 import com.won.smarketing.recommend.domain.model.StoreData;
+import com.won.smarketing.recommend.domain.model.StoreWithMenuData;
 import com.won.smarketing.recommend.domain.service.AiTipGenerator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +13,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Python AI 팁 생성 구현체 (날씨 정보 제거)
@@ -33,26 +38,44 @@ public class PythonAiTipGenerator implements AiTipGenerator {
     private int timeout;
 
     @Override
-    public String generateTip(StoreData storeData) {
+    public String generateTip(StoreWithMenuData storeWithMenuData) {
         try {
-            log.debug("Python AI 서비스 직접 호출: store={}", storeData.getStoreName());
-            return callPythonAiService(storeData);
+            log.debug("Python AI 서비스 직접 호출: store={}", storeWithMenuData.getStoreData().getStoreName());
+            return callPythonAiService(storeWithMenuData);
 
         } catch (Exception e) {
             log.error("Python AI 서비스 호출 실패, Fallback 처리: {}", e.getMessage());
-            return createFallbackTip(storeData);
+            return createFallbackTip(storeWithMenuData);
         }
     }
 
-    private String callPythonAiService(StoreData storeData) {
+    private String callPythonAiService(StoreWithMenuData storeWithMenuData) {
+
         try {
-            // Python AI 서비스로 전송할 데이터
-            Map<String, Object> requestData = Map.of(
-                    "store_name", storeData.getStoreName(),
-                    "business_type", storeData.getBusinessType(),
-                    "location", storeData.getLocation(),
-                    "seat_count", storeData.getSeatCount()
-            );
+
+            StoreData storeData = storeWithMenuData.getStoreData();
+            List<MenuData> menuDataList = storeWithMenuData.getMenuDataList();
+
+            // 메뉴 데이터를 Map 형태로 변환
+            List<Map<String, Object>> menuList = menuDataList.stream()
+                    .map(menu -> {
+                        Map<String, Object> menuMap = new HashMap<>();
+                        menuMap.put("menu_id", menu.getMenuId());
+                        menuMap.put("menu_name", menu.getMenuName());
+                        menuMap.put("category", menu.getCategory());
+                        menuMap.put("price", menu.getPrice());
+                        menuMap.put("description", menu.getDescription());
+                        return menuMap;
+                    })
+                    .collect(Collectors.toList());
+
+            // Python AI 서비스로 전송할 데이터 (매장 정보 + 메뉴 정보)
+            Map<String, Object> requestData = new HashMap<>();
+            requestData.put("store_name", storeData.getStoreName());
+            requestData.put("business_type", storeData.getBusinessType());
+            requestData.put("location", storeData.getLocation());
+            requestData.put("seat_count", storeData.getSeatCount());
+            requestData.put("menu_list", menuList);
 
             log.debug("Python AI 서비스 요청 데이터: {}", requestData);
 
@@ -75,16 +98,16 @@ public class PythonAiTipGenerator implements AiTipGenerator {
             log.error("Python AI 서비스 실제 호출 실패: {}", e.getMessage());
         }
 
-        return createFallbackTip(storeData);
+        return createFallbackTip(storeWithMenuData);
     }
 
     /**
      * 규칙 기반 Fallback 팁 생성 (날씨 정보 없이 매장 정보만 활용)
      */
-    private String createFallbackTip(StoreData storeData) {
-        String businessType = storeData.getBusinessType();
-        String storeName = storeData.getStoreName();
-        String location = storeData.getLocation();
+    private String createFallbackTip(StoreWithMenuData storeWithMenuData) {
+        String businessType = storeWithMenuData.getStoreData().getBusinessType();
+        String storeName = storeWithMenuData.getStoreData().getStoreName();
+        String location = storeWithMenuData.getStoreData().getLocation();
 
         // 업종별 기본 팁 생성
         if (businessType.contains("카페")) {

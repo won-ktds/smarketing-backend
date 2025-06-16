@@ -21,15 +21,15 @@ public class MarketingTip {
     private Long storeId;
     private String tipSummary;
     private String tipContent;
-    private StoreData storeData;
+    private StoreWithMenuData storeWithMenuData;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static MarketingTip create(Long storeId, String tipContent, StoreData storeData) {
+    public static MarketingTip create(Long storeId, String tipContent, StoreWithMenuData storeWithMenuData) {
         return MarketingTip.builder()
                 .storeId(storeId)
                 .tipContent(tipContent)
-                .storeData(storeData)
+                .storeWithMenuData(storeWithMenuData)
                 .createdAt(LocalDateTime.now())
                 .build();
     }

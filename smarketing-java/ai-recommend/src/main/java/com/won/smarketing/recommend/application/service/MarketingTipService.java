@@ -4,7 +4,9 @@ import com.won.smarketing.common.exception.BusinessException;
 import com.won.smarketing.common.exception.ErrorCode;
 import com.won.smarketing.recommend.application.usecase.MarketingTipUseCase;
 import com.won.smarketing.recommend.domain.model.MarketingTip;
+import com.won.smarketing.recommend.domain.model.MenuData;
 import com.won.smarketing.recommend.domain.model.StoreData;
+import com.won.smarketing.recommend.domain.model.StoreWithMenuData;
 import com.won.smarketing.recommend.domain.repository.MarketingTipRepository;
 import com.won.smarketing.recommend.domain.service.AiTipGenerator;
 import com.won.smarketing.recommend.domain.service.StoreDataProvider;
@@ -19,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -38,21 +41,21 @@ public class MarketingTipService implements MarketingTipUseCase {
 
         try {
             // 1. 사용자의 매장 정보 조회
-            StoreData storeData = storeDataProvider.getStoreDataByUserId(userId);
+            StoreWithMenuData storeWithMenuData = storeDataProvider.getStoreWithMenuData(userId);
 
             // 2. 1시간 이내에 생성된 마케팅 팁이 있는지 DB에서 확인
-            Optional<MarketingTip> recentTip = findRecentMarketingTip(storeData.getStoreId());
+            Optional<MarketingTip> recentTip = findRecentMarketingTip(storeWithMenuData.getStoreData().getStoreId());
 
             if (recentTip.isPresent()) {
                 log.info("1시간 이내에 생성된 마케팅 팁 발견: tipId={}", recentTip.get().getId().getValue());
                 log.info("1시간 이내에 생성된 마케팅 팁 발견: getTipContent()={}", recentTip.get().getTipContent());
-                return convertToResponse(recentTip.get(), storeData, true);
+                return convertToResponse(recentTip.get(), storeWithMenuData.getStoreData(), true);
             }
 
             // 3. 1시간 이내 팁이 없으면 새로 생성
-            log.info("1시간 이내 마케팅 팁이 없어 새로 생성합니다: userId={}, storeId={}", userId, storeData.getStoreId());
-            MarketingTip newTip = createNewMarketingTip(storeData);
-            return convertToResponse(newTip, storeData, false);
+            log.info("1시간 이내 마케팅 팁이 없어 새로 생성합니다: userId={}, storeId={}", userId, storeWithMenuData.getStoreData().getStoreId());
+            MarketingTip newTip = createNewMarketingTip(storeWithMenuData);
+            return convertToResponse(newTip, storeWithMenuData.getStoreData(), false);
 
         } catch (Exception e) {
             log.error("마케팅 팁 조회/생성 중 오류: userId={}", userId, e);
@@ -93,18 +96,18 @@ public class MarketingTipService implements MarketingTipUseCase {
     /**
      * 새로운 마케팅 팁 생성
      */
-    private MarketingTip createNewMarketingTip(StoreData storeData) {
-        log.info("새로운 마케팅 팁 생성 시작: storeName={}", storeData.getStoreName());
+    private MarketingTip createNewMarketingTip(StoreWithMenuData storeWithMenuData) {
+        log.info("새로운 마케팅 팁 생성 시작: storeName={}", storeWithMenuData.getStoreData().getStoreName());
 
         // AI 서비스로 팁 생성
-        String aiGeneratedTip = aiTipGenerator.generateTip(storeData);
+        String aiGeneratedTip = aiTipGenerator.generateTip(storeWithMenuData);
         log.debug("AI 팁 생성 완료: {}", aiGeneratedTip.substring(0, Math.min(50, aiGeneratedTip.length())));
 
         // 도메인 객체 생성 및 저장
         MarketingTip marketingTip = MarketingTip.builder()
-                .storeId(storeData.getStoreId())
+                .storeId(storeWithMenuData.getStoreData().getStoreId())
                 .tipContent(aiGeneratedTip)
-                .storeData(storeData)
+                .storeWithMenuData(storeWithMenuData)
                 .createdAt(LocalDateTime.now())
                 .build();
 
