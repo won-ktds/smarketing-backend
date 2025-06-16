@@ -12,7 +12,7 @@ spring:
     password: ${POSTGRES_PASSWORD:postgres}
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+      ddl-auto: ${JPA_DDL_AUTO:create-drop}
     show-sql: ${JPA_SHOW_SQL:true}
     properties:
       hibernate:
@@ -29,7 +29,7 @@ external:
     base-url: ${STORE_SERVICE_URL:http://localhost:8082}
     timeout: ${STORE_SERVICE_TIMEOUT:5000}
   python-ai-service:
-    base-url: ${PYTHON_AI_SERVICE_URL:http://localhost:8090}
+    base-url: ${PYTHON_AI_SERVICE_URL:http://localhost:5001}
     api-key: ${PYTHON_AI_API_KEY:dummy-key}
     timeout: ${PYTHON_AI_TIMEOUT:30000}
 

@@ -4,11 +4,16 @@ import com.won.smarketing.common.exception.BusinessException;
 import com.won.smarketing.common.exception.ErrorCode;
 import com.won.smarketing.recommend.domain.model.StoreData;
 import com.won.smarketing.recommend.domain.service.StoreDataProvider;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;  // 이 어노테이션이 누락되어 있었음
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -30,46 +35,51 @@ public class StoreApiDataProvider implements StoreDataProvider {
     @Value("${external.store-service.timeout}")
     private int timeout;
 
-    @Override
-    @Cacheable(value = "storeData", key = "#storeId")
-    public StoreData getStoreData(Long storeId) {
-        try {
-            log.debug("매장 정보 조회 시도: storeId={}", storeId);
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
 
-            // 외부 서비스 연결 시도, 실패 시 Mock 데이터 반환
-            if (isStoreServiceAvailable()) {
-                return callStoreService(storeId);
-            } else {
-                log.warn("매장 서비스 연결 불가, Mock 데이터 반환: storeId={}", storeId);
-                return createMockStoreData(storeId);
-            }
+    /**
+     * 사용자 ID로 매장 정보 조회
+     *
+     * @param userId 사용자 ID
+     * @return 매장 정보
+     */
+    @Override
+    public StoreData getStoreDataByUserId(String userId) {
+        try {
+            log.debug("매장 정보 실시간 조회: userId={}", userId);
+            return callStoreServiceByUserId(userId);
 
         } catch (Exception e) {
-            log.error("매장 정보 조회 실패, Mock 데이터 반환: storeId={}", storeId, e);
-            return createMockStoreData(storeId);
+            log.error("매장 정보 조회 실패, Mock 데이터 반환: userId={}, error={}", userId, e.getMessage());
+            return createMockStoreData(userId);
         }
     }
 
-    private boolean isStoreServiceAvailable() {
-        return !storeServiceBaseUrl.equals("http://localhost:8082");
-    }
+    private StoreData callStoreServiceByUserId(String userId) {
 
-    private StoreData callStoreService(Long storeId) {
         try {
             StoreApiResponse response = webClient
                     .get()
-                    .uri(storeServiceBaseUrl + "/api/store/" + storeId)
+                    .uri(storeServiceBaseUrl + "/api/store")
+                    .header("Authorization", "Bearer " + getCurrentJwtToken())  // JWT 토큰 추가
                     .retrieve()
                     .bodyToMono(StoreApiResponse.class)
                     .timeout(Duration.ofMillis(timeout))
                     .block();
 
+            log.info("response : {}", response.getData().getStoreName());
+            log.info("response : {}", response.getData().getStoreId());
+
             if (response != null && response.getData() != null) {
                 StoreApiResponse.StoreInfo storeInfo = response.getData();
                 return StoreData.builder()
+                        .storeId(storeInfo.getStoreId())
                         .storeName(storeInfo.getStoreName())
                         .businessType(storeInfo.getBusinessType())
                         .location(storeInfo.getAddress())
+                        .description(storeInfo.getDescription())
+                        .seatCount(storeInfo.getSeatCount())
                         .build();
             }
         } catch (WebClientResponseException e) {
@@ -79,17 +89,54 @@ public class StoreApiDataProvider implements StoreDataProvider {
             log.error("매장 서비스 호출 실패: {}", e.getMessage());
         }
 
-        return createMockStoreData(storeId);
+        return createMockStoreData(userId);
     }
 
-    private StoreData createMockStoreData(Long storeId) {
+    private String getCurrentUserId() {
+        try {
+            return SecurityContextHolder.getContext().getAuthentication().getName();
+        } catch (Exception e) {
+            log.warn("사용자 ID 조회 실패: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private String getCurrentJwtToken() {
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+            if (attributes == null) {
+                log.warn("RequestAttributes를 찾을 수 없음 - HTTP 요청 컨텍스트 없음");
+                return null;
+            }
+
+            HttpServletRequest request = attributes.getRequest();
+            String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+
+            if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+                String token = bearerToken.substring(BEARER_PREFIX.length());
+                log.debug("JWT 토큰 추출 성공: {}...", token.substring(0, Math.min(10, token.length())));
+                return token;
+            } else {
+                log.warn("Authorization 헤더에서 Bearer 토큰을 찾을 수 없음: {}", bearerToken);
+                return null;
+            }
+
+        } catch (Exception e) {
+            log.error("JWT 토큰 추출 중 오류 발생: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private StoreData createMockStoreData(String userId) {
         return StoreData.builder()
-                .storeName("테스트 카페 " + storeId)
+                .storeName("테스트 카페 " + userId)
                 .businessType("카페")
                 .location("서울시 강남구")
                 .build();
     }
 
+    @Getter
     private static class StoreApiResponse {
         private int status;
         private String message;
@@ -102,23 +149,14 @@ public class StoreApiDataProvider implements StoreDataProvider {
         public StoreInfo getData() { return data; }
         public void setData(StoreInfo data) { this.data = data; }
 
+        @Getter
         static class StoreInfo {
             private Long storeId;
             private String storeName;
             private String businessType;
             private String address;
-            private String phoneNumber;
-
-            public Long getStoreId() { return storeId; }
-            public void setStoreId(Long storeId) { this.storeId = storeId; }
-            public String getStoreName() { return storeName; }
-            public void setStoreName(String storeName) { this.storeName = storeName; }
-            public String getBusinessType() { return businessType; }
-            public void setBusinessType(String businessType) { this.businessType = businessType; }
-            public String getAddress() { return address; }
-            public void setAddress(String address) { this.address = address; }
-            public String getPhoneNumber() { return phoneNumber; }
-            public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+            private String description;
+            private Integer seatCount;
         }
     }
 }
