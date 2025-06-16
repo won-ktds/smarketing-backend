@@ -3,6 +3,7 @@ package com.won.smarketing.store.service;
 import com.won.smarketing.store.dto.SalesResponse;
 import com.won.smarketing.store.entity.Sales;
 import com.won.smarketing.store.repository.SalesRepository;
+import com.won.smarketing.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 매출 관리 서비스 구현체
@@ -28,10 +30,7 @@ public class SalesServiceImpl implements SalesService {
      * @return 매출 정보 (오늘, 월간, 전일 대비)
      */
     @Override
-    public SalesResponse getSales() {
-        // TODO: 현재는 더미 데이터 반환, 실제로는 현재 로그인한 사용자의 매장 ID를 사용해야 함
-        Long storeId = 1L; // 임시로 설정
-
+    public SalesResponse getSales(Long storeId) {
         // 오늘 매출 계산
         BigDecimal todaySales = calculateSalesByDate(storeId, LocalDate.now());
 
@@ -44,9 +43,12 @@ public class SalesServiceImpl implements SalesService {
         // 전일 대비 매출 변화량 계산
         BigDecimal previousDayComparison = todaySales.subtract(yesterdaySales);
 
+        //오늘로부터 1년 전까지의 매출 리스트
+
         return SalesResponse.builder()
                 .todaySales(todaySales)
                 .monthSales(monthSales)
+                .yearSales(getSalesAmountListLast365Days(storeId))
                 .previousDayComparison(previousDayComparison)
                 .build();
     }
@@ -80,5 +82,19 @@ public class SalesServiceImpl implements SalesService {
         return salesList.stream()
                 .map(Sales::getSalesAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * 최근 365일 매출 금액 리스트 조회
+     *
+     * @param storeId 매장 ID
+     * @return 최근 365일 매출 금액 리스트
+     */
+    private List<Sales> getSalesAmountListLast365Days(Long storeId) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(365);
+
+        // Sales 엔티티 전체를 조회하는 메서드 사용
+       return salesRepository.findSalesDataLast365Days(storeId, startDate, endDate);
     }
 }

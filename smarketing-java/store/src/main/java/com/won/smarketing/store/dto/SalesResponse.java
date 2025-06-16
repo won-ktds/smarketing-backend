@@ -1,5 +1,6 @@
 package com.won.smarketing.store.dto;
 
+import com.won.smarketing.store.entity.Sales;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 매출 응답 DTO
@@ -33,4 +35,7 @@ public class SalesResponse {
     
     @Schema(description = "목표 매출 대비 달성율 (%)", example = "85.2")
     private BigDecimal goalAchievementRate;
+
+    @Schema(description = "일년 동안의 매출액")
+    private List<Sales> yearSales;
 }

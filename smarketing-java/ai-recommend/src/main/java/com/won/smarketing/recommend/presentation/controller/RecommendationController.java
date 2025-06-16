@@ -52,11 +52,11 @@ public class RecommendationController {
     public ResponseEntity<ApiResponse<Page<MarketingTipResponse>>> getMarketingTipHistory(
             @Parameter(description = "매장 ID") @RequestParam Long storeId,
             Pageable pageable) {
-        
+
         log.info("마케팅 팁 이력 조회: storeId={}, page={}", storeId, pageable.getPageNumber());
-        
+
         Page<MarketingTipResponse> response = marketingTipUseCase.getMarketingTipHistory(storeId, pageable);
-        
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

@@ -35,6 +35,15 @@ public enum ErrorCode {
     RECOMMENDATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "R001", "추천 생성에 실패했습니다."),
     EXTERNAL_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "R002", "외부 API 호출에 실패했습니다."),
 
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "F001", "파일을 찾을 수 없습니다."),
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F002", "파일 업로드에 실패했습니다."),
+    FILE_SIZE_EXCEEDED(HttpStatus.NOT_FOUND, "F003", "파일 크기가 제한을 초과했습니다."),
+    INVALID_FILE_EXTENSION(HttpStatus.NOT_FOUND, "F004", "지원하지 않는 파일 확장자입니다."),
+    INVALID_FILE_TYPE(HttpStatus.NOT_FOUND, "F005", "지원하지 않는 파일 형식입니다."),
+    INVALID_FILE_NAME(HttpStatus.NOT_FOUND, "F006", "잘못된 파일명입니다."),
+    INVALID_FILE_URL(HttpStatus.NOT_FOUND, "F007", "잘못된 파일 URL입니다."),
+    STORAGE_CONTAINER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "F008", "스토리지 컨테이너 오류가 발생했습니다."),
+
     // 공통 오류
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G001", "서버 내부 오류가 발생했습니다."),
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "G002", "잘못된 입력값입니다."),

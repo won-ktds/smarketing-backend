@@ -82,7 +82,7 @@ class PosterServiceV3:
             prompt = self._create_poster_prompt_v3(request, main_image_analysis)
 
             # OpenAI로 이미지 생성
-            image_url = self.ai_client.generate_image_with_openai(prompt, "1024x1024")
+            image_url = self.ai_client.generate_image_with_openai(prompt, "1024x1536")
 
             return {
                 'success': True,
@@ -146,11 +146,6 @@ class PosterServiceV3:
         """
         V3 포스터 생성을 위한 AI 프롬프트 생성 (한글, 글자 완전 제외, 메인 이미지 기반 + 예시 링크 10개 포함)
         """
-        # 기본 스타일 설정
-        photo_style = self.photo_styles.get(request.photoStyle, '현대적이고 깔끔한 디자인')
-        category_style = self.category_styles.get(request.category, '홍보용 디자인')
-        tone_style = self.tone_styles.get(request.toneAndManner, '친근하고 따뜻한 느낌')
-        emotion_design = self.emotion_designs.get(request.emotionIntensity, '적당히 활기찬 디자인')
 
         # 메인 이미지 정보 활용
         main_description = main_analysis.get('description', '맛있는 음식')
@@ -173,32 +168,53 @@ class PosterServiceV3:
         example_links = "\n".join([f"- {link}" for link in self.example_images])
 
         prompt = f"""
-                메인 이미지 URL을 참조하여, "글이 없는" 심플한 카페 포스터를 디자인해주세요.
+        ## 카페 홍보 포스터 디자인 요청
+        
+        ### 📋 기본 정보
+        카테고리: {request.category}
+        콘텐츠 타입: {request.contentType}
+        메뉴명: {request.menuName or '없음'}
+        메뉴 정보: {main_description}
+        
+        ### 📅 이벤트 기간
+        시작일: {request.startDate or '지금'}
+        종료일: {request.endDate or '한정 기간'}
+        이벤트 시작일과 종료일은 필수로 포스터에 명시해주세요.
+        
+        ### 🎨 디자인 요구사항
+        메인 이미지 처리
+        - 기존 메인 이미지는 변경하지 않고 그대로 유지
+        - 포스터 전체 크기의 1/3 이하로 배치
+        - 이미지와 조화로운 작은 장식 이미지 추가
+        - 크기: {image_orientation}
+        
+        텍스트 요소
+        - 메뉴명 (필수)
+        - 간단한 추가 홍보 문구 (새로 생성, 한글) 혹은 "{request.requirement or '눈길을 끄는 전문적인 디자인'}"라는 요구사항에 맞는 문구
+        - 메뉴명 외 추가되는 문구는 1줄만 작성
+        
+        
+        텍스트 배치 규칙
+        - 글자가 이미지 경계를 벗어나지 않도록 주의
+        - 모서리에 너무 가깝게 배치하지 말 것
+        - 적당한 크기로 가독성 확보
+        - 아기자기한 한글 폰트 사용
+        
+        ### 🎨 디자인 스타일
+        참조 이미지
+        {example_links}의 URL을 참고하여 비슷한 스타일로 제작
+        
+        색상 가이드
+        {color_description}
+        전체적인 디자인 방향
+        
+        타겟: 한국 카페 고객층
+        스타일: 화려하고 매력적인 디자인
+        목적: 소셜미디어 공유용 (적합한 크기)
+        톤앤매너: 맛있어 보이는 색상, 방문 유도하는 비주얼
+        
+        ### 🎯 최종 목표
+        고객들이 "이 카페에 가보고 싶다!"라고 생각하게 만드는 시각적으로 매력적인 홍보 포스터 제작
+        """
 
-                **핵심 기준 이미지:**
-                메인 이미지 URL: {main_image_url}
-                이 이미지 URL에 들어가 이미지를 다운로드 후, 이 이미지를 그대로 반영한 채 홍보 포스터를 디자인해주세요.
-                심플한 배경이 중요합니다.
-                AI가 생성하지 않은 것처럼 현실적인 요소를 반영해주세요.
-
-                **절대 필수 조건:**
-                - 어떤 형태의 텍스트, 글자, 문자, 숫자도 절대 포함하지 말 것!!!! - 가장 중요
-                - 위의 메인 이미지를 임의 변경 없이, 포스터의 중심 요소로 포함할 것
-                - 하나의 포스터만 생성해주세요
-                - 메인 이미지의 색감과 분위기를 살려서 심플한 포스터 디자인
-                - 메인 이미지가 돋보이도록 배경과 레이아웃 구성
-                - 확실하지도 않은 문자 절대 생성 x
-
-                **특별 요구사항:**
-                {request.requirement}
-
-
-
-                **반드시 제외할 요소:**
-                - 모든 형태의 텍스트 (한글, 영어, 숫자, 기호)
-                - 메뉴판, 가격표, 간판
-                - 글자가 적힌 모든 요소
-                - 브랜드 로고나 문자
-
-                """
         return prompt
