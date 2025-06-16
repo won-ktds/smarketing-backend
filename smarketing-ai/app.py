@@ -33,6 +33,9 @@ def create_app():
     poster_service_v3 = PosterServiceV3()
     sns_content_service = SnsContentService()
 
+    # Blueprint 등록
+    app.register_blueprint(marketing_tip_bp)
+
     @app.route('/health', methods=['GET'])
     def health_check():
         """헬스 체크 API"""

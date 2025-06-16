@@ -1,7 +1,10 @@
 package com.won.smarketing.recommend.infrastructure.external;
 
+import com.won.smarketing.recommend.domain.model.MenuData;
 import com.won.smarketing.recommend.domain.model.StoreData;
+import com.won.smarketing.recommend.domain.model.StoreWithMenuData;
 import com.won.smarketing.recommend.domain.service.AiTipGenerator;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,7 +12,11 @@ import org.springframework.stereotype.Service;  // 이 어노테이션이 누락
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Python AI 팁 생성 구현체 (날씨 정보 제거)
@@ -31,37 +38,44 @@ public class PythonAiTipGenerator implements AiTipGenerator {
     private int timeout;
 
     @Override
-    public String generateTip(StoreData storeData, String additionalRequirement) {
+    public String generateTip(StoreWithMenuData storeWithMenuData) {
         try {
-            log.debug("Python AI 서비스 호출: store={}", storeData.getStoreName());
-
-            // Python AI 서비스 사용 가능 여부 확인
-            if (isPythonServiceAvailable()) {
-                return callPythonAiService(storeData, additionalRequirement);
-            } else {
-                log.warn("Python AI 서비스 사용 불가, Fallback 처리");
-                return createFallbackTip(storeData, additionalRequirement);
-            }
+            log.debug("Python AI 서비스 직접 호출: store={}", storeWithMenuData.getStoreData().getStoreName());
+            return callPythonAiService(storeWithMenuData);
 
         } catch (Exception e) {
             log.error("Python AI 서비스 호출 실패, Fallback 처리: {}", e.getMessage());
-            return createFallbackTip(storeData, additionalRequirement);
+            return createFallbackTip(storeWithMenuData);
         }
     }
 
-    private boolean isPythonServiceAvailable() {
-        return !pythonAiServiceApiKey.equals("dummy-key");
-    }
+    private String callPythonAiService(StoreWithMenuData storeWithMenuData) {
 
-    private String callPythonAiService(StoreData storeData, String additionalRequirement) {
         try {
-            // Python AI 서비스로 전송할 데이터 (날씨 정보 제거, 매장 정보만 전달)
-            Map<String, Object> requestData = Map.of(
-                    "store_name", storeData.getStoreName(),
-                    "business_type", storeData.getBusinessType(),
-                    "location", storeData.getLocation(),
-                    "additional_requirement", additionalRequirement != null ? additionalRequirement : ""
-            );
+
+            StoreData storeData = storeWithMenuData.getStoreData();
+            List<MenuData> menuDataList = storeWithMenuData.getMenuDataList();
+
+            // 메뉴 데이터를 Map 형태로 변환
+            List<Map<String, Object>> menuList = menuDataList.stream()
+                    .map(menu -> {
+                        Map<String, Object> menuMap = new HashMap<>();
+                        menuMap.put("menu_id", menu.getMenuId());
+                        menuMap.put("menu_name", menu.getMenuName());
+                        menuMap.put("category", menu.getCategory());
+                        menuMap.put("price", menu.getPrice());
+                        menuMap.put("description", menu.getDescription());
+                        return menuMap;
+                    })
+                    .collect(Collectors.toList());
+
+            // Python AI 서비스로 전송할 데이터 (매장 정보 + 메뉴 정보)
+            Map<String, Object> requestData = new HashMap<>();
+            requestData.put("store_name", storeData.getStoreName());
+            requestData.put("business_type", storeData.getBusinessType());
+            requestData.put("location", storeData.getLocation());
+            requestData.put("seat_count", storeData.getSeatCount());
+            requestData.put("menu_list", menuList);
 
             log.debug("Python AI 서비스 요청 데이터: {}", requestData);
 
@@ -84,22 +98,16 @@ public class PythonAiTipGenerator implements AiTipGenerator {
             log.error("Python AI 서비스 실제 호출 실패: {}", e.getMessage());
         }
 
-        return createFallbackTip(storeData, additionalRequirement);
+        return createFallbackTip(storeWithMenuData);
     }
 
     /**
      * 규칙 기반 Fallback 팁 생성 (날씨 정보 없이 매장 정보만 활용)
      */
-    private String createFallbackTip(StoreData storeData, String additionalRequirement) {
-        String businessType = storeData.getBusinessType();
-        String storeName = storeData.getStoreName();
-        String location = storeData.getLocation();
-
-        // 추가 요청사항이 있는 경우 우선 반영
-        if (additionalRequirement != null && !additionalRequirement.trim().isEmpty()) {
-            return String.format("%s에서 %s를 중심으로 한 특별한 서비스로 고객들을 맞이해보세요!",
-                    storeName, additionalRequirement);
-        }
+    private String createFallbackTip(StoreWithMenuData storeWithMenuData) {
+        String businessType = storeWithMenuData.getStoreData().getBusinessType();
+        String storeName = storeWithMenuData.getStoreData().getStoreName();
+        String location = storeWithMenuData.getStoreData().getLocation();
 
         // 업종별 기본 팁 생성
         if (businessType.contains("카페")) {
@@ -123,16 +131,13 @@ public class PythonAiTipGenerator implements AiTipGenerator {
         return String.format("%s만의 특별함을 살린 고객 맞춤 서비스로 단골 고객을 늘려보세요!", storeName);
     }
 
+    @Getter
     private static class PythonAiResponse {
         private String tip;
         private String status;
         private String message;
-
-        public String getTip() { return tip; }
-        public void setTip(String tip) { this.tip = tip; }
-        public String getStatus() { return status; }
-        public void setStatus(String status) { this.status = status; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
+        private LocalDateTime generatedTip;
+        private String businessType;
+        private String aiModel;
     }
 }

@@ -6,17 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 매장 데이터 값 객체
+ * 메뉴 데이터 값 객체
  */
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StoreData {
-    private Long storeId;
-    private String storeName;
-    private String businessType;
-    private String location;
+public class MenuData {
+    private Long menuId;
+    private String menuName;
+    private String category;
+    private Integer price;
     private String description;
-    private Integer seatCount;
 }
