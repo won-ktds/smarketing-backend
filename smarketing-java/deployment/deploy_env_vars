@@ -4,7 +4,7 @@ root_project=smarketing-backend
 namespace=smarketing
 
 # Container Registry Settings
-registry=unicorncr.azurecr.io
+registry=acrdigitalgarage02.azurecr.io
 image_org=smarketing
 
 # Application Settings
