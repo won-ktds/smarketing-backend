@@ -1,0 +1,157 @@
+def PIPELINE_ID = "${env.BUILD_NUMBER}"
+
+def getImageTag() {
+    def dateFormat = new java.text.SimpleDateFormat('yyyyMMddHHmmss')
+    def currentDate = new Date()
+    return dateFormat.format(currentDate)
+}
+
+podTemplate(
+    label: "${PIPELINE_ID}",
+    serviceAccount: 'jenkins',
+    containers: [
+        containerTemplate(name: 'podman', image: "mgoltzsche/podman", ttyEnabled: true, command: 'cat', privileged: true),
+        containerTemplate(name: 'gradle',
+                        image: 'gradle:jdk17',
+                        ttyEnabled: true,
+                        command: 'cat',
+                        envVars: [
+                            envVar(key: 'DOCKER_HOST', value: 'unix:///run/podman/podman.sock'),
+                            envVar(key: 'TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE', value: '/run/podman/podman.sock'),
+                            envVar(key: 'TESTCONTAINERS_RYUK_DISABLED', value: 'true')
+                        ]),
+        containerTemplate(name: 'azure-cli', image: 'hiondal/azure-kubectl:latest', command: 'cat', ttyEnabled: true),
+        containerTemplate(name: 'envsubst', image: "hiondal/envsubst", command: 'sleep', args: '1h')
+    ],
+    volumes: [
+        emptyDirVolume(mountPath: '/home/gradle/.gradle', memory: false),
+        emptyDirVolume(mountPath: '/root/.azure', memory: false),
+        emptyDirVolume(mountPath: '/run/podman', memory: false)
+    ]
+) {
+    node(PIPELINE_ID) {
+        def props
+        def imageTag = getImageTag()
+        def manifest = "deploy.yaml"
+        def namespace
+        def services = ['member', 'store', 'marketing-content', 'ai-recommend']
+
+        stage("Get Source") {
+            checkout scm
+            props = readProperties file: "deployment/deploy_env_vars"
+            namespace = "${props.namespace}"
+        }
+
+        stage('Code Analysis & Quality Gate') {
+            container('gradle') {
+                sh "./gradlew clean build -x test"
+                
+                // SonarQube 분석
+                withSonarQubeEnv('SonarQube Server') {
+                    sh """
+                        ./gradlew sonarqube \\
+                            -Dsonar.projectKey=smarketing-backend-member-kros235 \\
+                            -Dsonar.host.url=\$SONAR_HOST_URL \\
+                            -Dsonar.login=\$SONAR_AUTH_TOKEN
+                        
+                        ./gradlew sonarqube \\
+                            -Dsonar.projectKey=smarketing-backend-store-kros235 \\
+                            -Dsonar.host.url=\$SONAR_HOST_URL \\
+                            -Dsonar.login=\$SONAR_AUTH_TOKEN
+                            
+                        ./gradlew sonarqube \\
+                            -Dsonar.projectKey=smarketing-backend-marketing-content-kros235 \\
+                            -Dsonar.host.url=\$SONAR_HOST_URL \\
+                            -Dsonar.login=\$SONAR_AUTH_TOKEN
+                            
+                        ./gradlew sonarqube \\
+                            -Dsonar.projectKey=smarketing-backend-ai-recommend-kros235 \\
+                            -Dsonar.host.url=\$SONAR_HOST_URL \\
+                            -Dsonar.login=\$SONAR_AUTH_TOKEN
+                    """
+                }
+
+                // Quality Gate 확인
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Build Application') {
+            container('gradle') {
+                sh """
+                    ./gradlew :member:clean :member:build -x test
+                    ./gradlew :store:clean :store:build -x test
+                    ./gradlew :marketing-content:clean :marketing-content:build -x test
+                    ./gradlew :ai-recommend:clean :ai-recommend:build -x test
+                """
+            }
+        }
+
+        stage('Build & Push Images') {
+            container('podman') {
+                services.each { service ->
+                    script {
+                        // mysub 서비스 특별 처리 (요구사항에 없지만 참고용 주석)
+                        // def buildDir = service == 'mysub' ? 'mysub-infra' : service
+                        def buildDir = service
+                        def jarFile = "${service}.jar"
+
+                        sh """
+                            podman build \\
+                                --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \\
+                                --build-arg ARTIFACTORY_FILE="${jarFile}" \\
+                                -f deployment/container/Dockerfile \\
+                                -t ${props.registry}/${props.image_org}/${service}:${imageTag} .
+
+                            podman push ${props.registry}/${props.image_org}/${service}:${imageTag}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Generate & Apply Manifest') {
+            container('envsubst') {
+                sh """
+                    export namespace=${namespace}
+                    export allowed_origins=${props.allowed_origins}
+                    export jwt_secret_key=${props.jwt_secret_key}
+                    export postgres_user=${props.postgres_user}
+                    export postgres_password=${props.postgres_password}
+                    export replicas=${props.replicas}
+                    export resources_requests_cpu=${props.resources_requests_cpu}
+                    export resources_requests_memory=${props.resources_requests_memory}
+                    export resources_limits_cpu=${props.resources_limits_cpu}
+                    export resources_limits_memory=${props.resources_limits_memory}
+
+                    # 이미지 경로 환경변수 설정
+                    export member_image_path=${props.registry}/${props.image_org}/member:${imageTag}
+                    export store_image_path=${props.registry}/${props.image_org}/store:${imageTag}
+                    export marketing_content_image_path=${props.registry}/${props.image_org}/marketing-content:${imageTag}
+                    export ai_recommend_image_path=${props.registry}/${props.image_org}/ai-recommend:${imageTag}
+
+                    # manifest 생성
+                    envsubst < deployment/${manifest}.template > deployment/${manifest}
+                    
+                    echo "=== Generated Manifest File ==="
+                    cat deployment/${manifest}
+                    echo "==============================="
+                """
+            }
+
+            container('azure-cli') {
+                sh """
+                    kubectl apply -f deployment/${manifest}
+
+                    echo "Waiting for deployments to be ready..."
+                    kubectl -n ${namespace} wait --for=condition=available deployment/member --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available deployment/store --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available deployment/marketing-content --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available deployment/ai-recommend --timeout=300s
+                """
+            }
+        }
+    }
+}
