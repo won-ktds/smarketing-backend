@@ -10,6 +10,7 @@ import anthropic
 import openai
 from PIL import Image
 import io
+from utils.blob_storage import BlobStorageClient
 
 
 class AIClient:
@@ -19,6 +20,9 @@ class AIClient:
         """AI 클라이언트 초기화"""
         self.claude_api_key = os.getenv('CLAUDE_API_KEY')
         self.openai_api_key = os.getenv('OPENAI_API_KEY')
+
+        # Blob Storage 클라이언트 초기화
+        self.blob_client = BlobStorageClient()
 
         # Claude 클라이언트 초기화
         if self.claude_api_key:
@@ -64,14 +68,14 @@ class AIClient:
             print(f"이미지 다운로드 실패 {image_url}: {e}")
             return None
 
-    def generate_image_with_openai(self, prompt: str, size: str = "1024x1024") -> str:
+    def generate_image_with_openai(self, prompt: str, size: str = "1024x1536") -> str:
         """
-        OpenAI DALL-E를 사용하여 이미지 생성
+        gpt를 사용하여 이미지 생성
         Args:
             prompt: 이미지 생성 프롬프트
-            size: 이미지 크기 (1024x1024, 1792x1024, 1024x1792)
+            size: 이미지 크기 (1024x1536)
         Returns:
-            생성된 이미지 URL
+            Azure Blob Storage에 저장된 이미지 URL
         """
         try:
             if not self.openai_client:
@@ -84,27 +88,15 @@ class AIClient:
                 n=1,
             )
 
-            # base64를 파일로 저장
-            import base64
-            from datetime import datetime
-
+            # base64 이미지 데이터 추출
             b64_data = response.data[0].b64_json
             image_data = base64.b64decode(b64_data)
 
-            # 로컬 파일 저장
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"poster_{timestamp}.png"
-            filepath = os.path.join('uploads', 'temp', filename)
+            # Azure Blob Storage에 업로드
+            blob_url = self.blob_client.upload_image(image_data, 'png')
 
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-
-            with open(filepath, 'wb') as f:
-                f.write(image_data)
-
-            print(f"✅ 이미지 저장 완료: {filepath}")
-
-            # 그냥 파일 경로만 반환
-            return filepath
+            print(f"✅ 이미지 생성 및 업로드 완료: {blob_url}")
+            return blob_url
 
         except Exception as e:
             raise Exception(f"이미지 생성 실패: {str(e)}")
