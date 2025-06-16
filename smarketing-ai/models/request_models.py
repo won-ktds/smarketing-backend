@@ -17,6 +17,8 @@ class SnsContentGetRequest:
     images: List[str]  # 이미지 URL 리스트
     target : Optional[str] = None # 타켓
     requirement: Optional[str] = None
+    storeName: Optional[str] = None
+    storeType: Optional[str] = None
     #toneAndManner: Optional[str] = None
     #emotionIntensity: Optional[str] = None
     menuName: Optional[str] = None

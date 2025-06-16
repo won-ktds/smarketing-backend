@@ -1676,6 +1676,9 @@ class SnsContentService:
 
         prompt = f"""
 당신은 인스타그램 마케팅 전문가입니다. 소상공인 음식점을 위한 매력적인 인스타그램 게시물을 작성해주세요.
+**🍸 가게 정보:**
+- 가게명: {request.storeName}
+- 업종 : {request.storeType}
 
 **🎯 콘텐츠 정보:**
 - 제목: {request.title}
@@ -1741,6 +1744,10 @@ class SnsContentService:
 
         prompt = f"""
 당신은 네이버 블로그 맛집 리뷰 전문가입니다. 검색 최적화와 정보 제공을 중시하는 네이버 블로그 특성에 맞는 게시물을 작성해주세요.
+
+**🍸 가게 정보:**
+- 가게명: {request.storeName}
+- 업종 : {request.storeType}
 
 **📝 콘텐츠 정보:**
 - 제목: {request.title}

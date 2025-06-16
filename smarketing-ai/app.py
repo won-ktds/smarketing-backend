@@ -73,6 +73,8 @@ def create_app():
                 platform=data.get('platform'),
                 images=data.get('images', []),
                 requirement=data.get('requirement'),
+                storeName=data.get('storeName'),
+                storeType=data.get('storeType'),
                 target=data.get('target'),
                 #toneAndManner=data.get('toneAndManner'),
                 #emotionIntensity=data.get('emotionIntensity'),
