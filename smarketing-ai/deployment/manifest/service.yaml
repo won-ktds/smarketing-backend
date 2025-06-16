@@ -6,7 +6,7 @@ metadata:
   labels:
     app: smarketing
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
   - port: 5001
     targetPort: 5001
