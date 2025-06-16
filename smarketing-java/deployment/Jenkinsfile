@@ -35,6 +35,33 @@ podTemplate(
             checkout scm
             props = readProperties file: "smarketing-java/deployment/deploy_env_vars"
             namespace = "${props.namespace}"
+            
+            echo "네임스페이스: ${namespace}"
+            echo "팀 ID: ${props.teamid}"
+        }
+
+        // 🔧 핵심 추가: AKS 설정 단계
+        stage("Setup AKS") {
+            container('azure-cli') {
+                withCredentials([azureServicePrincipal('azure-credentials')]) {
+                    sh """
+                        echo "=== Azure 로그인 ==="
+                        az login --service-principal -u \$AZURE_CLIENT_ID -p \$AZURE_CLIENT_SECRET -t \$AZURE_TENANT_ID
+                        
+                        echo "=== AKS 인증정보 가져오기 ==="
+                        az aks get-credentials --resource-group rg-digitalgarage-01 --name aks-digitalgarage-01 --overwrite-existing
+                        
+                        echo "=== kubectl 연결 테스트 ==="
+                        kubectl cluster-info
+                        
+                        echo "=== 네임스페이스 생성 ==="
+                        kubectl create namespace ${namespace} --dry-run=client -o yaml | kubectl apply -f -
+                        
+                        echo "=== 현재 컨텍스트 확인 ==="
+                        kubectl config current-context
+                    """
+                }
+            }
         }
 
         stage('Build Application') {
@@ -71,11 +98,10 @@ podTemplate(
 
                             echo "Building image for ${service}: ${fullImageName}"
                             
-                            // 🔧 실제 JAR 파일명 동적 탐지
+                            // 실제 JAR 파일명 동적 탐지
                             def actualJarFile = sh(
                                 script: """
                                     cd ${buildDir}/build/libs
-                                    # -plain.jar 파일 제외하고 메인 JAR 파일 찾기
                                     ls *.jar | grep -v 'plain.jar' | head -1
                                 """,
                                 returnStdout: true
@@ -137,13 +163,22 @@ podTemplate(
 
             container('azure-cli') {
                 sh """
+                    echo "=== kubectl 연결 상태 재확인 ==="
+                    kubectl cluster-info
+                    
+                    echo "=== Manifest 적용 ==="
                     kubectl apply -f smarketing-java/deployment/${manifest}
 
-                    echo "Waiting for deployments to be ready..."
+                    echo "=== Deployment 대기 ==="
                     kubectl -n ${namespace} wait --for=condition=available deployment/member --timeout=300s
                     kubectl -n ${namespace} wait --for=condition=available deployment/store --timeout=300s
                     kubectl -n ${namespace} wait --for=condition=available deployment/marketing-content --timeout=300s
                     kubectl -n ${namespace} wait --for=condition=available deployment/ai-recommend --timeout=300s
+                    
+                    echo "=== 배포 상태 확인 ==="
+                    kubectl -n ${namespace} get deployments
+                    kubectl -n ${namespace} get pods
+                    kubectl -n ${namespace} get services
                 """
             }
         }
