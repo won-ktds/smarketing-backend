@@ -1,22 +1,31 @@
 """
-포스터 생성 서비스
-OpenAI를 사용한 이미지 생성 (한글 프롬프트)
+포스터 생성 서비스 V3
+OpenAI DALL-E를 사용한 이미지 생성 (메인 메뉴 이미지 1개 + 프롬프트 내 예시 링크 10개)
 """
 import os
-from typing import Dict, Any
-from datetime import datetime
+from typing import Dict, Any, List
 from utils.ai_client import AIClient
 from utils.image_processor import ImageProcessor
 from models.request_models import PosterContentGetRequest
 
 
 class PosterService:
-    """포스터 생성 서비스 클래스"""
 
     def __init__(self):
         """서비스 초기화"""
         self.ai_client = AIClient()
         self.image_processor = ImageProcessor()
+
+        # Azure Blob Storage 예시 이미지 링크 10개 (카페 음료 관련)
+        self.example_images = [
+            "https://stdigitalgarage02.blob.core.windows.net/ai-content/example1.png",
+            "https://stdigitalgarage02.blob.core.windows.net/ai-content/example2.png",
+            "https://stdigitalgarage02.blob.core.windows.net/ai-content/example3.png",
+            "https://stdigitalgarage02.blob.core.windows.net/ai-content/example4.png",
+            "https://stdigitalgarage02.blob.core.windows.net/ai-content/example5.png",
+            "https://stdigitalgarage02.blob.core.windows.net/ai-content/example6.png",
+            "https://stdigitalgarage02.blob.core.windows.net/ai-content/example7.png"
+        ]
 
         # 포토 스타일별 프롬프트
         self.photo_styles = {
@@ -32,9 +41,7 @@ class PosterService:
         self.category_styles = {
             '음식': '음식 사진, 먹음직스러운, 맛있어 보이는',
             '매장': '레스토랑 인테리어, 아늑한 분위기',
-            '이벤트': '홍보용 디자인, 눈길을 끄는',
-            '메뉴': '메뉴 디자인, 정리된 레이아웃',
-            '할인': '세일 포스터, 할인 디자인'
+            '이벤트': '홍보용 디자인, 눈길을 끄는'
         }
 
         # 톤앤매너별 디자인 스타일
@@ -54,21 +61,27 @@ class PosterService:
 
     def generate_poster(self, request: PosterContentGetRequest) -> Dict[str, Any]:
         """
-        포스터 생성 (OpenAI 이미지 URL 반환)
+        포스터 생성 (메인 이미지 1개 분석 + 예시 링크 7개 프롬프트 제공)
         """
         try:
-            # 참조 이미지 분석 (있는 경우)
-            image_analysis = self._analyze_reference_images(request.images)
+            # 메인 이미지 확인
+            if not request.images:
+                return {'success': False, 'error': '메인 메뉴 이미지가 제공되지 않았습니다.'}
 
-            # 포스터 생성 프롬프트 생성
-            prompt = self._create_poster_prompt(request, image_analysis)
+            main_image_url = request.images[0]  # 첫 번째 이미지가 메인 메뉴
+
+            # 메인 이미지 분석
+            main_image_analysis = self._analyze_main_image(main_image_url)
+
+            # 포스터 생성 프롬프트 생성 (예시 링크 10개 포함)
+            prompt = self._create_poster_prompt_v3(request, main_image_analysis)
 
             # OpenAI로 이미지 생성
-            image_url = self.ai_client.generate_image_with_openai(prompt, "1024x1024")
+            image_url = self.ai_client.generate_image_with_openai(prompt, "1024x1536")
 
             return {
                 'success': True,
-                'content': image_url
+                'content': image_url,
             }
 
         except Exception as e:
@@ -77,117 +90,113 @@ class PosterService:
                 'error': str(e)
             }
 
-    def _analyze_reference_images(self, image_urls: list) -> Dict[str, Any]:
+    def _analyze_main_image(self, image_url: str) -> Dict[str, Any]:
         """
-        참조 이미지들 분석
+        메인 메뉴 이미지 분석
         """
-        if not image_urls:
-            return {'total_images': 0, 'results': []}
-
-        analysis_results = []
         temp_files = []
-
         try:
-            for image_url in image_urls:
-                # 이미지 다운로드
-                temp_path = self.ai_client.download_image_from_url(image_url)
-                if temp_path:
-                    temp_files.append(temp_path)
+            # 이미지 다운로드
+            temp_path = self.ai_client.download_image_from_url(image_url)
+            if temp_path:
+                temp_files.append(temp_path)
 
-                    try:
-                        # 이미지 분석
-                        image_description = self.ai_client.analyze_image(temp_path)
-                        # 색상 분석
-                        colors = self.image_processor.analyze_colors(temp_path, 3)
+                # 이미지 분석
+                image_info = self.image_processor.get_image_info(temp_path)
+                image_description = self.ai_client.analyze_image(temp_path)
+                colors = self.image_processor.analyze_colors(temp_path, 5)
 
-                        analysis_results.append({
-                            'url': image_url,
-                            'description': image_description,
-                            'dominant_colors': colors
-                        })
-                    except Exception as e:
-                        analysis_results.append({
-                            'url': image_url,
-                            'error': str(e)
-                        })
+                return {
+                    'url': image_url,
+                    'info': image_info,
+                    'description': image_description,
+                    'dominant_colors': colors,
+                    'is_food': self.image_processor.is_food_image(temp_path)
+                }
+            else:
+                return {
+                    'url': image_url,
+                    'error': '이미지 다운로드 실패'
+                }
 
+        except Exception as e:
             return {
-                'total_images': len(image_urls),
-                'results': analysis_results
+                'url': image_url,
+                'error': str(e)
             }
 
-        finally:
-            # 임시 파일 정리
-            for temp_file in temp_files:
-                try:
-                    os.remove(temp_file)
-                except:
-                    pass
-
-    def _create_poster_prompt(self, request: PosterContentGetRequest, image_analysis: Dict[str, Any]) -> str:
+    def _create_poster_prompt_v3(self, request: PosterContentGetRequest,
+                                 main_analysis: Dict[str, Any]) -> str:
         """
-        포스터 생성을 위한 AI 프롬프트 생성 (한글)
+        포스터 생성을 위한 AI 프롬프트 생성 (한글, 글자 완전 제외, 메인 이미지 기반 + 예시 링크 7개 포함)
         """
-        # 기본 스타일 설정
-        photo_style = self.photo_styles.get(request.photoStyle, '현대적이고 깔끔한 디자인')
-        category_style = self.category_styles.get(request.category, '홍보용 디자인')
-        tone_style = self.tone_styles.get(request.toneAndManner, '친근하고 따뜻한 느낌')
-        emotion_design = self.emotion_designs.get(request.emotionIntensity, '적당히 활기찬 디자인')
 
-        # 참조 이미지 설명
-        reference_descriptions = []
-        for result in image_analysis.get('results', []):
-            if 'description' in result:
-                reference_descriptions.append(result['description'])
+        # 메인 이미지 정보 활용
+        main_description = main_analysis.get('description', '맛있는 음식')
+        main_colors = main_analysis.get('dominant_colors', [])
+        image_info = main_analysis.get('info', {})
 
-        # 색상 정보
-        color_info = ""
-        if image_analysis.get('results'):
-            colors = image_analysis['results'][0].get('dominant_colors', [])
-            if colors:
-                color_info = f"참조 색상 팔레트: {colors[:3]}을 활용한 조화로운 색감"
+        # 이미지 크기 및 비율 정보
+        aspect_ratio = image_info.get('aspect_ratio', 1.0) if image_info else 1.0
+        image_orientation = "가로형" if aspect_ratio > 1.2 else "세로형" if aspect_ratio < 0.8 else "정사각형"
+
+        # 색상 정보를 텍스트로 변환
+        color_description = ""
+        if main_colors:
+            color_rgb = main_colors[:3]  # 상위 3개 색상
+            color_description = f"주요 색상 RGB 값: {color_rgb}를 기반으로 한 조화로운 색감"
+
+        # 예시 이미지 링크들을 문자열로 변환
+        example_links = "\n".join([f"- {link}" for link in self.example_images])
 
         prompt = f"""
-한국의 음식점/카페를 위한 전문적인 홍보 포스터를 디자인해주세요.
+        ## 카페 홍보 포스터 디자인 요청
+        
+        ### 📋 기본 정보
+        카테고리: {request.category}
+        콘텐츠 타입: {request.contentType}
+        메뉴명: {request.menuName or '없음'}
+        메뉴 정보: {main_description}
+        
+        ### 📅 이벤트 기간
+        시작일: {request.startDate or '지금'}
+        종료일: {request.endDate or '한정 기간'}
+        이벤트 시작일과 종료일은 필수로 포스터에 명시해주세요.
+        
+        ### 🎨 디자인 요구사항
+        메인 이미지 처리
+        - 기존 메인 이미지는 변경하지 않고 그대로 유지
+        - 포스터 전체 크기의 1/3 이하로 배치
+        - 이미지와 조화로운 작은 장식 이미지 추가
+        - 크기: {image_orientation}
+        
+        텍스트 요소
+        - 메뉴명 (필수)
+        - 간단한 추가 홍보 문구 (새로 생성, 한글) 혹은 "{request.requirement or '눈길을 끄는 전문적인 디자인'}"라는 요구사항에 맞는 문구
+        - 메뉴명 외 추가되는 문구는 1줄만 작성
+        
+        
+        텍스트 배치 규칙
+        - 글자가 이미지 경계를 벗어나지 않도록 주의
+        - 모서리에 너무 가깝게 배치하지 말 것
+        - 적당한 크기로 가독성 확보
+        - 아기자기한 한글 폰트 사용
+        
+        ### 🎨 디자인 스타일
+        참조 이미지
+        {example_links}의 URL을 참고하여 비슷한 스타일로 제작
+        
+        색상 가이드
+        {color_description}
+        전체적인 디자인 방향
+        
+        타겟: 한국 카페 고객층
+        스타일: 화려하고 매력적인 디자인
+        목적: 소셜미디어 공유용 (적합한 크기)
+        톤앤매너: 맛있어 보이는 색상, 방문 유도하는 비주얼
+        
+        ### 🎯 최종 목표
+        고객들이 "이 카페에 가보고 싶다!"라고 생각하게 만드는 시각적으로 매력적인 홍보 포스터 제작
+        """
 
-**메인 콘텐츠:**
-- 제목: "{request.title}"
-- 카테고리: {request.category}
-- 콘텐츠 타입: {request.contentType}
-
-**디자인 스타일 요구사항:**
-- 포토 스타일: {photo_style}
-- 카테고리 스타일: {category_style}
-- 톤앤매너: {tone_style}
-- 감정 강도: {emotion_design}
-
-**메뉴 정보:**
-- 메뉴명: {request.menuName or '없음'}
-
-**이벤트 정보:**
-- 이벤트명: {request.eventName or '특별 프로모션'}
-- 시작일: {request.startDate or '지금'}
-- 종료일: {request.endDate or '한정 기간'}
-
-**특별 요구사항:**
-{request.requirement or '눈길을 끄는 전문적인 디자인'}
-
-**참조 이미지 설명:**
-{chr(10).join(reference_descriptions) if reference_descriptions else '참조 이미지 없음'}
-
-{color_info}
-
-**디자인 가이드라인:**
-- 한국 음식점/카페에 적합한 깔끔하고 현대적인 레이아웃
-- 한글 텍스트 요소를 자연스럽게 포함
-- 가독성이 좋은 전문적인 타이포그래피
-- 명확한 대비로 읽기 쉽게 구성
-- 소셜미디어 공유에 적합한 크기
-- 저작권이 없는 오리지널 디자인
-- 음식점에 어울리는 맛있어 보이는 색상 조합
-- 고객의 시선을 끄는 매력적인 비주얼
-
-고객들이 음식점을 방문하고 싶게 만드는 시각적으로 매력적인 포스터를 만들어주세요.
-텍스트는 한글로, 전체적인 분위기는 한국적 감성에 맞게 디자인해주세요.
-"""
         return prompt
