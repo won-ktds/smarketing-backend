@@ -33,7 +33,7 @@ podTemplate(
 
         stage("Get Source") {
             checkout scm
-            props = readProperties file: "deployment/deploy_env_vars"
+            props = readProperties file: "smarketing-java/deployment/deploy_env_vars"
             namespace = "${props.namespace}"
         }
 
@@ -67,7 +67,7 @@ podTemplate(
                             podman build \
                                 --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \
                                 --build-arg ARTIFACTORY_FILE="${jarFile}" \
-                                -f deployment/container/Dockerfile \
+                                -f smarketing-java/deployment/container/Dockerfile \
                                 -t ${props.registry}/${props.image_org}/${service}:${imageTag} .
 
                             podman push ${props.registry}/${props.image_org}/${service}:${imageTag}
@@ -98,23 +98,23 @@ podTemplate(
                     export ai_recommend_image_path=${props.registry}/${props.image_org}/ai-recommend:${imageTag}
 
                     # manifest 생성
-                    envsubst < deployment/${manifest}.template > deployment/${manifest}
+                    envsubst < smarketing-java/deployment/${manifest}.template > smarketing-java/deployment/${manifest}
                     
                     echo "=== Generated Manifest File ==="
-                    cat deployment/${manifest}
+                    cat smarketing-java/deployment/${manifest}
                     echo "==============================="
                 """
             }
 
             container('azure-cli') {
                 sh """
-                    kubectl apply -f deployment/${manifest}
+                    kubectl apply -f smarketing-java/deployment/${manifest}
 
                     echo "Waiting for deployments to be ready..."
-                    kubectl -n ${namespace} wait --for=condition=available deployment/member --timeout=300s
-                    kubectl -n ${namespace} wait --for=condition=available deployment/store --timeout=300s
-                    kubectl -n ${namespace} wait --for=condition=available deployment/marketing-content --timeout=300s
-                    kubectl -n ${namespace} wait --for=condition=available deployment/ai-recommend --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available smarketing-java/deployment/member --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available smarketing-java/deployment/store --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available smarketing-java/deployment/marketing-content --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available smarketing-java/deployment/ai-recommend --timeout=300s
                 """
             }
         }
