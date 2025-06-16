@@ -1,7 +1,7 @@
 # Team Settings
 teamid=kros235
 root_project=smarketing-backend
-namespace=kros235-lifesub-ns
+namespace=smarketing
 
 # Container Registry Settings
 registry=unicorncr.azurecr.io
