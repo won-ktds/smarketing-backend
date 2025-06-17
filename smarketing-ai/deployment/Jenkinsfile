@@ -47,7 +47,7 @@ podTemplate(
                 if (!changes.contains("smarketing-ai/")) {
                     echo "No changes in smarketing-ai, skipping build"
                     currentBuild.result = 'SUCCESS'
-                    return
+                    error("Stopping pipeline - no changes detected")
                 }
 
                 echo "Changes detected in smarketing-ai, proceeding with build"
@@ -144,7 +144,7 @@ podTemplate(
                     kubectl apply -f smarketing-ai/deployment/${manifest}
 
                     echo "Waiting for smarketing deployment to be ready..."
-                    kubectl -n ${namespace} wait --for=condition=available smarketing-ai/smarketing --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available smarketing-ai/deployment/smarketing --timeout=300s
 
                     echo "=========================================="
                     echo "Getting LoadBalancer External IP..."

@@ -51,7 +51,7 @@ podTemplate(
                 if (!changes.contains("smarketing-java/")) {
                     echo "No changes in smarketing-java, skipping build"
                     currentBuild.result = 'SUCCESS'
-                    return
+                    error("Stopping pipeline - no changes detected")
                 }
 
                 echo "Changes detected in smarketing-java, proceeding with build"
