@@ -16,8 +16,8 @@ jwt_secret_key=8O2HQ13etL2BWZvYOiWsJ5uWFoLi6NBUG8divYVoCgtHVvlk3dqRksMl16toztDUe
 postgres_user=admin
 postgres_password=Hi5Jessica!
 
-# Resource Settings
-resources_requests_cpu=256m
-resources_requests_memory=256Mi
-resources_limits_cpu=1024m
-resources_limits_memory=1024Mi
+# Resource Settings (리소스 요구사항 줄임)
+resources_requests_cpu=100m
+resources_requests_memory=128Mi
+resources_limits_cpu=500m
+resources_limits_memory=512Mi
