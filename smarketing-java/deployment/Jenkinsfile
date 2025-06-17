@@ -181,6 +181,21 @@ podTemplate(
                     export postgres_user=${props.postgres_user}
                     export postgres_password=${props.postgres_password}
                     export replicas=${props.replicas}
+
+                    # PostgreSQL 환경변수 추가
+                    export postgres_host=${props.POSTGRES_HOST}
+                    export postgres_port=${props.POSTGRES_PORT:-5432}
+                    export postgres_db_member=member
+                    export postgres_db_store=store
+                    export postgres_db_marketing_content=marketing_content
+                    export postgres_db_ai_recommend=AiRecommendationDB
+            
+                    # Redis 환경변수 추가
+                    export redis_host=${props.REDIS_HOST}
+                    export redis_port=${props.REDIS_PORT}
+                    export redis_password=${props.REDIS_PASSWORD}
+
+                    
                     # 리소스 요구사항 조정 (작게)
                     export resources_requests_cpu=100m
                     export resources_requests_memory=128Mi
