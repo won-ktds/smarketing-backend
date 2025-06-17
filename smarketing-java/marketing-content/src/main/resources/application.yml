@@ -36,7 +36,7 @@ logging:
     com.won.smarketing: ${LOG_LEVEL:DEBUG}
 external:
   ai-service:
-    base-url: ${AI_SERVICE_BASE_URL:http://20.249.139.88:5001}
+    base-url: ${AI_SERVICE_BASE_URL:http://20.249.113.247:5001}
 
 management:
   endpoints:
