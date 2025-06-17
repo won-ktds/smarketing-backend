@@ -8,28 +8,6 @@ data:
   ALLOWED_ORIGINS: ${allowed_origins}
   JPA_DDL_AUTO: update
   JPA_SHOW_SQL: 'true'
-  # 🔧 강화된 Actuator 설정
-  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: '*'
-  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
-  MANAGEMENT_ENDPOINT_HEALTH_ENABLED: 'true'
-  MANAGEMENT_ENDPOINTS_WEB_BASE_PATH: /actuator
-  MANAGEMENT_SERVER_PORT: '8080'
-  # Spring Security 비활성화 (Actuator용)
-  SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-  # 또는 Management port를 main port와 동일하게
-  MANAGEMENT_SERVER_PORT: ''
-
----
-# ConfigMap
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: common-config
-  namespace: ${namespace}
-data:
-  ALLOWED_ORIGINS: ${allowed_origins}
-  JPA_DDL_AUTO: update
-  JPA_SHOW_SQL: 'true'
   # Actuator 설정
   MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: '*'
   MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
@@ -45,10 +23,10 @@ metadata:
 data:
   SERVER_PORT: '8081'
   POSTGRES_HOST: ${postgres_host}
-  POSTGRES_PORT: ${postgres_port}
+  POSTGRES_PORT: '5432'
   POSTGRES_DB: ${postgres_db_member}
   REDIS_HOST: ${redis_host}
-  REDIS_PORT: ${redis_port}
+  REDIS_PORT: '6380'
   JPA_DDL_AUTO: 'create-drop'
   JPA_SHOW_SQL: 'true'
 
@@ -61,10 +39,10 @@ metadata:
 data:
   SERVER_PORT: '8082'
   POSTGRES_HOST: ${postgres_host}
-  POSTGRES_PORT: ${postgres_port}
+  POSTGRES_PORT: '5432'
   POSTGRES_DB: ${postgres_db_store}
   REDIS_HOST: ${redis_host}
-  REDIS_PORT: ${redis_port}
+  REDIS_PORT: '6380'
   JPA_DDL_AUTO: 'create-drop'
   JPA_SHOW_SQL: 'true'
 
@@ -77,10 +55,10 @@ metadata:
 data:
   SERVER_PORT: '8083'
   POSTGRES_HOST: ${postgres_host}
-  POSTGRES_PORT: ${postgres_port}
+  POSTGRES_PORT: '5432'
   POSTGRES_DB: ${postgres_db_marketing_content}
   REDIS_HOST: ${redis_host}
-  REDIS_PORT: ${redis_port}
+  REDIS_PORT: '6380'
   JPA_DDL_AUTO: 'create-drop'
   JPA_SHOW_SQL: 'true'
 
@@ -93,13 +71,12 @@ metadata:
 data:
   SERVER_PORT: '8084'
   POSTGRES_HOST: ${postgres_host}
-  POSTGRES_PORT: ${postgres_port}
+  POSTGRES_PORT: '5432'
   POSTGRES_DB: ${postgres_db_ai_recommend}
   REDIS_HOST: ${redis_host}
-  REDIS_PORT: ${redis_port}
+  REDIS_PORT: '6380'
   JPA_DDL_AUTO: 'create-drop'
   JPA_SHOW_SQL: 'true'
-
 
 ---
 # Secrets
@@ -206,35 +183,25 @@ spec:
         - secretRef:
             name: member-secret
         startupProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - "nc -z member-postgresql 5432"
+          tcpSocket:
+            port: 8081
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 10
-        # 🔧 개선된 Health Check 설정
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8081
-            httpHeaders:
-            - name: Accept
-              value: application/json
-          initialDelaySeconds: 120  # 2분으로 증가
+          initialDelaySeconds: 120
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health/readiness
+            path: /actuator/health
             port: 8081
-            httpHeaders:
-            - name: Accept
-              value: application/json
-          initialDelaySeconds: 60   # 1분으로 증가
+          initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -282,11 +249,8 @@ spec:
         - secretRef:
             name: store-secret
         startupProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - "nc -z store-postgresql 5432"
+          tcpSocket:
+            port: 8082
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -295,20 +259,14 @@ spec:
           httpGet:
             path: /actuator/health
             port: 8082
-            httpHeaders:
-            - name: Accept
-              value: application/json
           initialDelaySeconds: 120
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health/readiness
+            path: /actuator/health
             port: 8082
-            httpHeaders:
-            - name: Accept
-              value: application/json
           initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 5
@@ -357,11 +315,8 @@ spec:
         - secretRef:
             name: marketing-content-secret
         startupProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - "nc -z marketing-content-postgresql 5432"
+          tcpSocket:
+            port: 8083
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -370,20 +325,14 @@ spec:
           httpGet:
             path: /actuator/health
             port: 8083
-            httpHeaders:
-            - name: Accept
-              value: application/json
           initialDelaySeconds: 120
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health/readiness
+            path: /actuator/health
             port: 8083
-            httpHeaders:
-            - name: Accept
-              value: application/json
           initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 5
@@ -432,11 +381,8 @@ spec:
         - secretRef:
             name: ai-recommend-secret
         startupProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - "nc -z ai-recommend-postgresql 5432"
+          tcpSocket:
+            port: 8084
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -445,20 +391,14 @@ spec:
           httpGet:
             path: /actuator/health
             port: 8084
-            httpHeaders:
-            - name: Accept
-              value: application/json
           initialDelaySeconds: 120
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health/readiness
+            path: /actuator/health
             port: 8084
-            httpHeaders:
-            - name: Accept
-              value: application/json
           initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 5
