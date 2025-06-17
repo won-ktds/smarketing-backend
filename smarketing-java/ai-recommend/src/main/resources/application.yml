@@ -33,12 +33,15 @@ external:
     api-key: ${PYTHON_AI_API_KEY:dummy-key}
     timeout: ${PYTHON_AI_TIMEOUT:30000}
 
+<<<<<<< HEAD
 azure:
   eventhub:
     namespace: ${AZURE_EVENTHUB_NAMESPACE}
     marketing-tip-hub: ${AZURE_EVENTHUB_MARKETING_TIP_HUB:marketing-tip-requests}
     consumer-group: ${AZURE_EVENTHUB_CONSUMER_GROUP:ai-recommend-service}
 
+=======
+>>>>>>> origin/main
 management:
   endpoints:
     web:

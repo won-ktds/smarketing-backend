@@ -1,0 +1,479 @@
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-config
+  namespace: ${namespace}
+data:
+  ALLOWED_ORIGINS: ${allowed_origins}
+  JPA_DDL_AUTO: update
+  JPA_SHOW_SQL: 'true'
+  # 🔧 Actuator 보안 설정 추가
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+  MANAGEMENT_SECURITY_ENABLED: 'false'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: member-config
+  namespace: ${namespace}
+data:
+  POSTGRES_DB: member
+  POSTGRES_HOST: member-postgresql
+  POSTGRES_PORT: '5432'
+  SERVER_PORT: '8081'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: store-config
+  namespace: ${namespace}
+data:
+  POSTGRES_DB: store
+  POSTGRES_HOST: store-postgresql
+  POSTGRES_PORT: '5432'
+  SERVER_PORT: '8082'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: marketing-content-config
+  namespace: ${namespace}
+data:
+  POSTGRES_DB: marketing_content
+  POSTGRES_HOST: marketing-content-postgresql
+  POSTGRES_PORT: '5432'
+  SERVER_PORT: '8083'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-recommend-config
+  namespace: ${namespace}
+data:
+  POSTGRES_DB: ai_recommend
+  POSTGRES_HOST: ai-recommend-postgresql
+  POSTGRES_PORT: '5432'
+  SERVER_PORT: '8084'
+
+---
+# Secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: common-secret
+  namespace: ${namespace}
+stringData:
+  JWT_SECRET_KEY: ${jwt_secret_key}
+type: Opaque
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: member-secret
+  namespace: ${namespace}
+stringData:
+  JWT_ACCESS_TOKEN_VALIDITY: '3600000'
+  JWT_REFRESH_TOKEN_VALIDITY: '86400000'
+  POSTGRES_PASSWORD: ${postgres_password}
+  POSTGRES_USER: ${postgres_user}
+type: Opaque
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: store-secret
+  namespace: ${namespace}
+stringData:
+  POSTGRES_PASSWORD: ${postgres_password}
+  POSTGRES_USER: ${postgres_user}
+type: Opaque
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: marketing-content-secret
+  namespace: ${namespace}
+stringData:
+  POSTGRES_PASSWORD: ${postgres_password}
+  POSTGRES_USER: ${postgres_user}
+type: Opaque
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ai-recommend-secret
+  namespace: ${namespace}
+stringData:
+  POSTGRES_PASSWORD: ${postgres_password}
+  POSTGRES_USER: ${postgres_user}
+type: Opaque
+
+---
+# Deployments
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: member
+  namespace: ${namespace}
+  labels:
+    app: member
+spec:
+  replicas: ${replicas}
+  selector:
+    matchLabels:
+      app: member
+  template:
+    metadata:
+      labels:
+        app: member
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      containers:
+      - name: member
+        image: ${member_image_path}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+        resources:
+          requests:
+            cpu: ${resources_requests_cpu}
+            memory: ${resources_requests_memory}
+          limits:
+            cpu: ${resources_limits_cpu}
+            memory: ${resources_limits_memory}
+        envFrom:
+        - configMapRef:
+            name: common-config
+        - configMapRef:
+            name: member-config
+        - secretRef:
+            name: common-secret
+        - secretRef:
+            name: member-secret
+        startupProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "nc -z member-postgresql 5432"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 5
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store
+  namespace: ${namespace}
+  labels:
+    app: store
+spec:
+  replicas: ${replicas}
+  selector:
+    matchLabels:
+      app: store
+  template:
+    metadata:
+      labels:
+        app: store
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      containers:
+      - name: store
+        image: ${store_image_path}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8082
+        resources:
+          requests:
+            cpu: ${resources_requests_cpu}
+            memory: ${resources_requests_memory}
+          limits:
+            cpu: ${resources_limits_cpu}
+            memory: ${resources_limits_memory}
+        envFrom:
+        - configMapRef:
+            name: common-config
+        - configMapRef:
+            name: store-config
+        - secretRef:
+            name: common-secret
+        - secretRef:
+            name: store-secret
+        startupProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "nc -z store-postgresql 5432"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 30
+          periodSeconds: 5
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marketing-content
+  namespace: ${namespace}
+  labels:
+    app: marketing-content
+spec:
+  replicas: ${replicas}
+  selector:
+    matchLabels:
+      app: marketing-content
+  template:
+    metadata:
+      labels:
+        app: marketing-content
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      containers:
+      - name: marketing-content
+        image: ${marketing_content_image_path}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8083
+        resources:
+          requests:
+            cpu: ${resources_requests_cpu}
+            memory: ${resources_requests_memory}
+          limits:
+            cpu: ${resources_limits_cpu}
+            memory: ${resources_limits_memory}
+        envFrom:
+        - configMapRef:
+            name: common-config
+        - configMapRef:
+            name: marketing-content-config
+        - secretRef:
+            name: common-secret
+        - secretRef:
+            name: marketing-content-secret
+        startupProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "nc -z marketing-content-postgresql 5432"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8083
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8083
+          initialDelaySeconds: 30
+          periodSeconds: 5
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-recommend
+  namespace: ${namespace}
+  labels:
+    app: ai-recommend
+spec:
+  replicas: ${replicas}
+  selector:
+    matchLabels:
+      app: ai-recommend
+  template:
+    metadata:
+      labels:
+        app: ai-recommend
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      containers:
+      - name: ai-recommend
+        image: ${ai_recommend_image_path}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8084
+        resources:
+          requests:
+            cpu: ${resources_requests_cpu}
+            memory: ${resources_requests_memory}
+          limits:
+            cpu: ${resources_limits_cpu}
+            memory: ${resources_limits_memory}
+        envFrom:
+        - configMapRef:
+            name: common-config
+        - configMapRef:
+            name: ai-recommend-config
+        - secretRef:
+            name: common-secret
+        - secretRef:
+            name: ai-recommend-secret
+        startupProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "nc -z ai-recommend-postgresql 5432"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8084
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8084
+          initialDelaySeconds: 30
+          periodSeconds: 5
+
+---
+# Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: member
+  namespace: ${namespace}
+spec:
+  selector:
+    app: member
+  ports:
+  - port: 80
+    targetPort: 8081
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: store
+  namespace: ${namespace}
+spec:
+  selector:
+    app: store
+  ports:
+  - port: 80
+    targetPort: 8082
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: marketing-content
+  namespace: ${namespace}
+spec:
+  selector:
+    app: marketing-content
+  ports:
+  - port: 80
+    targetPort: 8083
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-recommend
+  namespace: ${namespace}
+spec:
+  selector:
+    app: ai-recommend
+  ports:
+  - port: 80
+    targetPort: 8084
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smarketing-backend
+  namespace: ${namespace}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: member
+                port:
+                  number: 80
+          - path: /api/store
+            pathType: Prefix
+            backend:
+              service:
+                name: store
+                port:
+                  number: 80
+          - path: /api/content
+            pathType: Prefix
+            backend:
+              service:
+                name: marketing-content
+                port:
+                  number: 80
+          - path: /api/recommend
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-recommend
+                port:
+                  number: 80
