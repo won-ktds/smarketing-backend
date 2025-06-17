@@ -92,55 +92,77 @@ podTemplate(
             }
         }
 
-        stage('Build & Push Images') {
-            container('docker') {
+        stage('ACR Login') {
+            container('azure-cli') {
                 withCredentials([azureServicePrincipal('azure-credentials')]) {
                     sh """
-                        echo "=== Docker 데몬 시작 대기 ==="
-                        timeout 30 sh -c 'until docker info; do sleep 1; done'
-                        
-                        echo "=== Azure 로그인 및 ACR 로그인 ==="
+                        echo "=== Azure 로그인 ==="
                         az login --service-principal -u \$AZURE_CLIENT_ID -p \$AZURE_CLIENT_SECRET -t \$AZURE_TENANT_ID
                         az account set --subscription 2513dd36-7978-48e3-9a7c-b221d4874f66
-                        az acr login --name acrdigitalgarage02
+                        
+                        echo "=== ACR 인증 토큰 생성 ==="
+                        ACR_TOKEN=\$(az acr login --name acrdigitalgarage02 --expose-token --output tsv --query accessToken)
+                        echo "ACR_TOKEN=\$ACR_TOKEN" > /tmp/acr_token.env
+                        
+                        echo "=== ACR 인증 정보 저장 ==="
+                        echo "acrdigitalgarage02.azurecr.io" > /tmp/acr_server.txt
+                        echo "00000000-0000-0000-0000-000000000000" > /tmp/acr_username.txt
+                        echo "\$ACR_TOKEN" > /tmp/acr_password.txt
                     """
+                }
+            }
+        }
 
-                    services.each { service ->
-                        script {
-                            def buildDir = "smarketing-java/${service}"
-                            def fullImageName = "${props.registry}/${props.image_org}/${service}:${imageTag}"
+        stage('Build & Push Images') {
+            container('docker') {
+                sh """
+                    echo "=== Docker 데몬 시작 대기 ==="
+                    timeout 30 sh -c 'until docker info; do sleep 1; done'
+                    
+                    echo "=== ACR 로그인 정보 읽기 ==="
+                    ACR_SERVER=\$(cat /tmp/acr_server.txt)
+                    ACR_USERNAME=\$(cat /tmp/acr_username.txt)
+                    ACR_PASSWORD=\$(cat /tmp/acr_password.txt)
+                    
+                    echo "=== Docker로 ACR 로그인 ==="
+                    echo "\$ACR_PASSWORD" | docker login \$ACR_SERVER --username \$ACR_USERNAME --password-stdin
+                """
 
-                            echo "Building image for ${service}: ${fullImageName}"
-                            
-                            // 실제 JAR 파일명 동적 탐지
-                            def actualJarFile = sh(
-                                script: """
-                                    cd ${buildDir}/build/libs
-                                    ls *.jar | grep -v 'plain.jar' | head -1
-                                """,
-                                returnStdout: true
-                            ).trim()
-                            
-                            if (!actualJarFile) {
-                                error "${service} JAR 파일을 찾을 수 없습니다"
-                            }
-                            
-                            echo "발견된 JAR 파일: ${actualJarFile}"
+                services.each { service ->
+                    script {
+                        def buildDir = "smarketing-java/${service}"
+                        def fullImageName = "${props.registry}/${props.image_org}/${service}:${imageTag}"
 
-                            sh """
-                                echo "=== ${service} 이미지 빌드 ==="
-                                docker build \\
-                                    --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \\
-                                    --build-arg ARTIFACTORY_FILE="${actualJarFile}" \\
-                                    -f smarketing-java/deployment/container/Dockerfile \\
-                                    -t ${fullImageName} .
-
-                                echo "=== ${service} 이미지 푸시 ==="
-                                docker push ${fullImageName}
-                                
-                                echo "Successfully built and pushed: ${fullImageName}"
-                            """
+                        echo "Building image for ${service}: ${fullImageName}"
+                        
+                        // 실제 JAR 파일명 동적 탐지
+                        def actualJarFile = sh(
+                            script: """
+                                cd ${buildDir}/build/libs
+                                ls *.jar | grep -v 'plain.jar' | head -1
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        
+                        if (!actualJarFile) {
+                            error "${service} JAR 파일을 찾을 수 없습니다"
                         }
+                        
+                        echo "발견된 JAR 파일: ${actualJarFile}"
+
+                        sh """
+                            echo "=== ${service} 이미지 빌드 ==="
+                            docker build \\
+                                --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \\
+                                --build-arg ARTIFACTORY_FILE="${actualJarFile}" \\
+                                -f smarketing-java/deployment/container/Dockerfile \\
+                                -t ${fullImageName} .
+
+                            echo "=== ${service} 이미지 푸시 ==="
+                            docker push ${fullImageName}
+                            
+                            echo "Successfully built and pushed: ${fullImageName}"
+                        """
                     }
                 }
             }
