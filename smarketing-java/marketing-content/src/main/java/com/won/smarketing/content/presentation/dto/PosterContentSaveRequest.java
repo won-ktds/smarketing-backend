@@ -19,9 +19,9 @@ import java.util.List;
 @Schema(description = "포스터 콘텐츠 저장 요청")
 public class PosterContentSaveRequest {
 
-    @Schema(description = "콘텐츠 ID", example = "1", required = true)
-    @NotNull(message = "콘텐츠 ID는 필수입니다")
-    private Long contentId;
+//    @Schema(description = "콘텐츠 ID", example = "1", required = true)
+//    @NotNull(message = "콘텐츠 ID는 필수입니다")
+//    private Long contentId;
 
     @Schema(description = "매장 ID", example = "1", required = true)
     @NotNull(message = "매장 ID는 필수입니다")
