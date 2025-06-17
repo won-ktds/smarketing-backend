@@ -20,6 +20,23 @@ data:
   MANAGEMENT_SERVER_PORT: ''
 
 ---
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-config
+  namespace: ${namespace}
+data:
+  ALLOWED_ORIGINS: ${allowed_origins}
+  JPA_DDL_AUTO: update
+  JPA_SHOW_SQL: 'true'
+  # Actuator 설정
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: '*'
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+  MANAGEMENT_ENDPOINT_HEALTH_ENABLED: 'true'
+  MANAGEMENT_ENDPOINTS_WEB_BASE_PATH: /actuator
+
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -29,7 +46,7 @@ data:
   SERVER_PORT: '8081'
   POSTGRES_HOST: ${postgres_host}
   POSTGRES_PORT: ${postgres_port}
-  POSTGRES_DB: ${postgres_db_ai_recommend}
+  POSTGRES_DB: ${postgres_db_member}
   REDIS_HOST: ${redis_host}
   REDIS_PORT: ${redis_port}
   JPA_DDL_AUTO: 'create-drop'
@@ -45,7 +62,7 @@ data:
   SERVER_PORT: '8082'
   POSTGRES_HOST: ${postgres_host}
   POSTGRES_PORT: ${postgres_port}
-  POSTGRES_DB: ${postgres_db_ai_recommend}
+  POSTGRES_DB: ${postgres_db_store}
   REDIS_HOST: ${redis_host}
   REDIS_PORT: ${redis_port}
   JPA_DDL_AUTO: 'create-drop'
@@ -61,12 +78,11 @@ data:
   SERVER_PORT: '8083'
   POSTGRES_HOST: ${postgres_host}
   POSTGRES_PORT: ${postgres_port}
-  POSTGRES_DB: ${postgres_db_ai_recommend}
+  POSTGRES_DB: ${postgres_db_marketing_content}
   REDIS_HOST: ${redis_host}
   REDIS_PORT: ${redis_port}
   JPA_DDL_AUTO: 'create-drop'
   JPA_SHOW_SQL: 'true'
-
 
 ---
 apiVersion: v1
@@ -83,6 +99,7 @@ data:
   REDIS_PORT: ${redis_port}
   JPA_DDL_AUTO: 'create-drop'
   JPA_SHOW_SQL: 'true'
+
 
 ---
 # Secrets
