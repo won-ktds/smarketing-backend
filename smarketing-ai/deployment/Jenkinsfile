@@ -27,7 +27,7 @@ podTemplate(
 
         stage("Get Source") {
             checkout scm
-            props = readProperties file: "deployment/deploy_env_vars"
+            props = readProperties file: "smarketing-ai/deployment/deploy_env_vars"
             namespace = "${props.namespace}"
 
             echo "Registry: ${props.registry}"
@@ -86,7 +86,7 @@ podTemplate(
 
                         # Docker 이미지 빌드
                         podman build \
-                            -f deployment/container/Dockerfile \
+                            -f smarketing-ai/deployment/Dockerfile \
                             -t ${props.registry}/${props.image_org}/smarketing-ai:${imageTag} .
 
                         # 이미지 푸시
@@ -101,11 +101,11 @@ podTemplate(
         stage('Generate & Apply Manifest') {
             container('envsubst') {
                 withCredentials([
-                    string(credentialsId: 'secret-key', variable: 'SECRET_KEY'),
-                    string(credentialsId: 'claude-api-key', variable: 'CLAUDE_API_KEY'),
-                    string(credentialsId: 'openai-api-key', variable: 'OPENAI_API_KEY'),
-                    string(credentialsId: 'azure-storage-account-name', variable: 'AZURE_STORAGE_ACCOUNT_NAME'),
-                    string(credentialsId: 'azure-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY')
+                    string(credentialsId: 'SECRET_KEY', variable: 'SECRET_KEY'),
+                    string(credentialsId: 'CLAUDE_API_KEY', variable: 'CLAUDE_API_KEY'),
+                    string(credentialsId: 'OPENAI_API_KEY', variable: 'OPENAI_API_KEY'),
+                    string(credentialsId: 'AZURE_STORAGE_ACCOUNT_NAME', variable: 'AZURE_STORAGE_ACCOUNT_NAME'),
+                    string(credentialsId: 'AZURE_STORAGE_ACCOUNT_KEY', variable: 'AZURE_STORAGE_ACCOUNT_KEY')
                 ]) {
                     sh """
                         export namespace=${namespace}
@@ -132,19 +132,19 @@ podTemplate(
                         export azure_storage_account_key=\$AZURE_STORAGE_ACCOUNT_KEY
 
                         # manifest 생성
-                        envsubst < deployment/${manifest}.template > deployment/${manifest}
+                        envsubst < smarketing-ai/deployment/${manifest}.template > smarketing-ai/deployment/${manifest}
                         echo "Generated manifest file:"
-                        cat deployment/${manifest}
+                        cat smarketing-ai/deployment/${manifest}
                     """
                 }
             }
 
             container('azure-cli') {
                 sh """
-                    kubectl apply -f deployment/${manifest}
+                    kubectl apply -f smarketing-ai/deployment/${manifest}
 
                     echo "Waiting for smarketing deployment to be ready..."
-                    kubectl -n ${namespace} wait --for=condition=available deployment/smarketing --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available smarketing-ai/smarketing --timeout=300s
 
                     echo "=========================================="
                     echo "Getting LoadBalancer External IP..."
