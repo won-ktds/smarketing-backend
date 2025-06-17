@@ -35,4 +35,9 @@ public class MenuUpdateRequest {
 
     @Schema(description = "메뉴 설명", example = "진한 원두의 깊은 맛")
     private String description;
+
+    @Schema(description = "이미지")
+    @Size(max = 500, message = "이미지 URL은 500자 이하여야 합니다")
+    private MultipartFile image;
+
 }
