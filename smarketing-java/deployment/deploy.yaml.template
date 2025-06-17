@@ -494,7 +494,8 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - http:
+    - host: smarketing
+      http:
         paths:
           - path: /api/auth
             pathType: Prefix
