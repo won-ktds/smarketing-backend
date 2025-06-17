@@ -1,0 +1,113 @@
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smarketing-config
+  namespace: ${namespace}
+data:
+  SERVER_HOST: "${server_host}"
+  SERVER_PORT: "${server_port}"
+  UPLOAD_FOLDER: "${upload_folder}"
+  MAX_CONTENT_LENGTH: "${max_content_length}"
+  ALLOWED_EXTENSIONS: "${allowed_extensions}"
+  AZURE_STORAGE_CONTAINER_NAME: "${azure_storage_container_name}"
+
+---
+# Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: smarketing-secret
+  namespace: ${namespace}
+type: Opaque
+stringData:
+  SECRET_KEY: "${secret_key}"
+  CLAUDE_API_KEY: "${claude_api_key}"
+  OPENAI_API_KEY: "${openai_api_key}"
+  AZURE_STORAGE_ACCOUNT_NAME: "${azure_storage_account_name}"
+  AZURE_STORAGE_ACCOUNT_KEY: "${azure_storage_account_key}"
+
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smarketing
+  namespace: ${namespace}
+  labels:
+    app: smarketing
+spec:
+  replicas: ${replicas}
+  selector:
+    matchLabels:
+      app: smarketing
+  template:
+    metadata:
+      labels:
+        app: smarketing
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      containers:
+      - name: smarketing
+        image: ${smarketing_image_path}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5001
+        resources:
+          requests:
+            cpu: ${resources_requests_cpu}
+            memory: ${resources_requests_memory}
+          limits:
+            cpu: ${resources_limits_cpu}
+            memory: ${resources_limits_memory}
+        envFrom:
+        - configMapRef:
+            name: smarketing-config
+        - secretRef:
+            name: smarketing-secret
+        volumeMounts:
+        - name: upload-storage
+          mountPath: /app/uploads
+        - name: temp-storage
+          mountPath: /app/uploads/temp
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: upload-storage
+        emptyDir: {}
+      - name: temp-storage
+        emptyDir: {}
+
+---
+# Service (LoadBalancer type for External IP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: smarketing-service
+  namespace: ${namespace}
+  labels:
+    app: smarketing
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 5001
+    targetPort: 5001
+    protocol: TCP
+    name: http
+  selector:
+    app: smarketing

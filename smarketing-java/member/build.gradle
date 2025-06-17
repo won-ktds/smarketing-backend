@@ -1,0 +1,5 @@
+dependencies {
+    implementation project(':common')
+    // 데이터베이스 의존성
+    runtimeOnly 'org.postgresql:postgresql'
+}

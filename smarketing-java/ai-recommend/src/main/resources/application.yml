@@ -1,0 +1,52 @@
+server:
+  port: ${SERVER_PORT:8084}
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: ai-recommend-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:AiRecommendationDB}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:create-drop}
+    show-sql: ${JPA_SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+external:
+  store-service:
+    base-url: ${STORE_SERVICE_URL:http://localhost:8082}
+    timeout: ${STORE_SERVICE_TIMEOUT:5000}
+  python-ai-service:
+    base-url: ${PYTHON_AI_SERVICE_URL:http://localhost:5001}
+    api-key: ${PYTHON_AI_API_KEY:dummy-key}
+    timeout: ${PYTHON_AI_TIMEOUT:30000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.won.smarketing.recommend: ${LOG_LEVEL:DEBUG}
+
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidation123456789}
+  access-token-validity: ${JWT_ACCESS_VALIDITY:3600000}
+  refresh-token-validity: ${JWT_REFRESH_VALIDITY:604800000}
