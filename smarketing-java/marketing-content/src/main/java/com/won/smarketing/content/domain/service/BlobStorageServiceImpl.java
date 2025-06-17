@@ -57,11 +57,10 @@ public class BlobStorageServiceImpl implements BlobStorageService {
      * 이미지 파일 업로드
      *
      * @param files 업로드할 파일들
-     * @param containerName 컨테이너 이름
      * @return 업로드된 파일의 URL
      */
     @Override
-    public List<String> uploadImage(List<MultipartFile> files, String containerName) {
+    public List<String> uploadImage(List<MultipartFile> files) {
         // 파일 유효성 검증
         validateImageFile(files);
         List<String> urls = new ArrayList<>();
@@ -71,10 +70,10 @@ public class BlobStorageServiceImpl implements BlobStorageService {
             for(MultipartFile file : files) {
                 String fileName = generateMenuImageFileName(file.getOriginalFilename());
 
-                ensureContainerExists(containerName);
+                ensureContainerExists(posterImageContainer);
 
                 // Blob 클라이언트 생성
-                BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(containerName);
+                BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(posterImageContainer);
                 BlobClient blobClient = containerClient.getBlobClient(fileName);
 
                 // 파일 업로드 (간단한 방식)
