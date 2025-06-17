@@ -8,10 +8,16 @@ data:
   ALLOWED_ORIGINS: ${allowed_origins}
   JPA_DDL_AUTO: update
   JPA_SHOW_SQL: 'true'
-  # 🔧 Actuator 보안 설정 추가
-  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+  # 🔧 강화된 Actuator 설정
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: '*'
   MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
-  MANAGEMENT_SECURITY_ENABLED: 'false'
+  MANAGEMENT_ENDPOINT_HEALTH_ENABLED: 'true'
+  MANAGEMENT_ENDPOINTS_WEB_BASE_PATH: /actuator
+  MANAGEMENT_SERVER_PORT: '8080'
+  # Spring Security 비활성화 (Actuator용)
+  SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  # 또는 Management port를 main port와 동일하게
+  MANAGEMENT_SERVER_PORT: ''
 
 ---
 apiVersion: v1
@@ -171,18 +177,29 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 10
+        # 🔧 개선된 Health Check 설정
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8081
-          initialDelaySeconds: 60
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 120  # 2분으로 증가
           periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health
+            path: /actuator/health/readiness
             port: 8081
-          initialDelaySeconds: 30
-          periodSeconds: 5
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 60   # 1분으로 증가
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
 
 ---
 apiVersion: apps/v1
@@ -240,14 +257,24 @@ spec:
           httpGet:
             path: /actuator/health
             port: 8082
-          initialDelaySeconds: 60
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 120
           periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health
+            path: /actuator/health/readiness
             port: 8082
-          initialDelaySeconds: 30
-          periodSeconds: 5
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
 
 ---
 apiVersion: apps/v1
@@ -305,14 +332,24 @@ spec:
           httpGet:
             path: /actuator/health
             port: 8083
-          initialDelaySeconds: 60
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 120
           periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health
+            path: /actuator/health/readiness
             port: 8083
-          initialDelaySeconds: 30
-          periodSeconds: 5
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
 
 ---
 apiVersion: apps/v1
@@ -370,14 +407,24 @@ spec:
           httpGet:
             path: /actuator/health
             port: 8084
-          initialDelaySeconds: 60
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 120
           periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health
+            path: /actuator/health/readiness
             port: 8084
-          initialDelaySeconds: 30
-          periodSeconds: 5
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
 
 ---
 # Services
