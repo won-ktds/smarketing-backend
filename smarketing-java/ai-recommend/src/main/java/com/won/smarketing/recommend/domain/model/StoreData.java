@@ -13,7 +13,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StoreData {
+    private Long storeId;
     private String storeName;
     private String businessType;
     private String location;
+    private String description;
+    private Integer seatCount;
 }

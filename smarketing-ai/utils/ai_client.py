@@ -10,6 +10,7 @@ import anthropic
 import openai
 from PIL import Image
 import io
+from utils.blob_storage import BlobStorageClient
 
 
 class AIClient:
@@ -19,6 +20,9 @@ class AIClient:
         """AI 클라이언트 초기화"""
         self.claude_api_key = os.getenv('CLAUDE_API_KEY')
         self.openai_api_key = os.getenv('OPENAI_API_KEY')
+
+        # Blob Storage 클라이언트 초기화
+        self.blob_client = BlobStorageClient()
 
         # Claude 클라이언트 초기화
         if self.claude_api_key:
@@ -64,33 +68,38 @@ class AIClient:
             print(f"이미지 다운로드 실패 {image_url}: {e}")
             return None
 
-    def generate_image_with_openai(self, prompt: str, size: str = "1024x1024") -> str:
+    def generate_image_with_openai(self, prompt: str, size: str = "1024x1536") -> str:
         """
-        OpenAI DALL-E를 사용하여 이미지 생성
+        gpt를 사용하여 이미지 생성
         Args:
             prompt: 이미지 생성 프롬프트
-            size: 이미지 크기 (1024x1024, 1792x1024, 1024x1792)
+            size: 이미지 크기 (1024x1536)
         Returns:
-            생성된 이미지 URL
+            Azure Blob Storage에 저장된 이미지 URL
         """
         try:
             if not self.openai_client:
                 raise Exception("OpenAI API 키가 설정되지 않았습니다.")
 
             response = self.openai_client.images.generate(
-                model="dall-e-3",
+                model="gpt-image-1",
                 prompt=prompt,
-                size="1024x1024",
-                quality="hd",  # 고품질 설정
-                style="vivid",  # 또는 "natural"
+                size=size,
                 n=1,
             )
 
-            return response.data[0].url
+            # base64 이미지 데이터 추출
+            b64_data = response.data[0].b64_json
+            image_data = base64.b64decode(b64_data)
+
+            # Azure Blob Storage에 업로드
+            blob_url = self.blob_client.upload_image(image_data, 'png')
+
+            print(f"✅ 이미지 생성 및 업로드 완료: {blob_url}")
+            return blob_url
 
         except Exception as e:
-            print(f"OpenAI 이미지 생성 실패: {e}")
-            raise Exception(f"이미지 생성 중 오류가 발생했습니다: {str(e)}")
+            raise Exception(f"이미지 생성 실패: {str(e)}")
 
     def generate_text(self, prompt: str, max_tokens: int = 1000) -> str:
         """

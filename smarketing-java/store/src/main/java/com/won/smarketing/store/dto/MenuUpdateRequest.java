@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 메뉴 수정 요청 DTO
@@ -34,7 +35,4 @@ public class MenuUpdateRequest {
 
     @Schema(description = "메뉴 설명", example = "진한 원두의 깊은 맛")
     private String description;
-
-    @Schema(description = "메뉴 이미지 URL", example = "https://example.com/americano.jpg")
-    private String image;
 }

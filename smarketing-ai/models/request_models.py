@@ -7,6 +7,7 @@ from typing import List, Optional
 from datetime import date
 
 
+
 @dataclass
 class SnsContentGetRequest:
     """SNS 게시물 생성 요청 모델"""

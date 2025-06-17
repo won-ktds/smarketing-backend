@@ -1,6 +1,7 @@
 package com.won.smarketing.store.service;
 
 import com.won.smarketing.store.dto.StoreCreateRequest;
+import com.won.smarketing.store.dto.StoreCreateResponse;
 import com.won.smarketing.store.dto.StoreResponse;
 import com.won.smarketing.store.dto.StoreUpdateRequest;
 
@@ -16,7 +17,7 @@ public interface StoreService {
      * @param request 매장 등록 요청 정보
      * @return 등록된 매장 정보
      */
-    StoreResponse register(StoreCreateRequest request);
+    StoreCreateResponse register(StoreCreateRequest request);
     
     /**
      * 매장 정보 조회 (현재 로그인 사용자)
@@ -36,9 +37,9 @@ public interface StoreService {
     /**
      * 매장 정보 수정
      * 
-     * @param storeId 매장 ID
+     * //@param storeId 매장 ID
      * @param request 매장 수정 요청 정보
      * @return 수정된 매장 정보
      */
-    StoreResponse updateStore(Long storeId, StoreUpdateRequest request);
+    StoreResponse updateStore(StoreUpdateRequest request);
 }
