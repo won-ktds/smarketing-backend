@@ -173,48 +173,52 @@ podTemplate(
 
         stage('Generate & Apply Manifest') {
             container('envsubst') {
-                sh """
-                    echo "=== 환경변수 설정 ==="
-                    export namespace=${namespace}
-                    export allowed_origins=${props.allowed_origins}
-                    export jwt_secret_key=${props.jwt_secret_key}
-                    export postgres_user=${props.postgres_user}
-                    export postgres_password=${props.postgres_password}
-                    export replicas=${props.replicas}
-
-                    # PostgreSQL 환경변수 추가
-                    export postgres_host=${props.POSTGRES_HOST}
-                    export postgres_port=${props.POSTGRES_PORT:-5432}
-                    export postgres_db_member=member
-                    export postgres_db_store=store
-                    export postgres_db_marketing_content=marketing_content
-                    export postgres_db_ai_recommend=AiRecommendationDB
-            
-                    # Redis 환경변수 추가
-                    export redis_host=${props.REDIS_HOST}
-                    export redis_port=${props.REDIS_PORT}
-                    export redis_password=${props.REDIS_PASSWORD}
-
+                script {
+                    def postgresPort = props.POSTGRES_PORT ?: '5432'
+                    def redisPort = props.REDIS_PORT ?: '6379'
                     
-                    # 리소스 요구사항 조정 (작게)
-                    export resources_requests_cpu=100m
-                    export resources_requests_memory=128Mi
-                    export resources_limits_cpu=500m
-                    export resources_limits_memory=512Mi
+                    sh """
+                        echo "=== 환경변수 설정 ==="
+                        export namespace=${namespace}
+                        export allowed_origins=${props.allowed_origins}
+                        export jwt_secret_key=${props.jwt_secret_key}
+                        export postgres_user=${props.postgres_user}
+                        export postgres_password=${props.postgres_password}
+                        export replicas=${props.replicas}
+                        
+                        # PostgreSQL 환경변수 추가
+                        export postgres_host=${props.POSTGRES_HOST}
+                        export postgres_port=${postgresPort}
+                        export postgres_db_member=member
+                        export postgres_db_store=store
+                        export postgres_db_marketing_content=marketing_content
+                        export postgres_db_ai_recommend=AiRecommendationDB
+                        
+                        # Redis 환경변수 추가
+                        export redis_host=${props.REDIS_HOST}
+                        export redis_port=${redisPort}
+                        export redis_password=${props.REDIS_PASSWORD}
+                        
+                        # 리소스 요구사항
+                        export resources_requests_cpu=${props.resources_requests_cpu}
+                        export resources_requests_memory=${props.resources_requests_memory}
+                        export resources_limits_cpu=${props.resources_limits_cpu}
+                        export resources_limits_memory=${props.resources_limits_memory}
 
-                    # 이미지 경로 환경변수 설정
-                    export member_image_path=${props.registry}/${props.image_org}/member:${imageTag}
-                    export store_image_path=${props.registry}/${props.image_org}/store:${imageTag}
-                    export marketing_content_image_path=${props.registry}/${props.image_org}/marketing-content:${imageTag}
-                    export ai_recommend_image_path=${props.registry}/${props.image_org}/ai-recommend:${imageTag}
+                        # 이미지 경로 환경변수 설정
+                        export member_image_path=${props.registry}/${props.image_org}/member:${imageTag}
+                        export store_image_path=${props.registry}/${props.image_org}/store:${imageTag}
+                        export marketing_content_image_path=${props.registry}/${props.image_org}/marketing-content:${imageTag}
+                        export ai_recommend_image_path=${props.registry}/${props.image_org}/ai-recommend:${imageTag}
 
-                    echo "=== Manifest 생성 ==="
-                    envsubst < smarketing-java/deployment/${manifest}.template > smarketing-java/deployment/${manifest}
-                    
-                    echo "=== Generated Manifest File ==="
-                    cat smarketing-java/deployment/${manifest}
-                    echo "==============================="
-                """
+                        echo "=== Manifest 생성 ==="
+                        envsubst < smarketing-java/deployment/${manifest}.template > smarketing-java/deployment/${manifest}
+                        
+                        echo "=== Generated Manifest File ==="
+                        cat smarketing-java/deployment/${manifest}
+                        echo "==============================="
+                    """
+                }
             }
 
             container('azure-cli') {
