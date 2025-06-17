@@ -105,8 +105,8 @@ public class ContentMapper {
         ContentConditionsJpaEntity entity = new ContentConditionsJpaEntity();
         entity.setCategory(conditions.getCategory());
         entity.setRequirement(conditions.getRequirement());
-        entity.setToneAndManner(conditions.getToneAndManner());
-        entity.setEmotionIntensity(conditions.getEmotionIntensity());
+//        entity.setToneAndManner(conditions.getToneAndManner());
+//        entity.setEmotionIntensity(conditions.getEmotionIntensity());
         entity.setEventName(conditions.getEventName());
         entity.setStartDate(conditions.getStartDate());
         entity.setEndDate(conditions.getEndDate());
@@ -126,8 +126,8 @@ public class ContentMapper {
         return CreationConditions.builder()
                 .category(entity.getCategory())
                 .requirement(entity.getRequirement())
-                .toneAndManner(entity.getToneAndManner())
-                .emotionIntensity(entity.getEmotionIntensity())
+//                .toneAndManner(entity.getToneAndManner())
+//                .emotionIntensity(entity.getEmotionIntensity())
                 .eventName(entity.getEventName())
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())

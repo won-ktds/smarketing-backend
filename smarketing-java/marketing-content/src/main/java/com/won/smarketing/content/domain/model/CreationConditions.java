@@ -24,8 +24,11 @@ public class CreationConditions {
     private String id;
     private String category;
     private String requirement;
-    private String toneAndManner;
-    private String emotionIntensity;
+//    private String toneAndManner;
+//    private String emotionIntensity;
+    private String storeName;
+    private String storeType;
+    private String target;
     private String eventName;
     private LocalDate startDate;
     private LocalDate endDate;

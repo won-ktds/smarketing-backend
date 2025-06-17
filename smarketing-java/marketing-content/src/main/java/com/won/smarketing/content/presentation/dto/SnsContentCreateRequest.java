@@ -1,5 +1,6 @@
 package com.won.smarketing.content.presentation.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Schema(description = "SNS 콘텐츠 생성 요청")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SnsContentCreateRequest {
 
     // ==================== 기본 정보 ====================
@@ -31,6 +33,12 @@ public class SnsContentCreateRequest {
     @NotNull(message = "매장 ID는 필수입니다")
     private Long storeId;
 
+    @Schema(description = "매장 이름", example = "명륜진사갈비")
+    private String storeName;
+
+    @Schema(description = "업종", example = "한식")
+    private String storeType;
+    
     @Schema(description = "대상 플랫폼",
             example = "INSTAGRAM",
             allowableValues = {"INSTAGRAM", "NAVER_BLOG", "FACEBOOK", "KAKAO_STORY"},
@@ -54,15 +62,21 @@ public class SnsContentCreateRequest {
     @Size(max = 500, message = "요구사항은 500자 이하로 입력해주세요")
     private String requirement;
 
-    @Schema(description = "톤앤매너",
-            example = "친근함",
-            allowableValues = {"친근함", "전문적", "유머러스", "감성적", "트렌디"})
-    private String toneAndManner;
+    @Schema(description = "타겟층", example = "10대 청소년")
+    private String target;
 
-    @Schema(description = "감정 강도",
-            example = "보통",
-            allowableValues = {"약함", "보통", "강함"})
-    private String emotionIntensity;
+    @Schema(description = "콘텐츠 타입", example = "SNS 게시물")
+    private String contentType;
+
+//    @Schema(description = "톤앤매너",
+//            example = "친근함",
+//            allowableValues = {"친근함", "전문적", "유머러스", "감성적", "트렌디"})
+//    private String toneAndManner;
+
+//    @Schema(description = "감정 강도",
+//            example = "보통",
+//            allowableValues = {"약함", "보통", "강함"})
+//    private String emotionIntensity;
 
     // ==================== 이벤트 정보 ====================
 

@@ -2,6 +2,7 @@ package com.won.smarketing.content.domain.service;
 
 import com.won.smarketing.content.domain.model.Platform;
 import com.won.smarketing.content.presentation.dto.SnsContentCreateRequest;
+import com.won.smarketing.content.presentation.dto.SnsContentCreateResponse;
 
 import java.util.List;
 
@@ -18,13 +19,4 @@ public interface AiContentGenerator {
      * @return 생성된 콘텐츠
      */
     String generateSnsContent(SnsContentCreateRequest request);
-    
-    /**
-     * 플랫폼별 해시태그 생성
-     * 
-     * @param content 콘텐츠 내용
-     * @param platform 플랫폼
-     * @return 해시태그 목록
-     */
-    List<String> generateHashtags(String content, Platform platform);
 }

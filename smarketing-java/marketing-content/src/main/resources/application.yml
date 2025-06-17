@@ -2,6 +2,9 @@ server:
   port: ${SERVER_PORT:8083}
 
 spring:
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: false
   application:
     name: marketing-content-service
   datasource:
@@ -31,3 +34,6 @@ jwt:
 logging:
   level:
     com.won.smarketing: ${LOG_LEVEL:DEBUG}
+external:
+  ai-service:
+    base-url: ${AI_SERVICE_BASE_URL:http://20.249.139.88:5001}
