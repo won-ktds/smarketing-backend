@@ -1,0 +1,27 @@
+# Team Settings
+teamid=won
+root_project=smarketing-ai
+namespace=smarketing
+
+# Container Registry Settings
+registry=acrdigitalgarage02.azurecr.io
+image_org=won
+
+# Application Settings
+replicas=1
+
+# Resource Settings
+resources_requests_cpu=256m
+resources_requests_memory=512Mi
+resources_limits_cpu=1024m
+resources_limits_memory=2048Mi
+
+# Flask App Settings (non-sensitive)
+upload_folder=/app/uploads
+max_content_length=16777216
+allowed_extensions=png,jpg,jpeg,gif,webp
+server_host=0.0.0.0
+server_port=5001
+
+# Azure Storage Settings (non-sensitive)
+azure_storage_container_name=ai-content

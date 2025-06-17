@@ -1,0 +1,170 @@
+def PIPELINE_ID = "${env.BUILD_NUMBER}"
+
+def getImageTag() {
+    def dateFormat = new java.text.SimpleDateFormat('yyyyMMddHHmmss')
+    def currentDate = new Date()
+    return dateFormat.format(currentDate)
+}
+
+podTemplate(
+    label: "${PIPELINE_ID}",
+    serviceAccount: 'jenkins',
+    containers: [
+        containerTemplate(name: 'podman', image: "mgoltzsche/podman", ttyEnabled: true, command: 'cat', privileged: true),
+        containerTemplate(name: 'git', image: 'alpine/git:latest', command: 'cat', ttyEnabled: true)
+    ],
+    volumes: [
+        emptyDirVolume(mountPath: '/run/podman', memory: false)
+    ]
+) {
+    node(PIPELINE_ID) {
+        def props
+        def imageTag = getImageTag()
+
+        stage("Get Source") {
+            checkout scm
+            props = readProperties file: "deployment/deploy_env_vars"
+        }
+
+        stage('Build & Push Docker Image') {
+            container('podman') {
+                sh 'podman system service -t 0 unix:///run/podman/podman.sock & sleep 2'
+
+                withCredentials([usernamePassword(
+                    credentialsId: 'acr-credentials',
+                    usernameVariable: 'ACR_USERNAME',
+                    passwordVariable: 'ACR_PASSWORD'
+                )]) {
+                    sh """
+                        echo "=========================================="
+                        echo "Building smarketing-ai for ArgoCD GitOps"
+                        echo "Image Tag: ${imageTag}"
+                        echo "=========================================="
+
+                        # ACR 로그인
+                        echo \$ACR_PASSWORD | podman login ${props.registry} --username \$ACR_USERNAME --password-stdin
+
+                        # Docker 이미지 빌드
+                        podman build \
+                            -f deployment/container/Dockerfile \
+                            -t ${props.registry}/${props.image_org}/smarketing-ai:${imageTag} .
+
+                        # 이미지 푸시
+                        podman push ${props.registry}/${props.image_org}/smarketing-ai:${imageTag}
+
+                        echo "Successfully built and pushed: ${props.registry}/${props.image_org}/smarketing-ai:${imageTag}"
+                    """
+                }
+            }
+        }
+
+        stage('Update Manifest Repository') {
+            container('git') {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-credentials-${props.teamid}',
+                    usernameVariable: 'GIT_USERNAME',
+                    passwordVariable: 'GIT_PASSWORD'
+                )]) {
+                    sh """
+                        # Git 설정
+                        git config --global user.email "jenkins@company.com"
+                        git config --global user.name "Jenkins CI"
+
+                        # Manifest 저장소 클론 (팀별 저장소로 수정 필요)
+                        git clone https://\${GIT_USERNAME}:\${GIT_PASSWORD}@github.com/your-team/smarketing-ai-manifest.git
+                        cd smarketing-ai-manifest
+
+                        echo "=========================================="
+                        echo "Updating smarketing-ai manifest repository:"
+                        echo "New Image: ${props.registry}/${props.image_org}/smarketing-ai:${imageTag}"
+
+                        # smarketing deployment 파일 업데이트
+                        if [ -f "smarketing/smarketing-deployment.yaml" ]; then
+                            # 이미지 태그 업데이트
+                            sed -i "s|image: ${props.registry}/${props.image_org}/smarketing-ai:.*|image: ${props.registry}/${props.image_org}/smarketing-ai:${imageTag}|g" \
+                                smarketing/smarketing-deployment.yaml
+
+                            echo "Updated smarketing deployment to image tag: ${imageTag}"
+                            cat smarketing/smarketing-deployment.yaml | grep "image:"
+                        else
+                            echo "Warning: smarketing-deployment.yaml not found"
+                            echo "Creating manifest directory structure..."
+
+                            # 기본 구조 생성
+                            mkdir -p smarketing
+
+                            # 기본 deployment 파일 생성
+                            cat > smarketing/smarketing-deployment.yaml << EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smarketing
+  namespace: smarketing
+  labels:
+    app: smarketing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smarketing
+  template:
+    metadata:
+      labels:
+        app: smarketing
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      containers:
+      - name: smarketing
+        image: ${props.registry}/${props.image_org}/smarketing-ai:${imageTag}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5001
+        resources:
+          requests:
+            cpu: 256m
+            memory: 512Mi
+          limits:
+            cpu: 1024m
+            memory: 2048Mi
+        envFrom:
+        - configMapRef:
+            name: smarketing-config
+        - secretRef:
+            name: smarketing-secret
+        volumeMounts:
+        - name: upload-storage
+          mountPath: /app/uploads
+        - name: temp-storage
+          mountPath: /app/uploads/temp
+      volumes:
+      - name: upload-storage
+        emptyDir: {}
+      - name: temp-storage
+        emptyDir: {}
+EOF
+            echo "Created basic smarketing-deployment.yaml"
+        fi
+
+                        # 변경사항 커밋 및 푸시
+                        git add .
+                        git commit -m "Update smarketing-ai image tag to ${imageTag}
+
+                        Image: ${props.registry}/${props.image_org}/smarketing-ai:${imageTag}
+                        Build: ${env.BUILD_NUMBER}
+                        Branch: ${env.BRANCH_NAME}
+                        Commit: ${env.GIT_COMMIT}"
+
+                        git push origin main
+
+                        echo "=========================================="
+                        echo "ArgoCD GitOps Update Completed!"
+                        echo "Updated Service: smarketing-ai:${imageTag}"
+                        echo "ArgoCD will automatically detect and deploy these changes."
+                        echo "=========================================="
+                    """
+                }
+            }
+        }
+    }
+}
