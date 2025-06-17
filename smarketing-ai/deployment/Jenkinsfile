@@ -27,7 +27,7 @@ podTemplate(
 
         stage("Get Source") {
             checkout scm
-            props = readProperties file: "deployment/deploy_env_vars"
+            props = readProperties file: "smarketing-ai/deployment/deploy_env_vars"
             namespace = "${props.namespace}"
 
             echo "Registry: ${props.registry}"
