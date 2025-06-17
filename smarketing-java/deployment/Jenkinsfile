@@ -41,6 +41,25 @@ podTemplate(
             echo "Image Tag: ${imageTag}"
         }
 
+        stage("Check Changes") {
+            script {
+                def changes = sh(
+                    script: "git diff --name-only HEAD~1 HEAD",
+                    returnStdout: true
+                ).trim()
+
+                echo "Changed files: ${changes}"
+
+                if (!changes.contains("smarketing-ai/")) {
+                    echo "No changes in smarketing-ai, skipping build"
+                    currentBuild.result = 'SUCCESS'
+                    return
+                }
+
+                echo "Changes detected in smarketing-ai, proceeding with build"
+            }
+        }
+
         stage("Setup AKS") {
             container('azure-cli') {
                 withCredentials([azureServicePrincipal('azure-credentials')]) {
