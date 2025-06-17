@@ -47,13 +47,11 @@ subprojects {
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testImplementation 'org.springframework.security:spring-security-test'
-<<<<<<< HEAD
 
         implementation 'com.azure:azure-messaging-eventhubs:5.18.0'
         implementation 'com.azure:azure-messaging-eventhubs-checkpointstore-blob:1.19.0'
         implementation 'com.azure:azure-identity:1.11.4'
-=======
->>>>>>> origin/main
+
     }
 
     tasks.named('test') {
