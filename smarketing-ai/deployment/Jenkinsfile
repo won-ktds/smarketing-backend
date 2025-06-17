@@ -27,7 +27,7 @@ podTemplate(
 
         stage("Get Source") {
             checkout scm
-            props = readProperties file: "smarketing-ai/deployment/deploy_env_vars"
+            props = readProperties file: "deployment/deploy_env_vars"
             namespace = "${props.namespace}"
 
             echo "Registry: ${props.registry}"
@@ -86,7 +86,7 @@ podTemplate(
 
                         # Docker 이미지 빌드
                         podman build \
-                            -f smarketing-ai/deployment/Dockerfile \
+                            -f deployment/container/Dockerfile \
                             -t ${props.registry}/${props.image_org}/smarketing-ai:${imageTag} .
 
                         # 이미지 푸시
@@ -132,19 +132,19 @@ podTemplate(
                         export azure_storage_account_key=\$AZURE_STORAGE_ACCOUNT_KEY
 
                         # manifest 생성
-                        envsubst < smarketing-ai/deployment/${manifest}.template > smarketing-ai/deployment/${manifest}
+                        envsubst < deployment/${manifest}.template > deployment/${manifest}
                         echo "Generated manifest file:"
-                        cat smarketing-ai/deployment/${manifest}
+                        cat deployment/${manifest}
                     """
                 }
             }
 
             container('azure-cli') {
                 sh """
-                    kubectl apply -f smarketing-ai/deployment/${manifest}
+                    kubectl apply -f deployment/${manifest}
 
                     echo "Waiting for smarketing deployment to be ready..."
-                    kubectl -n ${namespace} wait --for=condition=available smarketing-ai/deployment/smarketing --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available deployment/smarketing --timeout=300s
 
                     echo "=========================================="
                     echo "Getting LoadBalancer External IP..."
