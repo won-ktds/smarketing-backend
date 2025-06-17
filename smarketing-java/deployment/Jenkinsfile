@@ -49,8 +49,8 @@ podTemplate(
                         az login --service-principal -u \$AZURE_CLIENT_ID -p \$AZURE_CLIENT_SECRET -t \$AZURE_TENANT_ID
                         az account set --subscription 2513dd36-7978-48e3-9a7c-b221d4874f66
                         
-                        echo "=== AKS 인증정보 가져오기 ==="
-                        az aks get-credentials --resource-group rg-digitalgarage-01 --name aks-digitalgarage-01 --overwrite-existing
+                        echo "=== AKS 인증정보 가져오기 (rg-digitalgarage-02) ==="
+                        az aks get-credentials --resource-group rg-digitalgarage-02 --name aks-digitalgarage-02 --overwrite-existing
                         
                         echo "=== 네임스페이스 생성 ==="
                         kubectl create namespace ${namespace} --dry-run=client -o yaml | kubectl apply -f -
@@ -66,6 +66,9 @@ podTemplate(
                         echo "=== 클러스터 상태 확인 ==="
                         kubectl get nodes
                         kubectl get ns ${namespace}
+                        
+                        echo "=== 현재 연결된 클러스터 확인 ==="
+                        kubectl config current-context
                     """
                 }
             }
@@ -99,7 +102,7 @@ podTemplate(
                     timeout 30 sh -c 'until docker info; do sleep 1; done'
                 """
 
-                // 🔧 ACR Credential을 Jenkins에서 직접 사용
+                // ACR Credential을 Jenkins에서 직접 사용
                 withCredentials([usernamePassword(
                     credentialsId: 'acr-credentials',
                     usernameVariable: 'ACR_USERNAME',
@@ -184,6 +187,10 @@ podTemplate(
 
             container('azure-cli') {
                 sh """
+                    echo "=== 현재 연결된 클러스터 재확인 ==="
+                    kubectl config current-context
+                    kubectl cluster-info | head -3
+                    
                     echo "=== PostgreSQL 서비스 확인 ==="
                     kubectl get svc -n ${namespace} | grep postgresql || echo "PostgreSQL 서비스가 없습니다. 먼저 설치해주세요."
                     
