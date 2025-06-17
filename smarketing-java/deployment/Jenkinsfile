@@ -48,15 +48,13 @@ podTemplate(
                     returnStdout: true
                 ).trim()
 
-                echo "Changed files: ${changes}"
-
-                if (!changes.contains("smarketing-ai/")) {
-                    echo "No changes in smarketing-ai, skipping build"
+                if (!changes.contains("smarketing-java/")) {
+                    echo "No changes in smarketing-java, skipping build"
                     currentBuild.result = 'SUCCESS'
                     return
                 }
 
-                echo "Changes detected in smarketing-ai, proceeding with build"
+                echo "Changes detected in smarketing-java, proceeding with build"
             }
         }
 
