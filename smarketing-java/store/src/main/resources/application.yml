@@ -58,6 +58,11 @@ management:
       show-details: always
     info:
       enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
 
 info:
   app:

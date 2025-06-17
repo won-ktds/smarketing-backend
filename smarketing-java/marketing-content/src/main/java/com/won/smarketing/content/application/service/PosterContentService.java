@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -32,25 +33,20 @@ public class PosterContentService implements PosterContentUseCase {
 
     /**
      * 포스터 콘텐츠 생성
-     * 
+     *
      * @param request 포스터 콘텐츠 생성 요청
      * @return 생성된 포스터 콘텐츠 정보
      */
     @Override
     @Transactional
     public PosterContentCreateResponse generatePosterContent(PosterContentCreateRequest request) {
-        // AI를 사용하여 포스터 생성
+
         String generatedPoster = aiPosterGenerator.generatePoster(request);
-        
-        // 다양한 사이즈의 포스터 생성
-        Map<String, String> posterSizes = aiPosterGenerator.generatePosterSizes(generatedPoster);
 
         // 생성 조건 정보 구성
         CreationConditions conditions = CreationConditions.builder()
                 .category(request.getCategory())
                 .requirement(request.getRequirement())
-               // .toneAndManner(request.getToneAndManner())
-               // .emotionIntensity(request.getEmotionIntensity())
                 .eventName(request.getEventName())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
@@ -62,47 +58,41 @@ public class PosterContentService implements PosterContentUseCase {
                 .contentType(ContentType.POSTER.name())
                 .title(request.getTitle())
                 .posterImage(generatedPoster)
-                .posterSizes(posterSizes)
+                .posterSizes(new HashMap<>()) // 빈 맵 반환 (사이즈 변환 안함)
                 .status(ContentStatus.DRAFT.name())
-                //.createdAt(LocalDateTime.now())
                 .build();
     }
 
     /**
      * 포스터 콘텐츠 저장
-     * 
+     *
      * @param request 포스터 콘텐츠 저장 요청
      */
     @Override
     @Transactional
     public void savePosterContent(PosterContentSaveRequest request) {
-        // 생성 조건 정보 구성
+        // 생성 조건 구성
         CreationConditions conditions = CreationConditions.builder()
                 .category(request.getCategory())
                 .requirement(request.getRequirement())
-              //  .toneAndManner(request.getToneAndManner())
-             //   .emotionIntensity(request.getEmotionIntensity())
                 .eventName(request.getEventName())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .photoStyle(request.getPhotoStyle())
                 .build();
 
-        // 콘텐츠 엔티티 생성 및 저장
+        // 콘텐츠 엔티티 생성
         Content content = Content.builder()
                 .contentType(ContentType.POSTER)
-                .platform(Platform.GENERAL) // 포스터는 범용
                 .title(request.getTitle())
-                .content(null) // 포스터는 이미지가 주 콘텐츠
-                .hashtags(null)
+                .content(request.getContent())
                 .images(request.getImages())
                 .status(ContentStatus.PUBLISHED)
                 .creationConditions(conditions)
                 .storeId(request.getStoreId())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
+        // 저장
         contentRepository.save(content);
     }
 }
