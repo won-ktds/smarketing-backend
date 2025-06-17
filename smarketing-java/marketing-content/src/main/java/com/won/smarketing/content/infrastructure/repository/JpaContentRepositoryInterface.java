@@ -45,19 +45,16 @@ public interface JpaContentRepositoryInterface extends JpaRepository<ContentJpaE
 
     /**
      * 필터 조건으로 콘텐츠 목록 조회
-     * @param contentType 콘텐츠 타입 (null 가능)
+     * @param storeId 콘텐츠 타입
      * @param platform 플랫폼 (null 가능)
-     * @param status 상태 (null 가능)
      * @return 콘텐츠 엔티티 목록
      */
     @Query("SELECT c FROM ContentJpaEntity c WHERE " +
-            "(:contentType IS NULL OR c.contentType = :contentType) AND " +
-            "(:platform IS NULL OR c.platform = :platform) AND " +
-            "(:status IS NULL OR c.status = :status) " +
+            "(c.storeId = :storeId) AND " +
+            "(:platform IS NULL OR c.platform = :platform)" +
             "ORDER BY c.createdAt DESC")
-    List<ContentJpaEntity> findByFilters(@Param("contentType") String contentType,
-                                         @Param("platform") String platform,
-                                         @Param("status") String status);
+    List<ContentJpaEntity> findByFilters(@Param("storeId") Long storeId,
+                                         @Param("platform") String platform);
 
     /**
      * 진행 중인 콘텐츠 목록 조회 (발행된 상태의 콘텐츠)

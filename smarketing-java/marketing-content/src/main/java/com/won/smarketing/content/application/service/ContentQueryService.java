@@ -60,18 +60,16 @@ public class ContentQueryService implements ContentQueryUseCase {
     /**
      * 콘텐츠 목록 조회
      * 
-     * @param contentType 콘텐츠 타입
+     * @param storeId 가게 ID
      * @param platform 플랫폼
-     * @param period 기간
-     * @param sortBy 정렬 기준
+
      * @return 콘텐츠 목록
      */
     @Override
-    public List<ContentResponse> getContents(String contentType, String platform, String period, String sortBy) {
-        ContentType type = contentType != null ? ContentType.fromString(contentType) : null;
+    public List<ContentResponse> getContents(Long storeId, String platform) {
         Platform platformEnum = platform != null ? Platform.fromString(platform) : null;
         
-        List<Content> contents = contentRepository.findByFilters(type, platformEnum, period, sortBy);
+        List<Content> contents = contentRepository.findByFilters(storeId, platformEnum);
 
         return contents.stream()
                 .map(this::toContentResponse)

@@ -23,6 +23,7 @@ import java.util.Date;
 public class ContentJpaEntity {
 
     @Id
+    @Column(name = "content_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

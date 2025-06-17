@@ -66,20 +66,18 @@ public class JpaContentRepository implements ContentRepository {
 
     /**
      * 필터 조건으로 콘텐츠 목록 조회
-     * @param contentType 콘텐츠 타입
+     * @param storeId 콘텐츠 타입
      * @param platform 플랫폼
-     * @param period 기간 (현재는 사용하지 않음)
-     * @param sortBy 정렬 기준 (현재는 사용하지 않음)
+     *
      * @return 도메인 콘텐츠 목록
      */
     @Override
-    public List<Content> findByFilters(ContentType contentType, Platform platform, String period, String sortBy) {
-        log.debug("Finding contents with filters - contentType: {}, platform: {}", contentType, platform);
+    public List<Content> findByFilters(Long storeId, Platform platform) {
+        log.debug("Finding contents with filters - platform: {}", platform);
 
-        String contentTypeStr = contentType != null ? contentType.name() : null;
         String platformStr = platform != null ? platform.name() : null;
 
-        List<ContentJpaEntity> entities = jpaRepository.findByFilters(contentTypeStr, platformStr, null);
+        List<ContentJpaEntity> entities = jpaRepository.findByFilters(storeId, platformStr);
 
         return entities.stream()
                 .map(contentMapper::toDomain)

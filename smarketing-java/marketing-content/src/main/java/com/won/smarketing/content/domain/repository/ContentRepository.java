@@ -31,13 +31,12 @@ public interface ContentRepository {
 
     /**
      * 필터 조건으로 콘텐츠 목록 조회
-     * @param contentType 콘텐츠 타입
+     * @param storeId 콘텐츠 타입
      * @param platform 플랫폼
-     * @param period 기간
-     * @param sortBy 정렬 기준
+
      * @return 콘텐츠 목록
      */
-    List<Content> findByFilters(ContentType contentType, Platform platform, String period, String sortBy);
+    List<Content> findByFilters(Long storeId, Platform platform);
 
     /**
      * 진행 중인 콘텐츠 목록 조회

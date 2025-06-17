@@ -74,6 +74,7 @@ public class SnsContentService implements SnsContentUseCase {
                 .platform(Platform.fromString(request.getPlatform()))
                 .title(request.getTitle())
                 .content(request.getContent())
+                .contentType(request.getContentType())
                 .hashtags(request.getHashtags())
                 .images(request.getImages())
                 .status(ContentStatus.PUBLISHED)
