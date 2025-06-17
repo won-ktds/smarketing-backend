@@ -1,6 +1,10 @@
 // marketing-content/src/main/java/com/won/smarketing/content/domain/model/Content.java
 package com.won.smarketing.content.domain.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,6 +28,9 @@ import java.util.List;
 public class Content {
 
     // ==================== 기본키 및 식별자 ====================
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "content_id")
     private Long id;
 
     // ==================== 콘텐츠 분류 ====================
