@@ -26,10 +26,14 @@ metadata:
   name: member-config
   namespace: ${namespace}
 data:
-  POSTGRES_DB: member
-  POSTGRES_HOST: member-postgresql
-  POSTGRES_PORT: '5432'
   SERVER_PORT: '8081'
+  POSTGRES_HOST: ${postgres_host}
+  POSTGRES_PORT: ${postgres_port}
+  POSTGRES_DB: ${postgres_db_ai_recommend}
+  REDIS_HOST: ${redis_host}
+  REDIS_PORT: ${redis_port}
+  JPA_DDL_AUTO: 'create-drop'
+  JPA_SHOW_SQL: 'true'
 
 ---
 apiVersion: v1
@@ -38,10 +42,14 @@ metadata:
   name: store-config
   namespace: ${namespace}
 data:
-  POSTGRES_DB: store
-  POSTGRES_HOST: store-postgresql
-  POSTGRES_PORT: '5432'
   SERVER_PORT: '8082'
+  POSTGRES_HOST: ${postgres_host}
+  POSTGRES_PORT: ${postgres_port}
+  POSTGRES_DB: ${postgres_db_ai_recommend}
+  REDIS_HOST: ${redis_host}
+  REDIS_PORT: ${redis_port}
+  JPA_DDL_AUTO: 'create-drop'
+  JPA_SHOW_SQL: 'true'
 
 ---
 apiVersion: v1
@@ -50,10 +58,15 @@ metadata:
   name: marketing-content-config
   namespace: ${namespace}
 data:
-  POSTGRES_DB: marketing_content
-  POSTGRES_HOST: marketing-content-postgresql
-  POSTGRES_PORT: '5432'
   SERVER_PORT: '8083'
+  POSTGRES_HOST: ${postgres_host}
+  POSTGRES_PORT: ${postgres_port}
+  POSTGRES_DB: ${postgres_db_ai_recommend}
+  REDIS_HOST: ${redis_host}
+  REDIS_PORT: ${redis_port}
+  JPA_DDL_AUTO: 'create-drop'
+  JPA_SHOW_SQL: 'true'
+
 
 ---
 apiVersion: v1
@@ -62,10 +75,14 @@ metadata:
   name: ai-recommend-config
   namespace: ${namespace}
 data:
-  POSTGRES_DB: ai_recommend
-  POSTGRES_HOST: ai-recommend-postgresql
-  POSTGRES_PORT: '5432'
   SERVER_PORT: '8084'
+  POSTGRES_HOST: ${postgres_host}
+  POSTGRES_PORT: ${postgres_port}
+  POSTGRES_DB: ${postgres_db_ai_recommend}
+  REDIS_HOST: ${redis_host}
+  REDIS_PORT: ${redis_port}
+  JPA_DDL_AUTO: 'create-drop'
+  JPA_SHOW_SQL: 'true'
 
 ---
 # Secrets
@@ -87,8 +104,9 @@ metadata:
 stringData:
   JWT_ACCESS_TOKEN_VALIDITY: '3600000'
   JWT_REFRESH_TOKEN_VALIDITY: '86400000'
-  POSTGRES_PASSWORD: ${postgres_password}
   POSTGRES_USER: ${postgres_user}
+  POSTGRES_PASSWORD: ${postgres_password}
+  REDIS_PASSWORD: ${redis_password}
 type: Opaque
 
 ---
@@ -98,8 +116,9 @@ metadata:
   name: store-secret
   namespace: ${namespace}
 stringData:
-  POSTGRES_PASSWORD: ${postgres_password}
   POSTGRES_USER: ${postgres_user}
+  POSTGRES_PASSWORD: ${postgres_password}
+  REDIS_PASSWORD: ${redis_password}
 type: Opaque
 
 ---
@@ -109,8 +128,9 @@ metadata:
   name: marketing-content-secret
   namespace: ${namespace}
 stringData:
-  POSTGRES_PASSWORD: ${postgres_password}
   POSTGRES_USER: ${postgres_user}
+  POSTGRES_PASSWORD: ${postgres_password}
+  REDIS_PASSWORD: ${redis_password}
 type: Opaque
 
 ---
@@ -120,8 +140,9 @@ metadata:
   name: ai-recommend-secret
   namespace: ${namespace}
 stringData:
-  POSTGRES_PASSWORD: ${postgres_password}
   POSTGRES_USER: ${postgres_user}
+  POSTGRES_PASSWORD: ${postgres_password}
+  REDIS_PASSWORD: ${redis_password}
 type: Opaque
 
 ---
