@@ -21,3 +21,13 @@ resources_requests_cpu=100m
 resources_requests_memory=128Mi
 resources_limits_cpu=500m
 resources_limits_memory=512Mi
+
+# Postgres
+POSTGRES_HOST=psql-digitalgarage-02.postgres.database.azure.com
+POSTGRES_USER=pgadmin
+POSTGRES_PASSWORD=DG_Won!
+
+# Redis
+REDIS_HOST=redis-digitalgarage-02.redis.cache.windows.net
+REDIS_PASSWORD=bOpPbvYhUF8toxgHDfOJlG62HTtgX2AwxAzCaDajg2w=
+REDIS_PORT=6380
