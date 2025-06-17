@@ -132,19 +132,19 @@ podTemplate(
                         export azure_storage_account_key=\$AZURE_STORAGE_ACCOUNT_KEY
 
                         # manifest 생성
-                        envsubst < deployment/${manifest}.template > deployment/${manifest}
+                        envsubst < smarketing-ai/deployment/${manifest}.template > smarketing-ai/deployment/${manifest}
                         echo "Generated manifest file:"
-                        cat deployment/${manifest}
+                        cat smarketing-ai/deployment/${manifest}
                     """
                 }
             }
 
             container('azure-cli') {
                 sh """
-                    kubectl apply -f deployment/${manifest}
+                    kubectl apply -f smarketing-ai/deployment/${manifest}
 
                     echo "Waiting for smarketing deployment to be ready..."
-                    kubectl -n ${namespace} wait --for=condition=available deployment/smarketing --timeout=300s
+                    kubectl -n ${namespace} wait --for=condition=available smarketing-ai/deployment/smarketing --timeout=300s
 
                     echo "=========================================="
                     echo "Getting LoadBalancer External IP..."
