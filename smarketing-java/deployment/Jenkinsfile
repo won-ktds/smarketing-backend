@@ -39,6 +39,8 @@ podTemplate(
             echo "Services: ${services}"
             echo "Namespace: ${namespace}"
             echo "Image Tag: ${imageTag}"
+            echo "Registry: ${props.registry}"
+            echo "Image Org: ${props.image_org}"
         }
 
         stage("Check Changes") {
@@ -182,15 +184,15 @@ podTemplate(
                     export postgres_password='${props.POSTGRES_PASSWORD}'
                     export replicas=${props.replicas}
                     
-                    # PostgreSQL 환경변수 추가 (문자열로)
+                    # PostgreSQL 환경변수 추가 (올바른 DB명으로 수정)
                     export postgres_host='${props.POSTGRES_HOST}'
                     export postgres_port='5432'
-                    export postgres_db_member='member'
-                    export postgres_db_store='store'
-                    export postgres_db_marketing_content='marketing_content'
+                    export postgres_db_member='MemberDB'
+                    export postgres_db_store='StoreDB'
+                    export postgres_db_marketing_content='MarketingContentDB'
                     export postgres_db_ai_recommend='AiRecommendationDB'
                     
-                    # Redis 환경변수 추가 (문자열로)
+                    # Redis 환경변수 추가
                     export redis_host='${props.REDIS_HOST}'
                     export redis_port='6380'
                     export redis_password='${props.REDIS_PASSWORD}'
@@ -208,11 +210,17 @@ podTemplate(
                     export ai_recommend_image_path='${props.registry}/${props.image_org}/ai-recommend:${imageTag}'
 
                     echo "=== 환경변수 확인 ==="
+                    echo "namespace: \$namespace"
                     echo "postgres_host: \$postgres_host"
                     echo "postgres_port: \$postgres_port"
+                    echo "postgres_user: \$postgres_user"
+                    echo "postgres_db_member: \$postgres_db_member"
+                    echo "postgres_db_store: \$postgres_db_store"
+                    echo "postgres_db_marketing_content: \$postgres_db_marketing_content"
+                    echo "postgres_db_ai_recommend: \$postgres_db_ai_recommend"
                     echo "redis_host: \$redis_host"
                     echo "redis_port: \$redis_port"
-                    echo "postgres_user: \$postgres_user"
+                    echo "replicas: \$replicas"
 
                     echo "=== Manifest 생성 ==="
                     envsubst < smarketing-java/deployment/${manifest}.template > smarketing-java/deployment/${manifest}
@@ -233,7 +241,10 @@ podTemplate(
                     kubectl delete configmap member-config store-config marketing-content-config ai-recommend-config -n ${namespace} --ignore-not-found=true
                     
                     echo "=== PostgreSQL 서비스 확인 ==="
-                    kubectl get svc -n ${namespace} | grep postgresql || echo "PostgreSQL 서비스가 없습니다."
+                    kubectl get svc -n ${namespace} | grep postgresql || echo "PostgreSQL 서비스를 찾을 수 없습니다."
+                    
+                    echo "=== Redis 서비스 확인 ==="
+                    kubectl get svc -n ${namespace} | grep redis || echo "Redis 서비스를 찾을 수 없습니다."
                     
                     echo "=== Manifest 적용 ==="
                     kubectl apply -f smarketing-java/deployment/${manifest}
@@ -244,19 +255,27 @@ podTemplate(
                     kubectl -n ${namespace} get pods
                     
                     echo "=== ConfigMap 확인 ==="
-                    kubectl -n ${namespace} get configmap ai-recommend-config -o yaml
+                    kubectl -n ${namespace} get configmap member-config -o yaml | grep -A 10 "data:"
+                    kubectl -n ${namespace} get configmap ai-recommend-config -o yaml | grep -A 10 "data:"
                     
-                    echo "=== 각 서비스 배포 대기 (90초 timeout) ==="
-                    timeout 90 kubectl -n ${namespace} wait --for=condition=available deployment/member --timeout=90s || echo "member deployment 대기 타임아웃"
-                    timeout 90 kubectl -n ${namespace} wait --for=condition=available deployment/store --timeout=90s || echo "store deployment 대기 타임아웃"
-                    timeout 90 kubectl -n ${namespace} wait --for=condition=available deployment/marketing-content --timeout=90s || echo "marketing-content deployment 대기 타임아웃"
-                    timeout 90 kubectl -n ${namespace} wait --for=condition=available deployment/ai-recommend --timeout=90s || echo "ai-recommend deployment 대기 타임아웃"
+                    echo "=== Secret 확인 ==="
+                    kubectl -n ${namespace} get secret member-secret -o yaml | grep -A 5 "data:"
                     
-                    echo "=== 최종 상태 ==="
+                    echo "=== 각 서비스 배포 대기 (120초 timeout) ==="
+                    timeout 120 kubectl -n ${namespace} wait --for=condition=available deployment/member --timeout=120s || echo "member deployment 대기 타임아웃"
+                    timeout 120 kubectl -n ${namespace} wait --for=condition=available deployment/store --timeout=120s || echo "store deployment 대기 타임아웃"
+                    timeout 120 kubectl -n ${namespace} wait --for=condition=available deployment/marketing-content --timeout=120s || echo "marketing-content deployment 대기 타임아웃"
+                    timeout 120 kubectl -n ${namespace} wait --for=condition=available deployment/ai-recommend --timeout=120s || echo "ai-recommend deployment 대기 타임아웃"
+                    
+                    echo "=== 최종 배포 상태 ==="
                     kubectl -n ${namespace} get all
                     
-                    echo "=== Pod 로그 확인 (ai-recommend) ==="
-                    kubectl -n ${namespace} logs deployment/ai-recommend --tail=50 || echo "ai-recommend 로그를 가져올 수 없습니다"
+                    echo "=== 각 서비스 Pod 로그 확인 (최근 20라인) ==="
+                    for service in member store marketing-content ai-recommend; do
+                        echo "=== \$service 서비스 로그 ==="
+                        kubectl -n ${namespace} logs deployment/\$service --tail=20 || echo "\$service 로그를 가져올 수 없습니다"
+                        echo ""
+                    done
                     
                     echo "=== 실패한 Pod 상세 정보 ==="
                     for pod in \$(kubectl -n ${namespace} get pods --field-selector=status.phase!=Running -o name 2>/dev/null || true); do
@@ -264,9 +283,17 @@ podTemplate(
                             echo "=== 실패한 Pod: \$pod ==="
                             kubectl -n ${namespace} describe \$pod | tail -30
                             echo "=== Pod 로그: \$pod ==="
-                            kubectl -n ${namespace} logs \$pod --tail=20 || echo "로그를 가져올 수 없습니다"
+                            kubectl -n ${namespace} logs \$pod --tail=50 || echo "로그를 가져올 수 없습니다"
+                            echo "=========================================="
                         fi
                     done
+                    
+                    echo "=== Ingress 상태 확인 ==="
+                    kubectl -n ${namespace} get ingress
+                    kubectl -n ${namespace} describe ingress smarketing-backend || echo "Ingress를 찾을 수 없습니다"
+                    
+                    echo "=== 서비스 Endpoint 확인 ==="
+                    kubectl -n ${namespace} get endpoints
                 """
             }
         }
