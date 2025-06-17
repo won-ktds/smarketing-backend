@@ -8,16 +8,17 @@ import com.won.smarketing.content.domain.model.CreationConditions;
 import com.won.smarketing.content.domain.model.Platform;
 import com.won.smarketing.content.domain.repository.ContentRepository;
 import com.won.smarketing.content.domain.service.AiPosterGenerator;
+import com.won.smarketing.content.domain.service.BlobStorageService;
 import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 import com.won.smarketing.content.presentation.dto.PosterContentCreateResponse;
 import com.won.smarketing.content.presentation.dto.PosterContentSaveRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 /**
  * 포스터 콘텐츠 서비스 구현체
@@ -30,6 +31,7 @@ public class PosterContentService implements PosterContentUseCase {
 
     private final ContentRepository contentRepository;
     private final AiPosterGenerator aiPosterGenerator;
+    private final BlobStorageService blobStorageService;
 
     /**
      * 포스터 콘텐츠 생성
@@ -39,9 +41,17 @@ public class PosterContentService implements PosterContentUseCase {
      */
     @Override
     @Transactional
-    public PosterContentCreateResponse generatePosterContent(PosterContentCreateRequest request) {
+    public PosterContentCreateResponse generatePosterContent(List<MultipartFile> images, PosterContentCreateRequest request) {
 
+        // 1. 이미지 blob storage에 저장하고 request 저장
+        List<String> imageUrls = blobStorageService.uploadImage(images, "poster-content-original");
+        request.setImages(imageUrls);
+
+        // 2. AI 요청
         String generatedPoster = aiPosterGenerator.generatePoster(request);
+
+        // 3. 저장
+        Content savedContent = savePosterContent(request, generatedPoster);
 
         // 생성 조건 정보 구성
         CreationConditions conditions = CreationConditions.builder()
@@ -68,9 +78,8 @@ public class PosterContentService implements PosterContentUseCase {
      *
      * @param request 포스터 콘텐츠 저장 요청
      */
-    @Override
     @Transactional
-    public void savePosterContent(PosterContentSaveRequest request) {
+    public Content savePosterContent(PosterContentCreateRequest request, String generatedPoster) {
         // 생성 조건 구성
         CreationConditions conditions = CreationConditions.builder()
                 .category(request.getCategory())
@@ -86,7 +95,7 @@ public class PosterContentService implements PosterContentUseCase {
                 .contentType(ContentType.POSTER)
                 .platform(Platform.GENERAL)
                 .title(request.getTitle())
-                .content(request.getContent())
+                .content(generatedPoster)
                 .images(request.getImages())
                 .status(ContentStatus.PUBLISHED)
                 .creationConditions(conditions)
@@ -94,6 +103,8 @@ public class PosterContentService implements PosterContentUseCase {
                 .build();
 
         // 저장
-        contentRepository.save(content);
+        Content savedContent = contentRepository.save(content);
+
+        return savedContent;
     }
 }

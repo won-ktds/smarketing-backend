@@ -7,12 +7,17 @@ import com.won.smarketing.content.application.usecase.SnsContentUseCase;
 import com.won.smarketing.content.presentation.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 /**
@@ -62,23 +67,33 @@ public class ContentController {
      * @return 생성된 포스터 콘텐츠 정보
      */
     @Operation(summary = "홍보 포스터 생성", description = "AI를 활용하여 홍보 포스터를 생성합니다.")
-    @PostMapping("/poster/generate")
-    public ResponseEntity<ApiResponse<PosterContentCreateResponse>> generatePosterContent(@Valid @RequestBody PosterContentCreateRequest request) {
-        PosterContentCreateResponse response = posterContentUseCase.generatePosterContent(request);
-        return ResponseEntity.ok(ApiResponse.success(response, "포스터 콘텐츠가 성공적으로 생성되었습니다."));
-    }
+    @PostMapping(value = "/poster/generate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<PosterContentCreateResponse>> generatePosterContent(
+            @Parameter(
+                    description = "참고할 이미지 파일들 (선택사항, 최대 5개)",
+                    required = false,
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+            )
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @Parameter(
+                    description = "포스터 생성 요청 정보",
+                    required = true,
+                    example = """
+                {
+                  "title": "신메뉴 출시 이벤트",
+                  "category": "이벤트",
+                  "requirement": "밝고 화사한 분위기로 만들어주세요",
+                  "eventName": "아메리카노 할인 이벤트",
+                  "startDate": "2024-01-15",
+                  "endDate": "2024-01-31",
+                  "photoStyle": "밝고 화사한"
+                }
+                """
+            )
+            @RequestPart(value = "request") @Valid PosterContentCreateRequest request) {
 
-    /**
-     * 홍보 포스터 저장
-     * 
-     * @param request 포스터 콘텐츠 저장 요청
-     * @return 저장 성공 응답
-     */
-    @Operation(summary = "홍보 포스터 저장", description = "생성된 홍보 포스터를 저장합니다.")
-    @PostMapping("/poster/save")
-    public ResponseEntity<ApiResponse<Void>> savePosterContent(@Valid @RequestBody PosterContentSaveRequest request) {
-        posterContentUseCase.savePosterContent(request);
-        return ResponseEntity.ok(ApiResponse.success(null, "포스터 콘텐츠가 성공적으로 저장되었습니다."));
+        PosterContentCreateResponse response = posterContentUseCase.generatePosterContent(images, request);
+        return ResponseEntity.ok(ApiResponse.success(response, "포스터 콘텐츠가 성공적으로 생성되었습니다."));
     }
 
     /**
