@@ -103,9 +103,12 @@ public class MarketingTipService implements MarketingTipUseCase {
         String aiGeneratedTip = aiTipGenerator.generateTip(storeWithMenuData);
         log.debug("AI 팁 생성 완료: {}", aiGeneratedTip.substring(0, Math.min(50, aiGeneratedTip.length())));
 
+        String tipSummary = generateTipSummary(aiGeneratedTip);
+
         // 도메인 객체 생성 및 저장
         MarketingTip marketingTip = MarketingTip.builder()
                 .storeId(storeWithMenuData.getStoreData().getStoreId())
+                .tipSummary(tipSummary)
                 .tipContent(aiGeneratedTip)
                 .storeWithMenuData(storeWithMenuData)
                 .createdAt(LocalDateTime.now())
@@ -122,11 +125,10 @@ public class MarketingTipService implements MarketingTipUseCase {
      * 마케팅 팁을 응답 DTO로 변환 (전체 내용 포함)
      */
     private MarketingTipResponse convertToResponse(MarketingTip marketingTip, StoreData storeData, boolean isRecentlyCreated) {
-        String tipSummary = generateTipSummary(marketingTip.getTipContent());
 
         return MarketingTipResponse.builder()
                 .tipId(marketingTip.getId().getValue())
-                .tipSummary(tipSummary)
+                .tipSummary(marketingTip.getTipSummary())
                 .tipContent(marketingTip.getTipContent())  // 🆕 전체 내용 포함
                 .storeInfo(MarketingTipResponse.StoreInfo.builder()
                         .storeName(storeData.getStoreName())
