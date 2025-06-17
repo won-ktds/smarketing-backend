@@ -101,24 +101,19 @@ public class ContentController {
     /**
      * 콘텐츠 목록 조회
      * 
-     * @param contentType 콘텐츠 타입 필터
+     * @param storeId 콘텐츠 타입 필터
      * @param platform 플랫폼 필터
-     * @param period 기간 필터
-     * @param sortBy 정렬 기준
+     *
      * @return 콘텐츠 목록
      */
     @Operation(summary = "콘텐츠 목록 조회", description = "다양한 필터와 정렬 옵션으로 콘텐츠 목록을 조회합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<List<ContentResponse>>> getContents(
-            @Parameter(description = "콘텐츠 타입")
-            @RequestParam(required = false) String contentType,
             @Parameter(description = "플랫폼")
             @RequestParam(required = false) String platform,
-            @Parameter(description = "기간")
-            @RequestParam(required = false) String period,
-            @Parameter(description = "정렬 기준")
-            @RequestParam(required = false) String sortBy) {
-        List<ContentResponse> response = contentQueryUseCase.getContents(contentType, platform, period, sortBy);
+            @Parameter(description = "가게 ID")
+            @RequestParam Long storeId) {
+        List<ContentResponse> response = contentQueryUseCase.getContents(storeId, platform);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

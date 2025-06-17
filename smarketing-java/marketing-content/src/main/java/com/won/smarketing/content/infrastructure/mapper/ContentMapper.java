@@ -41,9 +41,9 @@ public class ContentMapper {
         ContentJpaEntity entity = new ContentJpaEntity();
 
         // 기본 필드 매핑
-        if (content.getId() != null) {
-            entity.setId(content.getId());
-        }
+//        if (content.getId() != null) {
+//            entity.setId(content.getId());
+//        }
         entity.setStoreId(content.getStoreId());
         entity.setContentType(content.getContentType() != null ? content.getContentType().name() : null);
         entity.setPlatform(content.getPlatform() != null ? content.getPlatform().name() : null);
