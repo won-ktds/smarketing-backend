@@ -4,6 +4,7 @@ import com.won.smarketing.content.domain.service.AiPosterGenerator; // 도메인
 import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -23,7 +24,7 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
 
     private final WebClient webClient;
 
-    @Value("${external.ai-service.base-url:http://20.249.139.88:5001}")
+    @Value("${external.ai-service.base-url}")
     private String aiServiceBaseUrl;
 
     /**
@@ -70,21 +71,9 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
     }
 
     /**
-     * 다양한 사이즈의 포스터 생성 (사용하지 않음)
-     * 1개의 이미지만 생성하므로 빈 맵 반환
-     *
-     * @param baseImage 기본 이미지 URL
-     * @return 빈 맵
-     */
-    @Override
-    public Map<String, String> generatePosterSizes(String baseImage) {
-        log.info("포스터 사이즈 변환 기능은 사용하지 않음: baseImage={}", baseImage);
-        return new HashMap<>();
-    }
-
-    /**
      * Python AI 서비스 요청 데이터 구성
      * Python 서비스의 PosterContentGetRequest 모델에 맞춤
+     * 카테고리,
      */
     private Map<String, Object> buildRequestBody(PosterContentCreateRequest request) {
         Map<String, Object> requestBody = new HashMap<>();
@@ -92,7 +81,6 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
         // 기본 정보
         requestBody.put("title", request.getTitle());
         requestBody.put("category", request.getCategory());
-        requestBody.put("contentType", request.getContentType());
 
         // 이미지 정보
         if (request.getImages() != null && !request.getImages().isEmpty()) {
@@ -109,16 +97,6 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
             requestBody.put("requirement", request.getRequirement());
         }
 
-        // 톤앤매너
-        if (request.getToneAndManner() != null) {
-            requestBody.put("toneAndManner", request.getToneAndManner());
-        }
-
-        // 감정 강도
-        if (request.getEmotionIntensity() != null) {
-            requestBody.put("emotionIntensity", request.getEmotionIntensity());
-        }
-
         // 메뉴명
         if (request.getMenuName() != null) {
             requestBody.put("menuName", request.getMenuName());
@@ -127,11 +105,6 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
         // 이벤트 정보
         if (request.getEventName() != null) {
             requestBody.put("eventName", request.getEventName());
-        }
-
-        // 날짜 정보 (LocalDate를 String으로 변환)
-        if (request.getStartDate() != null) {
-            requestBody.put("startDate", request.getStartDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
         }
 
         if (request.getEndDate() != null) {

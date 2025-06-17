@@ -41,32 +41,25 @@ public class PosterContentCreateRequest {
     @NotNull(message = "홍보 종료일은 필수입니다")
     private LocalDateTime promotionEndDate;
 
+    @Schema(description = "메뉴명 (메뉴 홍보시)", example = "카페라떼")
+    private String menuName;
+
     @Schema(description = "이벤트명 (이벤트 홍보시)", example = "신메뉴 출시 이벤트")
     private String eventName;
 
     @Schema(description = "이미지 스타일", example = "모던")
     private String imageStyle;
 
-    @Schema(description = "프로모션 유형", example = "할인 정보")
-    private String promotionType;
-
-    @Schema(description = "감정 강도", example = "보통")
-    private String emotionIntensity;
-
     @Schema(description = "업로드된 이미지 URL 목록", required = true)
     @NotNull(message = "이미지는 1개 이상 필수입니다")
     @Size(min = 1, message = "이미지는 1개 이상 업로드해야 합니다")
     private List<String> images;
 
-    // CreationConditions에 필요한 필드들
     @Schema(description = "콘텐츠 카테고리", example = "이벤트")
     private String category;
 
     @Schema(description = "구체적인 요구사항", example = "신메뉴 출시 이벤트 포스터를 만들어주세요")
     private String requirement;
-
-    @Schema(description = "톤앤매너", example = "전문적")
-    private String toneAndManner;
 
     @Schema(description = "이벤트 시작일", example = "2024-01-15")
     private LocalDate startDate;
@@ -76,4 +69,5 @@ public class PosterContentCreateRequest {
 
     @Schema(description = "사진 스타일", example = "밝고 화사한")
     private String photoStyle;
+
 }

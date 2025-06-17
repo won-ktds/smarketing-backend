@@ -17,12 +17,4 @@ public interface AiPosterGenerator {
      * @return 생성된 포스터 이미지 URL
      */
     String generatePoster(PosterContentCreateRequest request);
-    
-    /**
-     * 다양한 사이즈의 포스터 생성
-     * 
-     * @param baseImage 기본 이미지
-     * @return 사이즈별 포스터 URL 맵
-     */
-    Map<String, String> generatePosterSizes(String baseImage);
 }
