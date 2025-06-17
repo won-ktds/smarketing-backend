@@ -4,6 +4,9 @@ package com.won.smarketing.content.application.usecase;
 import com.won.smarketing.content.presentation.dto.SnsContentCreateRequest;
 import com.won.smarketing.content.presentation.dto.SnsContentCreateResponse;
 import com.won.smarketing.content.presentation.dto.SnsContentSaveRequest;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * SNS 콘텐츠 관련 UseCase 인터페이스
@@ -16,7 +19,7 @@ public interface SnsContentUseCase {
      * @param request SNS 콘텐츠 생성 요청
      * @return SNS 콘텐츠 생성 응답
      */
-    SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request);
+    SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request, List<MultipartFile> files);
 
     /**
      * SNS 콘텐츠 저장

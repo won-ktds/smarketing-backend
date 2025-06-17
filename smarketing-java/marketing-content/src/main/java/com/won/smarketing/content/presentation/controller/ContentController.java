@@ -41,9 +41,10 @@ public class ContentController {
      * @return 생성된 SNS 콘텐츠 정보
      */
     @Operation(summary = "SNS 게시물 생성", description = "AI를 활용하여 SNS 게시물을 생성합니다.")
-    @PostMapping("/sns/generate")
-    public ResponseEntity<ApiResponse<SnsContentCreateResponse>> generateSnsContent(@Valid @RequestBody SnsContentCreateRequest request) {
-        SnsContentCreateResponse response = snsContentUseCase.generateSnsContent(request);
+    @PostMapping(path = "/sns/generate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<SnsContentCreateResponse>> generateSnsContent(@Valid @RequestPart SnsContentCreateRequest request,
+                                                                                    @RequestPart("files") List<MultipartFile> images) {
+        SnsContentCreateResponse response = snsContentUseCase.generateSnsContent(request, images);
         return ResponseEntity.ok(ApiResponse.success(response, "SNS 콘텐츠가 성공적으로 생성되었습니다."));
     }
 

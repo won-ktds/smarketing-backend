@@ -9,12 +9,14 @@ import com.won.smarketing.content.domain.model.CreationConditions;
 import com.won.smarketing.content.domain.model.Platform;
 import com.won.smarketing.content.domain.repository.ContentRepository;
 import com.won.smarketing.content.domain.service.AiContentGenerator;
+import com.won.smarketing.content.domain.service.BlobStorageService;
 import com.won.smarketing.content.presentation.dto.SnsContentCreateRequest;
 import com.won.smarketing.content.presentation.dto.SnsContentCreateResponse;
 import com.won.smarketing.content.presentation.dto.SnsContentSaveRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,6 +32,7 @@ public class SnsContentService implements SnsContentUseCase {
 
     private final ContentRepository contentRepository;
     private final AiContentGenerator aiContentGenerator;
+    private final BlobStorageService blobStorageService;
 
     /**
      * SNS 콘텐츠 생성
@@ -39,14 +42,17 @@ public class SnsContentService implements SnsContentUseCase {
      */
     @Override
     @Transactional
-    public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request) {
+    public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request, List<MultipartFile> files) {
+        //파일들 주소 가져옴
+        List<String> urls = blobStorageService.uploadImage(files);
+        request.setImages(urls);
+
         // AI를 사용하여 SNS 콘텐츠 생성
         String content = aiContentGenerator.generateSnsContent(request);
 
         return SnsContentCreateResponse.builder()
                 .content(content)
                 .build();
-
     }
 
     /**
