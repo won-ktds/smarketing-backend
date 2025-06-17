@@ -86,7 +86,7 @@ podTemplate(
 
                         # Docker 이미지 빌드
                         podman build \
-                            -f deployment/Dockerfile \
+                            -f smarketing-ai/deployment/Dockerfile \
                             -t ${props.registry}/${props.image_org}/smarketing-ai:${imageTag} .
 
                         # 이미지 푸시
