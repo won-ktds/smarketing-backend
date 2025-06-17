@@ -143,14 +143,14 @@ public class ContentController {
      * @param contentId 조회할 콘텐츠 ID
      * @return 콘텐츠 상세 정보
      */
-    @Operation(summary = "콘텐츠 상세 조회", description = "특정 콘텐츠의 상세 정보를 조회합니다.")
-    @GetMapping("/{contentId}")
-    public ResponseEntity<ApiResponse<ContentDetailResponse>> getContentDetail(
-            @Parameter(description = "콘텐츠 ID", required = true)
-            @PathVariable Long contentId) {
-        ContentDetailResponse response = contentQueryUseCase.getContentDetail(contentId);
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
+//    @Operation(summary = "콘텐츠 상세 조회", description = "특정 콘텐츠의 상세 정보를 조회합니다.")
+//    @GetMapping("/{contentId}")
+//    public ResponseEntity<ApiResponse<ContentDetailResponse>> getContentDetail(
+//            @Parameter(description = "콘텐츠 ID", required = true)
+//            @PathVariable Long contentId) {
+//        ContentDetailResponse response = contentQueryUseCase.getContentDetail(contentId);
+//        return ResponseEntity.ok(ApiResponse.success(response));
+//    }
 
     /**
      * 콘텐츠 삭제

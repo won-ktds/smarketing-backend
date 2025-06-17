@@ -41,49 +41,12 @@ public class SnsContentService implements SnsContentUseCase {
     @Transactional
     public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request) {
         // AI를 사용하여 SNS 콘텐츠 생성
-        String generatedContent = aiContentGenerator.generateSnsContent(request);
-
-        // 플랫폼에 맞는 해시태그 생성
-        Platform platform = Platform.fromString(request.getPlatform());
-        List<String> hashtags = aiContentGenerator.generateHashtags(generatedContent, platform);
-
-        // 생성 조건 정보 구성
-        CreationConditions conditions = CreationConditions.builder()
-                .category(request.getCategory())
-                .requirement(request.getRequirement())
-                .toneAndManner(request.getToneAndManner())
-                .emotionIntensity(request.getEmotionIntensity())
-                .eventName(request.getEventName())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .build();
-
-        // 임시 콘텐츠 생성 (저장하지 않음)
-        Content content = Content.builder()
-//                .contentType(ContentType.SNS_POST)
-                .platform(platform)
-                .title(request.getTitle())
-                .content(generatedContent)
-                .hashtags(hashtags)
-                .images(request.getImages())
-                .status(ContentStatus.DRAFT)
-                .creationConditions(conditions)
-                .storeId(request.getStoreId())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        String content = aiContentGenerator.generateSnsContent(request);
 
         return SnsContentCreateResponse.builder()
-                .contentId(null) // 임시 생성이므로 ID 없음
-                .contentType(content.getContentType().name())
-                .platform(content.getPlatform().name())
-                .title(content.getTitle())
-                .content(content.getContent())
-                .hashtags(content.getHashtags())
-                .fixedImages(content.getImages())
-                .status(content.getStatus().name())
-                .createdAt(content.getCreatedAt())
+                .content(content)
                 .build();
+
     }
 
     /**
@@ -98,8 +61,8 @@ public class SnsContentService implements SnsContentUseCase {
         CreationConditions conditions = CreationConditions.builder()
                 .category(request.getCategory())
                 .requirement(request.getRequirement())
-                .toneAndManner(request.getToneAndManner())
-                .emotionIntensity(request.getEmotionIntensity())
+                //.toneAndManner(request.getToneAndManner())
+                //.emotionIntensity(request.getEmotionIntensity())
                 .eventName(request.getEventName())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())

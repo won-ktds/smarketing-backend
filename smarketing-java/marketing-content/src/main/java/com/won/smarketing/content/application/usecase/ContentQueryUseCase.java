@@ -44,7 +44,7 @@ public interface ContentQueryUseCase {
      * @param contentId 콘텐츠 ID
      * @return 콘텐츠 상세 정보
      */
-    ContentDetailResponse getContentDetail(Long contentId);
+    //ContentDetailResponse getContentDetail(Long contentId);
     
     /**
      * 콘텐츠 삭제

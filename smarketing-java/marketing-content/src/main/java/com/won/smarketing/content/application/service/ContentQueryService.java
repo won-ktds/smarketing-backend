@@ -99,24 +99,24 @@ public class ContentQueryService implements ContentQueryUseCase {
      * @param contentId 콘텐츠 ID
      * @return 콘텐츠 상세 정보
      */
-    @Override
-    public ContentDetailResponse getContentDetail(Long contentId) {
-        Content content = contentRepository.findById(ContentId.of(contentId))
-                .orElseThrow(() -> new BusinessException(ErrorCode.CONTENT_NOT_FOUND));
-
-        return ContentDetailResponse.builder()
-                .contentId(content.getId())
-                .contentType(content.getContentType().name())
-                .platform(content.getPlatform().name())
-                .title(content.getTitle())
-                .content(content.getContent())
-                .hashtags(content.getHashtags())
-                .images(content.getImages())
-                .status(content.getStatus().name())
-                .creationConditions(toCreationConditionsDto(content.getCreationConditions()))
-                .createdAt(content.getCreatedAt())
-                .build();
-    }
+//    @Override
+//    public ContentDetailResponse getContentDetail(Long contentId) {
+//        Content content = contentRepository.findById(ContentId.of(contentId))
+//                .orElseThrow(() -> new BusinessException(ErrorCode.CONTENT_NOT_FOUND));
+//
+//        return ContentDetailResponse.builder()
+//                .contentId(content.getId())
+//                .contentType(content.getContentType().name())
+//                .platform(content.getPlatform().name())
+//                .title(content.getTitle())
+//                .content(content.getContent())
+//                .hashtags(content.getHashtags())
+//                .images(content.getImages())
+//                .status(content.getStatus().name())
+//                .creationConditions(toCreationConditionsDto(content.getCreationConditions()))
+//                .createdAt(content.getCreatedAt())
+//                .build();
+//    }
 
     /**
      * 콘텐츠 삭제
@@ -177,15 +177,15 @@ public class ContentQueryService implements ContentQueryUseCase {
      * @param conditions CreationConditions 도메인 객체
      * @return CreationConditionsDto
      */
-    private ContentDetailResponse.CreationConditionsDto toCreationConditionsDto(CreationConditions conditions) {
-        if (conditions == null) {
-            return null;
-        }
-        
-        return ContentDetailResponse.CreationConditionsDto.builder()
-                .toneAndManner(conditions.getToneAndManner())
-                .emotionIntensity(conditions.getEmotionIntensity())
-                .eventName(conditions.getEventName())
-                .build();
-    }
+//    private ContentDetailResponse.CreationConditionsDto toCreationConditionsDto(CreationConditions conditions) {
+//        if (conditions == null) {
+//            return null;
+//        }
+//
+//        return ContentDetailResponse.CreationConditionsDto.builder()
+//                .toneAndManner(conditions.getToneAndManner())
+//                .emotionIntensity(conditions.getEmotionIntensity())
+//                .eventName(conditions.getEventName())
+//                .build();
+//    }
 }
