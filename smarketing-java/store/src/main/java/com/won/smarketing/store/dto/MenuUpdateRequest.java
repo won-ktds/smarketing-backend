@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 메뉴 수정 요청 DTO

@@ -104,13 +104,12 @@ public class MarketingTipService implements MarketingTipUseCase {
         log.debug("AI 팁 생성 완료: {}", aiGeneratedTip.substring(0, Math.min(50, aiGeneratedTip.length())));
 
         String tipSummary = generateTipSummary(aiGeneratedTip);
-        log.info("tipSummary : {}", tipSummary);
 
         // 도메인 객체 생성 및 저장
         MarketingTip marketingTip = MarketingTip.builder()
                 .storeId(storeWithMenuData.getStoreData().getStoreId())
-                .tipContent(aiGeneratedTip)
                 .tipSummary(tipSummary)
+                .tipContent(aiGeneratedTip)
                 .storeWithMenuData(storeWithMenuData)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -142,113 +141,80 @@ public class MarketingTipService implements MarketingTipUseCase {
                 .build();
     }
 
+    /**
+     * 마케팅 팁 요약 생성 (핵심 마케팅 팁 섹션에서 첫 번째 문장 추출)
+     *
+     * @param fullContent AI로 생성된 전체 마케팅 팁 HTML 콘텐츠
+     * @return 핵심 마케팅 팁의 첫 번째 문장
+     */
     private String generateTipSummary(String fullContent) {
         if (fullContent == null || fullContent.trim().isEmpty()) {
             return "마케팅 팁이 생성되었습니다.";
         }
 
         try {
-            // JSON 형식 처리: "```html\n..." 패턴
-            String processedContent = preprocessContent(fullContent);
+            // 1. "✨ 핵심 마케팅 팁" 섹션 추출
+            String coreSection = extractCoreMarketingTipSection(fullContent);
 
-            // 1순위: HTML 블록 밖의 첫 번째 제목 추출
-            String titleOutsideHtml = extractTitleOutsideHtml(processedContent);
-            if (titleOutsideHtml != null && titleOutsideHtml.length() > 5) {
-                return titleOutsideHtml;
+            if (coreSection != null && !coreSection.trim().isEmpty()) {
+                // 2. HTML 태그 제거
+                String cleanText = removeHtmlTags(coreSection);
+
+                // 3. 첫 번째 의미있는 문장 추출
+                String summary = extractFirstMeaningfulSentence(cleanText);
+
+                // 4. 길이 제한 (100자 이내)
+                if (summary.length() > 100) {
+                    summary = summary.substring(0, 97) + "...";
+                }
+
+                return summary;
             }
 
-            // 2순위: <b> 태그 안의 첫 번째 내용 추출
-            String boldContent = extractBoldContent(processedContent);
-            if (boldContent != null && boldContent.length() > 5) {
-                return boldContent;
-            }
-
-            // 3순위: HTML 태그 제거 후 첫 번째 문장
-            return extractFirstSentence(processedContent);
+            // 핵심 팁 섹션을 찾지 못한 경우 fallback 처리
+            return extractFallbackSummary(fullContent);
 
         } catch (Exception e) {
-            log.error("마케팅 팁 요약 생성 중 오류", e);
-            return "마케팅 팁이 생성되었습니다.";
+            log.warn("마케팅 팁 요약 생성 중 오류 발생, 기본 메시지 반환: {}", e.getMessage());
+            return "맞춤형 마케팅 팁이 생성되었습니다.";
         }
     }
 
     /**
-     * JSON이나 특수 형식 전처리
+     * "✨ 핵심 마케팅 팁" 섹션 추출
      */
-    private String preprocessContent(String content) {
-        // 먼저 JSON 이스케이프 문자 정리
-        if (content.contains("\\n")) {
-            content = content.replaceAll("\\\\n", "\n");
-        }
+    private String extractCoreMarketingTipSection(String fullContent) {
+        // 핵심 마케팅 팁 섹션 시작 패턴들
+        String[] corePatterns = {
+                "✨ 핵심 마케팅 팁",
+                "<h3>✨ 핵심 마케팅 팁</h3>",
+                "핵심 마케팅 팁"
+        };
 
-        // JSON 구조에서 실제 HTML 내용만 추출
-        if (content.contains("```html")) {
-            content = content.replaceAll("```html", "")
-                    .replaceAll("```", "")
-                    .replaceAll("\"", "");
-        }
+        // 다음 섹션 시작 패턴들
+        String[] nextSectionPatterns = {
+                "🚀 실행 방법",
+                "<h3>🚀 실행 방법</h3>",
+                "💰 예상 비용",
+                "<h3>💰 예상 비용"
+        };
 
-        return content.trim();
-    }
+        for (String pattern : corePatterns) {
+            int startIndex = fullContent.indexOf(pattern);
+            if (startIndex != -1) {
+                // 패턴 뒤부터 시작
+                int contentStart = startIndex + pattern.length();
 
-    /**
-     * HTML 블록 밖의 첫 번째 제목 라인 추출
-     * ```html 이후 첫 번째 줄의 내용만 추출
-     */
-    private String extractTitleOutsideHtml(String content) {
-        // 먼저 이스케이프 문자 정리
-        String processedContent = content.replaceAll("\\\\n", "\n");
-
-        // ```html 패턴 찾기 (이스케이프 처리 후)
-        String[] htmlPatterns = {"```html\n", "```html\\n"};
-
-        for (String pattern : htmlPatterns) {
-            int htmlStart = processedContent.indexOf(pattern);
-            if (htmlStart != -1) {
-                // 패턴 이후부터 시작
-                int contentStart = htmlStart + pattern.length();
-
-                // 첫 번째 줄바꿈까지 또는 \n\n까지 찾기
-                String remaining = processedContent.substring(contentStart);
-                String[] lines = remaining.split("\n");
-
-                if (lines.length > 0) {
-                    String firstLine = lines[0].trim();
-
-                    // 유효한 내용인지 확인
-                    if (firstLine.length() > 5 && !firstLine.contains("🎯") && !firstLine.contains("<")) {
-                        return cleanText(firstLine);
+                // 다음 섹션까지의 내용 추출
+                int endIndex = fullContent.length();
+                for (String nextPattern : nextSectionPatterns) {
+                    int nextIndex = fullContent.indexOf(nextPattern, contentStart);
+                    if (nextIndex != -1 && nextIndex < endIndex) {
+                        endIndex = nextIndex;
                     }
                 }
-            }
-        }
 
-        // 기존 방식으로 fallback
-        return extractFromLines(processedContent);
-    }
-
-    /**
-     * 줄별로 처리하는 기존 방식
-     */
-    private String extractFromLines(String content) {
-        String[] lines = content.split("\n");
-
-        for (String line : lines) {
-            line = line.trim();
-
-            // 빈 줄이나 HTML 태그, 이모지로 시작하는 줄 건너뛰기
-            if (line.isEmpty() ||
-                    line.contains("<") ||
-                    line.startsWith("🎯") ||
-                    line.startsWith("🔍") ||
-                    line.equals("```html") ||
-                    line.matches("^[\\p{So}\\p{Sk}\\s]+$")) {
-                continue;
-            }
-
-            // 의미있는 제목 라인 발견
-            if (line.length() > 5) {
-                return cleanText(line);
+                return fullContent.substring(contentStart, endIndex).trim();
             }
         }
 
@@ -256,73 +222,87 @@ public class MarketingTipService implements MarketingTipUseCase {
     }
 
     /**
-     * <b> 태그 안의 첫 번째 내용 추출
+     * HTML 태그 제거
      */
-    private String extractBoldContent(String htmlContent) {
-        int startIndex = htmlContent.indexOf("<b>");
-        if (startIndex == -1) {
-            return null;
-        }
+    private String removeHtmlTags(String htmlText) {
+        if (htmlText == null) return "";
 
-        int endIndex = htmlContent.indexOf("</b>", startIndex);
-        if (endIndex == -1) {
-            return null;
-        }
-
-        String content = htmlContent.substring(startIndex + 3, endIndex).trim();
-        return cleanText(content);
-    }
-
-    /**
-     * 텍스트 정리
-     */
-    private String cleanText(String text) {
-        if (text == null) {
-            return null;
-        }
-
-        return text.replaceAll("&nbsp;", " ")
-                .replaceAll("\\s+", " ")
+        return htmlText
+                .replaceAll("<[^>]+>", "")  // HTML 태그 제거
+                .replaceAll("&nbsp;", " ")  // HTML 엔티티 처리
+                .replaceAll("&lt;", "<")
+                .replaceAll("&gt;", ">")
+                .replaceAll("&amp;", "&")
+                .replaceAll("\\s+", " ")    // 연속된 공백을 하나로
                 .trim();
     }
 
     /**
-     * HTML 태그 제거 후 첫 번째 의미있는 문장 추출
+     * 첫 번째 의미있는 문장 추출
      */
-    private String extractFirstSentence(String htmlContent) {
-        // HTML 태그 모두 제거
-        String cleanContent = htmlContent.replaceAll("<[^>]+>", "").trim();
+    private String extractFirstMeaningfulSentence(String cleanText) {
+        if (cleanText == null || cleanText.trim().isEmpty()) {
+            return "마케팅 팁이 생성되었습니다.";
+        }
 
-        // 줄별로 나누어서 첫 번째 의미있는 줄 찾기
-        String[] lines = cleanContent.split("\\n");
+        // 문장 분할 (마침표, 느낌표, 물음표 기준)
+        String[] sentences = cleanText.split("[.!?]");
 
-        for (String line : lines) {
-            line = line.trim();
+        for (String sentence : sentences) {
+            String trimmed = sentence.trim();
 
-            // 빈 줄이나 이모지만 있는 줄 건너뛰기
-            if (line.isEmpty() || line.matches("^[\\p{So}\\p{Sk}\\s]+$")) {
-                continue;
-            }
+            // 의미있는 문장인지 확인 (10자 이상, 특수문자만으로 구성되지 않음)
+            if (trimmed.length() >= 10 &&
+                    !trimmed.matches("^[\\s\\p{Punct}]*$") &&  // 공백과 구두점만으로 구성되지 않음
+                    !isOnlyEmojisOrSymbols(trimmed)) {         // 이모지나 기호만으로 구성되지 않음
 
-            // 최소 길이 체크하고 반환
-            if (line.length() > 5) {
-                // 50자 제한
-                if (line.length() > 50) {
-                    return line.substring(0, 50).trim() + "...";
+                // 문장 끝에 마침표 추가 (없는 경우)
+                if (!trimmed.endsWith(".") && !trimmed.endsWith("!") && !trimmed.endsWith("?")) {
+                    trimmed += ".";
                 }
-                return line;
+
+                return trimmed;
             }
         }
 
-        // 모든 방법이 실패하면 기존 방식 사용
-        String[] sentences = cleanContent.split("[.!?]");
-        String firstSentence = sentences.length > 0 ? sentences[0].trim() : cleanContent;
-
-        if (firstSentence.length() > 50) {
-            firstSentence = firstSentence.substring(0, 50).trim() + "...";
+        // 의미있는 문장을 찾지 못한 경우 원본의 처음 50자 반환
+        if (cleanText.length() > 50) {
+            return cleanText.substring(0, 47) + "...";
         }
 
-        return firstSentence.isEmpty() ? "마케팅 팁이 생성되었습니다." : firstSentence;
+        return cleanText;
+    }
+
+    /**
+     * 이모지나 기호만으로 구성되었는지 확인
+     */
+    private boolean isOnlyEmojisOrSymbols(String text) {
+        // 한글, 영문, 숫자가 포함되어 있으면 의미있는 텍스트로 판단
+        return !text.matches(".*[\\p{L}\\p{N}].*");
+    }
+
+    /**
+     * 핵심 팁 섹션을 찾지 못한 경우 대체 요약 생성
+     */
+    private String extractFallbackSummary(String fullContent) {
+        // HTML 태그 제거 후 첫 번째 의미있는 문장 찾기
+        String cleanContent = removeHtmlTags(fullContent);
+
+        // 첫 번째 문단에서 의미있는 문장 추출
+        String[] paragraphs = cleanContent.split("\\n\\n");
+
+        for (String paragraph : paragraphs) {
+            String trimmed = paragraph.trim();
+            if (trimmed.length() >= 20) {  // 충분히 긴 문단
+                String summary = extractFirstMeaningfulSentence(trimmed);
+                if (summary.length() >= 10) {
+                    return summary;
+                }
+            }
+        }
+
+        // 모든 방법이 실패한 경우 기본 메시지
+        return "개인화된 마케팅 팁이 생성되었습니다.";
     }
 
     /**

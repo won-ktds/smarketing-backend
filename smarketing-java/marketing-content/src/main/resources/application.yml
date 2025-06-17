@@ -37,3 +37,26 @@ logging:
 external:
   ai-service:
     base-url: ${AI_SERVICE_BASE_URL:http://20.249.139.88:5001}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    info:
+      enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+info:
+  app:
+    name: ${APP_NAME:smarketing-content}
+    version: "1.0.0-MVP"
+    description: "AI 마케팅 서비스 MVP - content"
