@@ -8,6 +8,10 @@ data:
   ALLOWED_ORIGINS: ${allowed_origins}
   JPA_DDL_AUTO: update
   JPA_SHOW_SQL: 'true'
+  # 🔧 Actuator 보안 설정 추가
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+  MANAGEMENT_SECURITY_ENABLED: 'false'
 
 ---
 apiVersion: v1
