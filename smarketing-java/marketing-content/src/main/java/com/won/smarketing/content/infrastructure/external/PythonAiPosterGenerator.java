@@ -4,6 +4,7 @@ import com.won.smarketing.content.domain.service.AiPosterGenerator; // 도메인
 import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -23,7 +24,7 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
 
     private final WebClient webClient;
 
-    @Value("${external.ai-service.base-url:http://20.249.139.88:5001}")
+    @Value("${external.ai-service.base-url}")
     private String aiServiceBaseUrl;
 
     /**
