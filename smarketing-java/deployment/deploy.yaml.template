@@ -494,7 +494,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: smarketing
+    - host: smarketing.20.249.184.228.nip.io
       http:
         paths:
           - path: /api/auth
