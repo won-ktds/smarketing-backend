@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service  // 추가된 어노테이션
 @RequiredArgsConstructor
-public class PythonAiTipGenerator implements AiTipGenerator {
+public class PythonMarketingTipGenerator implements AiTipGenerator {
 
     private final WebClient webClient;
 
