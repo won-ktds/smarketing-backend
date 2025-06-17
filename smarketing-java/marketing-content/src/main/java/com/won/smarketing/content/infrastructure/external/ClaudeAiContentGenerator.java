@@ -24,7 +24,7 @@ public class ClaudeAiContentGenerator implements AiContentGenerator {
 
     private final WebClient webClient;
 
-    @Value("${external.ai-service.base-url:http://20.249.139.88:5001}")
+    @Value("${external.ai-service.base-url:http://20.249.113.247:5001}")
     private String aiServiceBaseUrl;
 
     /**
