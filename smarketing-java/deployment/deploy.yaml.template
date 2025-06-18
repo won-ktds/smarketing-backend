@@ -182,29 +182,6 @@ spec:
             name: common-secret
         - secretRef:
             name: member-secret
-        startupProbe:
-          tcpSocket:
-            port: 8081
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 10
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8081
-          initialDelaySeconds: 120
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8081
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
 
 ---
 apiVersion: apps/v1
@@ -248,29 +225,7 @@ spec:
             name: common-secret
         - secretRef:
             name: store-secret
-        startupProbe:
-          tcpSocket:
-            port: 8082
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 10
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8082
-          initialDelaySeconds: 120
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8082
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+
 
 ---
 apiVersion: apps/v1
@@ -314,29 +269,7 @@ spec:
             name: common-secret
         - secretRef:
             name: marketing-content-secret
-        startupProbe:
-          tcpSocket:
-            port: 8083
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 10
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8083
-          initialDelaySeconds: 120
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8083
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+
 
 ---
 apiVersion: apps/v1
@@ -380,29 +313,7 @@ spec:
             name: common-secret
         - secretRef:
             name: ai-recommend-secret
-        startupProbe:
-          tcpSocket:
-            port: 8084
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 10
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8084
-          initialDelaySeconds: 120
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8084
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+
 
 ---
 # Services
