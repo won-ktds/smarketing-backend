@@ -1,7 +1,4 @@
 dependencies {
     implementation project(':common')
     runtimeOnly 'org.postgresql:postgresql'
-
-    // WebClient를 위한 Spring WebFlux 의존성
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }

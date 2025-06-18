@@ -37,7 +37,15 @@ logging:
 external:
   ai-service:
     base-url: ${AI_SERVICE_BASE_URL:http://20.249.113.247:5001}
-
+azure:
+  storage:
+    account-name: ${AZURE_STORAGE_ACCOUNT_NAME:stdigitalgarage02}
+    account-key: ${AZURE_STORAGE_ACCOUNT_KEY:}
+    endpoint: ${AZURE_STORAGE_ENDPOINT:https://stdigitalgarage02.blob.core.windows.net}
+    container:
+      menu-images: ${AZURE_STORAGE_MENU_CONTAINER:smarketing-menu-images}
+      store-images: ${AZURE_STORAGE_STORE_CONTAINER:smarketing-store-images}
+    max-file-size: ${AZURE_STORAGE_MAX_FILE_SIZE:10485760} # 10MB
 management:
   endpoints:
     web:

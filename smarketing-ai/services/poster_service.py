@@ -154,7 +154,6 @@ class PosterService:
         
         ### 📋 기본 정보
         카테고리: {request.category}
-        콘텐츠 타입: {request.contentType}
         메뉴명: {request.menuName or '없음'}
         메뉴 정보: {main_description}
         

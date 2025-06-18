@@ -46,12 +46,12 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
             // Python AI 서비스 호출
             Map<String, Object> response = webClient
                     .post()
-                    .uri(aiServiceBaseUrl + "/api/ai/poster")
+                    .uri("http://localhost:5001" + "/api/ai/poster")
                     .header("Content-Type", "application/json")
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(Map.class)
-                    .timeout(Duration.ofSeconds(60)) // 포스터 생성은 시간이 오래 걸릴 수 있음
+                    .timeout(Duration.ofSeconds(90)) // 포스터 생성은 시간이 오래 걸릴 수 있음
                     .block();
 
             // 응답에서 content(이미지 URL) 추출

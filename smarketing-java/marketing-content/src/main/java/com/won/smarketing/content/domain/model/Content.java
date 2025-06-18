@@ -27,42 +27,37 @@ import java.util.List;
 @Builder
 public class Content {
 
-    // ==================== 기본키 및 식별자 ====================
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "content_id")
     private Long id;
 
-    // ==================== 콘텐츠 분류 ====================
     private ContentType contentType;
+
     private Platform platform;
 
-    // ==================== 콘텐츠 내용 ====================
     private String title;
+
     private String content;
 
-    // ==================== 멀티미디어 및 메타데이터 ====================
     @Builder.Default
     private List<String> hashtags = new ArrayList<>();
 
     @Builder.Default
     private List<String> images = new ArrayList<>();
 
-    // ==================== 상태 관리 ====================
     private ContentStatus status;
 
-    // ==================== 생성 조건 ====================
     private CreationConditions creationConditions;
 
-    // ==================== 매장 정보 ====================
     private Long storeId;
 
-    // ==================== 프로모션 기간 ====================
     private LocalDateTime promotionStartDate;
+
     private LocalDateTime promotionEndDate;
 
-    // ==================== 메타데이터 ====================
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 
     public Content(ContentId of, ContentType contentType, Platform platform, String title, String content, List<String> strings, List<String> strings1, ContentStatus contentStatus, CreationConditions conditions, Long storeId, LocalDateTime createdAt, LocalDateTime updatedAt) {

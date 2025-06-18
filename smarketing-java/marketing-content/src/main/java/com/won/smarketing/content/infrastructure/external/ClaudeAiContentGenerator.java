@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,15 +43,10 @@ public class ClaudeAiContentGenerator implements AiContentGenerator {
         requestBody.put("category", request.getCategory());
         requestBody.put("contentType", request.getContentType());
         requestBody.put("requirement", request.getRequirement());
-
-        //requestBody.put("tone_and_manner", request.getToneAndManner());
-       // requestBody.put("emotion_intensity", request.getEmotionIntensity());
         requestBody.put("target", request.getTarget());
-
         requestBody.put("event_name", request.getEventName());
         requestBody.put("start_date", request.getStartDate());
         requestBody.put("end_date", request.getEndDate());
-
         requestBody.put("images", request.getImages());
 
         // Python AI 서비스 호출
@@ -63,8 +57,8 @@ public class ClaudeAiContentGenerator implements AiContentGenerator {
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(Map.class)
-                .timeout(Duration.ofSeconds(30))
-                .block();
+                .timeout(Duration.ofSeconds(300))
+                .block(Duration.ofMinutes(6));
 
         String content = "";
 
@@ -76,10 +70,6 @@ public class ClaudeAiContentGenerator implements AiContentGenerator {
             return content;
         }
         return content;
-//        } catch (Exception e) {
-//            log.error("AI 서비스 호출 실패: {}", e.getMessage(), e);
-//            return generateFallbackContent(request.getTitle(), Platform.fromString(request.getPlatform()));
-//        }
     }
 
     /**
