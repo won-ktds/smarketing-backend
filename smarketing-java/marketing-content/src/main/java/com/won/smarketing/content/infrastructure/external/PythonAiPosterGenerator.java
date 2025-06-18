@@ -46,7 +46,7 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
             // Python AI 서비스 호출
             Map<String, Object> response = webClient
                     .post()
-                    .uri(aiServiceBaseUrl + "/api/ai/poster")
+                    .uri("http://localhost:5001" + "/api/ai/poster")
                     .header("Content-Type", "application/json")
                     .bodyValue(requestBody)
                     .retrieve()

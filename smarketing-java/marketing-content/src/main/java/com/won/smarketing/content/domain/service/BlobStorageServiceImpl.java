@@ -152,12 +152,12 @@ public class BlobStorageServiceImpl implements BlobStorageService {
      * @param files 검증할 파일
      */
     private void validateImageFile(List<MultipartFile> files) {
-        for (MultipartFile file : files) {
-            // 파일 존재 여부 확인
-            if (file == null || file.isEmpty()) {
-                throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
-            }
+        // 파일 존재 여부 확인
+        if (files == null || files.isEmpty()) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
+        }
 
+        for (MultipartFile file : files) {
             // 파일 크기 확인
             if (file.getSize() > maxFileSize) {
                 throw new BusinessException(ErrorCode.FILE_SIZE_EXCEEDED);
