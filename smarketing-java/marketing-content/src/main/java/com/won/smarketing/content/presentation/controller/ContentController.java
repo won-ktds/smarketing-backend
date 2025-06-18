@@ -46,7 +46,7 @@ public class ContentController {
     @Operation(summary = "SNS 게시물 생성", description = "AI를 활용하여 SNS 게시물을 생성합니다.")
     @PostMapping(path = "/sns/generate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SnsContentCreateResponse>> generateSnsContent(@Valid @RequestPart("request") String requestJson,
-                                                                                    @Valid @RequestPart("files") List<MultipartFile> images) throws JsonProcessingException {
+                                                                                    @Valid @RequestPart(name = "files", required = false) List<MultipartFile> images) throws JsonProcessingException {
         SnsContentCreateRequest request = objectMapper.readValue(requestJson, SnsContentCreateRequest.class);
         SnsContentCreateResponse response = snsContentUseCase.generateSnsContent(request, images);
         return ResponseEntity.ok(ApiResponse.success(response, "SNS 콘텐츠가 성공적으로 생성되었습니다."));

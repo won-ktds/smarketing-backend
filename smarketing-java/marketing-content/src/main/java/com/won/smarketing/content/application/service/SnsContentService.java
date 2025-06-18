@@ -14,6 +14,7 @@ import com.won.smarketing.content.presentation.dto.SnsContentCreateRequest;
 import com.won.smarketing.content.presentation.dto.SnsContentCreateResponse;
 import com.won.smarketing.content.presentation.dto.SnsContentSaveRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,6 +35,9 @@ public class SnsContentService implements SnsContentUseCase {
     private final AiContentGenerator aiContentGenerator;
     private final BlobStorageService blobStorageService;
 
+    @Value("${azure.storage.container.poster-images:content-images}")
+    private String contentImageContainer;
+
     /**
      * SNS 콘텐츠 생성
      *
@@ -44,8 +48,10 @@ public class SnsContentService implements SnsContentUseCase {
     @Transactional
     public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request, List<MultipartFile> files) {
         //파일들 주소 가져옴
-        List<String> urls = blobStorageService.uploadImage(files, "containerName");
-        request.setImages(urls);
+        if(files != null) {
+            List<String> urls = blobStorageService.uploadImage(files, contentImageContainer);
+            request.setImages(urls);
+        }
 
         // AI를 사용하여 SNS 콘텐츠 생성
         String content = aiContentGenerator.generateSnsContent(request);
@@ -67,8 +73,6 @@ public class SnsContentService implements SnsContentUseCase {
         CreationConditions conditions = CreationConditions.builder()
                 .category(request.getCategory())
                 .requirement(request.getRequirement())
-                //.toneAndManner(request.getToneAndManner())
-                //.emotionIntensity(request.getEmotionIntensity())
                 .eventName(request.getEventName())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
@@ -76,7 +80,6 @@ public class SnsContentService implements SnsContentUseCase {
 
         // 콘텐츠 엔티티 생성 및 저장
         Content content = Content.builder()
-//                .contentType(ContentType.SNS_POST)
                 .platform(Platform.fromString(request.getPlatform()))
                 .title(request.getTitle())
                 .content(request.getContent())

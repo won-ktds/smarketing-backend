@@ -43,7 +43,11 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                    .anyRequest().permitAll()
+                .requestMatchers("/api/auth/**", "/api/member/register", "/api/member/check-duplicate/**",
+                               "/api/member/validate-password", "/swagger-ui/**", "/v3/api-docs/**",
+                               "/swagger-resources/**", "/webjars/**", "/actuator/**", "/health/**", "/error"
+                ).permitAll()
+                .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
