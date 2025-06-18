@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -71,7 +70,7 @@ public class PosterContentService implements PosterContentUseCase {
      * @param request 포스터 콘텐츠 저장 요청
      */
     @Transactional
-    public Content savePosterContent(PosterContentSaveRequest request) {
+    public void savePosterContent(PosterContentSaveRequest request) {
         // 생성 조건 구성
         CreationConditions conditions = CreationConditions.builder()
                 .category(request.getCategory())
@@ -87,7 +86,7 @@ public class PosterContentService implements PosterContentUseCase {
                 .contentType(ContentType.POSTER)
                 .platform(Platform.GENERAL)
                 .title(request.getTitle())
-//                .content(request.gen)
+                .content(request.getContent())
                 .images(request.getImages())
                 .status(ContentStatus.PUBLISHED)
                 .creationConditions(conditions)
@@ -95,6 +94,6 @@ public class PosterContentService implements PosterContentUseCase {
                 .build();
 
         // 저장
-        return contentRepository.save(content);
+        contentRepository.save(content);
     }
 }
