@@ -86,6 +86,19 @@ public class ContentController {
     }
 
     /**
+     * 홍보 포스터 저장
+     *
+     * @param request 포스터 콘텐츠 저장 요청
+     * @return 저장 성공 응답
+     */
+    @Operation(summary = "홍보 포스터 저장", description = "생성된 홍보 포스터를 저장합니다.")
+    @PostMapping("/poster/save")
+    public ResponseEntity<ApiResponse<Void>> savePosterContent(@Valid @RequestBody PosterContentSaveRequest request) {
+        posterContentUseCase.savePosterContent(request);
+        return ResponseEntity.ok(ApiResponse.success(null, "포스터 콘텐츠가 성공적으로 저장되었습니다."));
+    }
+
+    /**
      * 콘텐츠 수정
      * 
      * @param contentId 수정할 콘텐츠 ID

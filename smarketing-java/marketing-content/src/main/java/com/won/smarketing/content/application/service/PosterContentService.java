@@ -48,33 +48,19 @@ public class PosterContentService implements PosterContentUseCase {
     @Override
     @Transactional
     public PosterContentCreateResponse generatePosterContent(List<MultipartFile> images, PosterContentCreateRequest request) {
-        log.info("지점1-1");
+
         // 1. 이미지 blob storage에 저장하고 request 저장
         List<String> imageUrls = blobStorageService.uploadImage(images, posterImageContainer);
         request.setImages(imageUrls);
-        log.info("지점2-1");
+
         // 2. AI 요청
         String generatedPoster = aiPosterGenerator.generatePoster(request);
-
-        // 3. 저장
-        Content savedContent = savePosterContent(request, generatedPoster);
-
-        // 생성 조건 정보 구성
-        CreationConditions conditions = CreationConditions.builder()
-                .category(request.getCategory())
-                .requirement(request.getRequirement())
-                .eventName(request.getEventName())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .photoStyle(request.getPhotoStyle())
-                .build();
 
         return PosterContentCreateResponse.builder()
                 .contentId(null) // 임시 생성이므로 ID 없음
                 .contentType(ContentType.POSTER.name())
                 .title(request.getTitle())
-                .posterImage(generatedPoster)
-                .posterSizes(new HashMap<>()) // 빈 맵 반환 (사이즈 변환 안함)
+                .content(generatedPoster)
                 .status(ContentStatus.DRAFT.name())
                 .build();
     }
@@ -85,7 +71,7 @@ public class PosterContentService implements PosterContentUseCase {
      * @param request 포스터 콘텐츠 저장 요청
      */
     @Transactional
-    public Content savePosterContent(PosterContentCreateRequest request, String generatedPoster) {
+    public Content savePosterContent(PosterContentSaveRequest request) {
         // 생성 조건 구성
         CreationConditions conditions = CreationConditions.builder()
                 .category(request.getCategory())
@@ -101,7 +87,7 @@ public class PosterContentService implements PosterContentUseCase {
                 .contentType(ContentType.POSTER)
                 .platform(Platform.GENERAL)
                 .title(request.getTitle())
-                .content(generatedPoster)
+//                .content(request.gen)
                 .images(request.getImages())
                 .status(ContentStatus.PUBLISHED)
                 .creationConditions(conditions)
@@ -109,8 +95,6 @@ public class PosterContentService implements PosterContentUseCase {
                 .build();
 
         // 저장
-        Content savedContent = contentRepository.save(content);
-
-        return savedContent;
+        return contentRepository.save(content);
     }
 }

@@ -32,7 +32,6 @@ public class PosterContentSaveRequest {
     @Schema(description = "발행 상태", example = "PUBLISHED")
     private String status;
 
-    // CreationConditions에 필요한 필드들
     @Schema(description = "콘텐츠 카테고리", example = "이벤트")
     private String category;
 
