@@ -1,5 +1,7 @@
 package com.won.smarketing.content.presentation.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.won.smarketing.common.dto.ApiResponse;
 import com.won.smarketing.content.application.usecase.ContentQueryUseCase;
 import com.won.smarketing.content.application.usecase.PosterContentUseCase;
@@ -7,12 +9,17 @@ import com.won.smarketing.content.application.usecase.SnsContentUseCase;
 import com.won.smarketing.content.presentation.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 /**
@@ -20,6 +27,7 @@ import java.util.List;
  * SNS 콘텐츠 생성, 포스터 생성, 콘텐츠 관리 기능 제공
  */
 @Tag(name = "마케팅 콘텐츠 관리", description = "AI 기반 마케팅 콘텐츠 생성 및 관리 API")
+@Slf4j
 @RestController
 @RequestMapping("/api/content")
 @RequiredArgsConstructor
@@ -28,17 +36,19 @@ public class ContentController {
     private final SnsContentUseCase snsContentUseCase;
     private final PosterContentUseCase posterContentUseCase;
     private final ContentQueryUseCase contentQueryUseCase;
+    private final ObjectMapper objectMapper;
 
     /**
      * SNS 게시물 생성
-     * 
-     * @param request SNS 콘텐츠 생성 요청
+
      * @return 생성된 SNS 콘텐츠 정보
      */
     @Operation(summary = "SNS 게시물 생성", description = "AI를 활용하여 SNS 게시물을 생성합니다.")
-    @PostMapping("/sns/generate")
-    public ResponseEntity<ApiResponse<SnsContentCreateResponse>> generateSnsContent(@Valid @RequestBody SnsContentCreateRequest request) {
-        SnsContentCreateResponse response = snsContentUseCase.generateSnsContent(request);
+    @PostMapping(path = "/sns/generate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<SnsContentCreateResponse>> generateSnsContent(@Valid @RequestPart("request") String requestJson,
+                                                                                    @Valid @RequestPart("files") List<MultipartFile> images) throws JsonProcessingException {
+        SnsContentCreateRequest request = objectMapper.readValue(requestJson, SnsContentCreateRequest.class);
+        SnsContentCreateResponse response = snsContentUseCase.generateSnsContent(request, images);
         return ResponseEntity.ok(ApiResponse.success(response, "SNS 콘텐츠가 성공적으로 생성되었습니다."));
     }
 
@@ -62,15 +72,22 @@ public class ContentController {
      * @return 생성된 포스터 콘텐츠 정보
      */
     @Operation(summary = "홍보 포스터 생성", description = "AI를 활용하여 홍보 포스터를 생성합니다.")
-    @PostMapping("/poster/generate")
-    public ResponseEntity<ApiResponse<PosterContentCreateResponse>> generatePosterContent(@Valid @RequestBody PosterContentCreateRequest request) {
-        PosterContentCreateResponse response = posterContentUseCase.generatePosterContent(request);
+    @PostMapping(value = "/poster/generate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<PosterContentCreateResponse>> generatePosterContent(
+            @Parameter(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @RequestPart("request") String requestJson) throws JsonProcessingException {
+
+        // JSON 파싱
+        PosterContentCreateRequest request = objectMapper.readValue(requestJson, PosterContentCreateRequest.class);
+
+        PosterContentCreateResponse response = posterContentUseCase.generatePosterContent(images, request);
         return ResponseEntity.ok(ApiResponse.success(response, "포스터 콘텐츠가 성공적으로 생성되었습니다."));
     }
 
     /**
      * 홍보 포스터 저장
-     * 
+     *
      * @param request 포스터 콘텐츠 저장 요청
      * @return 저장 성공 응답
      */
