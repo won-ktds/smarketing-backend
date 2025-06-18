@@ -85,7 +85,7 @@ public class PosterContentService implements PosterContentUseCase {
         // 콘텐츠 엔티티 생성
         Content content = Content.builder()
                 .contentType(ContentType.POSTER)
-                .platform(Platform.GENERAL)
+                .platform(Platform.POSTER)
                 .title(request.getTitle())
 //                .content(request.gen)
                 .images(request.getImages())
