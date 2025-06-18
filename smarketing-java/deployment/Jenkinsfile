@@ -43,22 +43,22 @@ podTemplate(
             echo "Image Org: ${props.image_org}"
         }
 
-        stage("Check Changes") {
-            script {
-                def changes = sh(
-                    script: "git diff --name-only HEAD~1 HEAD",
-                    returnStdout: true
-                ).trim()
-
-                if (!changes.contains("smarketing-java/")) {
-                    echo "No changes in smarketing-java, skipping build"
-                    currentBuild.result = 'SUCCESS'
-                    error("Stopping pipeline - no changes detected")
-                }
-
-                echo "Changes detected in smarketing-java, proceeding with build"
-            }
-        }
+//         stage("Check Changes") {
+//             script {
+//                 def changes = sh(
+//                     script: "git diff --name-only HEAD~1 HEAD",
+//                     returnStdout: true
+//                 ).trim()
+//
+//                 if (!changes.contains("smarketing-java/")) {
+//                     echo "No changes in smarketing-java, skipping build"
+//                     currentBuild.result = 'SUCCESS'
+//                     error("Stopping pipeline - no changes detected")
+//                 }
+//
+//                 echo "Changes detected in smarketing-java, proceeding with build"
+//             }
+//         }
 
         stage("Setup AKS") {
             container('azure-cli') {
