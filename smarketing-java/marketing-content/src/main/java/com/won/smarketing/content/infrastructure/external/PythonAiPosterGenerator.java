@@ -1,5 +1,6 @@
 package com.won.smarketing.content.infrastructure.external;
 
+import com.won.smarketing.content.domain.model.store.StoreWithMenuData;
 import com.won.smarketing.content.domain.service.AiPosterGenerator; // 도메인 인터페이스 import
 import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +35,12 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
      * @return 생성된 포스터 이미지 URL
      */
     @Override
-    public String generatePoster(PosterContentCreateRequest request) {
+    public String generatePoster(PosterContentCreateRequest request, StoreWithMenuData storeWithMenuData) {
         try {
             log.info("Python AI 포스터 서비스 호출: {}/api/ai/poster", aiServiceBaseUrl);
 
             // 요청 데이터 구성
-            Map<String, Object> requestBody = buildRequestBody(request);
+            Map<String, Object> requestBody = buildRequestBody(request, storeWithMenuData);
 
             log.debug("포스터 생성 요청 데이터: {}", requestBody);
 
@@ -75,7 +76,7 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
      * Python 서비스의 PosterContentGetRequest 모델에 맞춤
      * 카테고리,
      */
-    private Map<String, Object> buildRequestBody(PosterContentCreateRequest request) {
+    private Map<String, Object> buildRequestBody(PosterContentCreateRequest request, StoreWithMenuData storeWithMenuData) {
         Map<String, Object> requestBody = new HashMap<>();
 
         // 기본 정보
