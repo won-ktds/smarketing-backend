@@ -1,5 +1,7 @@
 package com.won.smarketing.content.presentation.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.won.smarketing.common.dto.ApiResponse;
 import com.won.smarketing.content.application.usecase.ContentQueryUseCase;
 import com.won.smarketing.content.application.usecase.PosterContentUseCase;
@@ -11,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +28,7 @@ import java.util.List;
  * SNS 콘텐츠 생성, 포스터 생성, 콘텐츠 관리 기능 제공
  */
 @Tag(name = "마케팅 콘텐츠 관리", description = "AI 기반 마케팅 콘텐츠 생성 및 관리 API")
+@Slf4j
 @RestController
 @RequestMapping("/api/content")
 @RequiredArgsConstructor
@@ -33,6 +37,7 @@ public class ContentController {
     private final SnsContentUseCase snsContentUseCase;
     private final PosterContentUseCase posterContentUseCase;
     private final ContentQueryUseCase contentQueryUseCase;
+    private final ObjectMapper objectMapper;
 
     /**
      * SNS 게시물 생성
@@ -70,28 +75,12 @@ public class ContentController {
     @Operation(summary = "홍보 포스터 생성", description = "AI를 활용하여 홍보 포스터를 생성합니다.")
     @PostMapping(value = "/poster/generate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<PosterContentCreateResponse>> generatePosterContent(
-            @Parameter(
-                    description = "참고할 이미지 파일들 (선택사항, 최대 5개)",
-                    required = false,
-                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
-            )
+            @Parameter(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
-            @Parameter(
-                    description = "포스터 생성 요청 정보",
-                    required = true,
-                    example = """
-                {
-                  "title": "신메뉴 출시 이벤트",
-                  "category": "이벤트",
-                  "requirement": "밝고 화사한 분위기로 만들어주세요",
-                  "eventName": "아메리카노 할인 이벤트",
-                  "startDate": "2024-01-15",
-                  "endDate": "2024-01-31",
-                  "photoStyle": "밝고 화사한"
-                }
-                """
-            )
-            @RequestPart(value = "request") @Valid PosterContentCreateRequest request) {
+            @RequestPart("request") String requestJson) throws JsonProcessingException {
+
+        // JSON 파싱
+        PosterContentCreateRequest request = objectMapper.readValue(requestJson, PosterContentCreateRequest.class);
 
         PosterContentCreateResponse response = posterContentUseCase.generatePosterContent(images, request);
         return ResponseEntity.ok(ApiResponse.success(response, "포스터 콘텐츠가 성공적으로 생성되었습니다."));

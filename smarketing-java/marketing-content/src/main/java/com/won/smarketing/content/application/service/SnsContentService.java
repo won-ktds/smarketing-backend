@@ -44,7 +44,7 @@ public class SnsContentService implements SnsContentUseCase {
     @Transactional
     public SnsContentCreateResponse generateSnsContent(SnsContentCreateRequest request, List<MultipartFile> files) {
         //파일들 주소 가져옴
-        List<String> urls = blobStorageService.uploadImage(files);
+        List<String> urls = blobStorageService.uploadImage(files, "containerName");
         request.setImages(urls);
 
         // AI를 사용하여 SNS 콘텐츠 생성

@@ -13,6 +13,8 @@ import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 import com.won.smarketing.content.presentation.dto.PosterContentCreateResponse;
 import com.won.smarketing.content.presentation.dto.PosterContentSaveRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,9 +27,13 @@ import java.util.List;
  * 홍보 포스터 생성 및 저장 기능 구현
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PosterContentService implements PosterContentUseCase {
+
+    @Value("${azure.storage.container.poster-images:poster-images}")
+    private String posterImageContainer;
 
     private final ContentRepository contentRepository;
     private final AiPosterGenerator aiPosterGenerator;
@@ -42,11 +48,11 @@ public class PosterContentService implements PosterContentUseCase {
     @Override
     @Transactional
     public PosterContentCreateResponse generatePosterContent(List<MultipartFile> images, PosterContentCreateRequest request) {
-
+        log.info("지점1-1");
         // 1. 이미지 blob storage에 저장하고 request 저장
-        List<String> imageUrls = blobStorageService.uploadImage(images, "poster-content-original");
+        List<String> imageUrls = blobStorageService.uploadImage(images, posterImageContainer);
         request.setImages(imageUrls);
-
+        log.info("지점2-1");
         // 2. AI 요청
         String generatedPoster = aiPosterGenerator.generatePoster(request);
 
