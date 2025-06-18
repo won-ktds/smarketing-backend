@@ -17,7 +17,7 @@ public enum Platform {
     FACEBOOK("페이스북"),
     KAKAO_STORY("카카오스토리"),
     YOUTUBE("유튜브"),
-    GENERAL("일반");
+    POSTER("포스터");
 
     private final String displayName;
 

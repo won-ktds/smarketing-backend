@@ -67,8 +67,6 @@ public class SnsContentService implements SnsContentUseCase {
         CreationConditions conditions = CreationConditions.builder()
                 .category(request.getCategory())
                 .requirement(request.getRequirement())
-                //.toneAndManner(request.getToneAndManner())
-                //.emotionIntensity(request.getEmotionIntensity())
                 .eventName(request.getEventName())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
@@ -76,7 +74,6 @@ public class SnsContentService implements SnsContentUseCase {
 
         // 콘텐츠 엔티티 생성 및 저장
         Content content = Content.builder()
-//                .contentType(ContentType.SNS_POST)
                 .platform(Platform.fromString(request.getPlatform()))
                 .title(request.getTitle())
                 .content(request.getContent())
