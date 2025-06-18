@@ -10,7 +10,6 @@ import com.won.smarketing.content.presentation.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,14 +40,14 @@ public class ContentController {
 
     /**
      * SNS 게시물 생성
-     * 
-     * @param request SNS 콘텐츠 생성 요청
+
      * @return 생성된 SNS 콘텐츠 정보
      */
     @Operation(summary = "SNS 게시물 생성", description = "AI를 활용하여 SNS 게시물을 생성합니다.")
     @PostMapping(path = "/sns/generate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<SnsContentCreateResponse>> generateSnsContent(@Valid @RequestPart SnsContentCreateRequest request,
-                                                                                    @RequestPart("files") List<MultipartFile> images) {
+    public ResponseEntity<ApiResponse<SnsContentCreateResponse>> generateSnsContent(@Valid @RequestPart("request") String requestJson,
+                                                                                    @Valid @RequestPart("files") List<MultipartFile> images) throws JsonProcessingException {
+        SnsContentCreateRequest request = objectMapper.readValue(requestJson, SnsContentCreateRequest.class);
         SnsContentCreateResponse response = snsContentUseCase.generateSnsContent(request, images);
         return ResponseEntity.ok(ApiResponse.success(response, "SNS 콘텐츠가 성공적으로 생성되었습니다."));
     }
