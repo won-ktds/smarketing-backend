@@ -1450,8 +1450,8 @@ class SnsContentService:
 
             # 네이버 블로그인 경우 이미지 배치 계획 생성
             image_placement_plan = None
-            if request.platform == '네이버 블로그':
-                image_placement_plan = self._create_image_placement_plan(image_analysis, request)
+            # if request.platform == '네이버 블로그':
+            #     image_placement_plan = self._create_image_placement_plan(image_analysis, request)
 
             # 플랫폼별 특화 프롬프트 생성
             prompt = self._create_platform_specific_prompt(request, image_analysis, image_placement_plan)
@@ -1551,98 +1551,98 @@ class SnsContentService:
 
         return '기타'
 
-    def _create_image_placement_plan(self, image_analysis: Dict[str, Any], request: SnsContentGetRequest) -> Dict[
-        str, Any]:
-        """
-        네이버 블로그용 이미지 배치 계획 생성
-        """
-        images = image_analysis.get('results', [])
-        if not images:
-            return None
-
-        # 이미지 타입별 분류
-        categorized_images = {
-            '매장외관': [],
-            '인테리어': [],
-            '메뉴판': [],
-            '음식': [],
-            '사람': [],
-            '기타': []
-        }
-
-        for img in images:
-            img_type = img.get('type', '기타')
-            categorized_images[img_type].append(img)
-
-        # 블로그 구조에 따른 이미지 배치 계획
-        placement_plan = {
-            'structure': [
-                {
-                    'section': '인트로',
-                    'description': '첫인상과 방문 동기',
-                    'recommended_images': [],
-                    'placement_guide': '매장 외관이나 대표적인 음식 사진으로 시작'
-                },
-                {
-                    'section': '매장 정보',
-                    'description': '위치, 분위기, 인테리어 소개',
-                    'recommended_images': [],
-                    'placement_guide': '매장 외관 → 내부 인테리어 순서로 배치'
-                },
-                {
-                    'section': '메뉴 소개',
-                    'description': '주문한 메뉴와 상세 후기',
-                    'recommended_images': [],
-                    'placement_guide': '메뉴판 → 실제 음식 사진 순서로 배치'
-                },
-                {
-                    'section': '총평',
-                    'description': '재방문 의향과 추천 이유',
-                    'recommended_images': [],
-                    'placement_guide': '가장 매력적인 음식 사진이나 전체 분위기 사진'
-                }
-            ],
-            'image_sequence': [],
-            'usage_guide': []
-        }
-
-        # 각 섹션에 적절한 이미지 배정
-        # 인트로: 매장외관 또는 대표 음식
-        if categorized_images['매장외관']:
-            placement_plan['structure'][0]['recommended_images'].extend(categorized_images['매장외관'][:1])
-        elif categorized_images['음식']:
-            placement_plan['structure'][0]['recommended_images'].extend(categorized_images['음식'][:1])
-
-        # 매장 정보: 외관 + 인테리어
-        placement_plan['structure'][1]['recommended_images'].extend(categorized_images['매장외관'])
-        placement_plan['structure'][1]['recommended_images'].extend(categorized_images['인테리어'])
-
-        # 메뉴 소개: 메뉴판 + 음식
-        placement_plan['structure'][2]['recommended_images'].extend(categorized_images['메뉴판'])
-        placement_plan['structure'][2]['recommended_images'].extend(categorized_images['음식'])
-
-        # 총평: 남은 음식 사진 또는 기타
-        remaining_food = [img for img in categorized_images['음식']
-                          if img not in placement_plan['structure'][2]['recommended_images']]
-        placement_plan['structure'][3]['recommended_images'].extend(remaining_food[:1])
-        placement_plan['structure'][3]['recommended_images'].extend(categorized_images['기타'][:1])
-
-        # 전체 이미지 순서 생성
-        for section in placement_plan['structure']:
-            for img in section['recommended_images']:
-                if img not in placement_plan['image_sequence']:
-                    placement_plan['image_sequence'].append(img)
-
-        # 사용 가이드 생성
-        placement_plan['usage_guide'] = [
-            "📸 이미지 배치 가이드라인:",
-            "1. 각 섹션마다 2-3문장의 설명 후 이미지 삽입",
-            "2. 이미지마다 간단한 설명 텍스트 추가",
-            "3. 음식 사진은 가장 맛있어 보이는 각도로 배치",
-            "4. 마지막에 전체적인 분위기를 보여주는 사진으로 마무리"
-        ]
-
-        return placement_plan
+    # def _create_image_placement_plan(self, image_analysis: Dict[str, Any], request: SnsContentGetRequest) -> Dict[
+    #     str, Any]:
+    #     """
+    #     네이버 블로그용 이미지 배치 계획 생성
+    #     """
+    #     images = image_analysis.get('results', [])
+    #     if not images:
+    #         return None
+    #
+    #     # 이미지 타입별 분류
+    #     categorized_images = {
+    #         '매장외관': [],
+    #         '인테리어': [],
+    #         '메뉴판': [],
+    #         '음식': [],
+    #         '사람': [],
+    #         '기타': []
+    #     }
+    #
+    #     for img in images:
+    #         img_type = img.get('type', '기타')
+    #         categorized_images[img_type].append(img)
+    #
+    #     # 블로그 구조에 따른 이미지 배치 계획
+    #     #placement_plan = {
+    #     #     'structure': [
+    #     #         {
+    #     #             'section': '인트로',
+    #     #             'description': '첫인상과 방문 동기',
+    #     #             'recommended_images': [],
+    #     #             'placement_guide': '매장 외관이나 대표적인 음식 사진으로 시작'
+    #     #         },
+    #     #         {
+    #     #             'section': '매장 정보',
+    #     #             'description': '위치, 분위기, 인테리어 소개',
+    #     #             'recommended_images': [],
+    #     #             'placement_guide': '매장 외관 → 내부 인테리어 순서로 배치'
+    #     #         },
+    #     #         {
+    #     #             'section': '메뉴 소개',
+    #     #             'description': '주문한 메뉴와 상세 후기',
+    #     #             'recommended_images': [],
+    #     #             'placement_guide': '메뉴판 → 실제 음식 사진 순서로 배치'
+    #     #         },
+    #     #         {
+    #     #             'section': '총평',
+    #     #             'description': '재방문 의향과 추천 이유',
+    #     #             'recommended_images': [],
+    #     #             'placement_guide': '가장 매력적인 음식 사진이나 전체 분위기 사진'
+    #     #         }
+    #     #     ],
+    #     #     'image_sequence': [],
+    #     #     'usage_guide': []
+    #     # }
+    #
+    #     # 각 섹션에 적절한 이미지 배정
+    #     # 인트로: 매장외관 또는 대표 음식
+    #     if categorized_images['매장외관']:
+    #         placement_plan['structure'][0]['recommended_images'].extend(categorized_images['매장외관'][:1])
+    #     elif categorized_images['음식']:
+    #         placement_plan['structure'][0]['recommended_images'].extend(categorized_images['음식'][:1])
+    #
+    #     # 매장 정보: 외관 + 인테리어
+    #     placement_plan['structure'][1]['recommended_images'].extend(categorized_images['매장외관'])
+    #     placement_plan['structure'][1]['recommended_images'].extend(categorized_images['인테리어'])
+    #
+    #     # 메뉴 소개: 메뉴판 + 음식
+    #     placement_plan['structure'][2]['recommended_images'].extend(categorized_images['메뉴판'])
+    #     placement_plan['structure'][2]['recommended_images'].extend(categorized_images['음식'])
+    #
+    #     # 총평: 남은 음식 사진 또는 기타
+    #     remaining_food = [img for img in categorized_images['음식']
+    #                       if img not in placement_plan['structure'][2]['recommended_images']]
+    #     placement_plan['structure'][3]['recommended_images'].extend(remaining_food[:1])
+    #     placement_plan['structure'][3]['recommended_images'].extend(categorized_images['기타'][:1])
+    #
+    #     # 전체 이미지 순서 생성
+    #     for section in placement_plan['structure']:
+    #         for img in section['recommended_images']:
+    #             if img not in placement_plan['image_sequence']:
+    #                 placement_plan['image_sequence'].append(img)
+    #
+    #     # 사용 가이드 생성
+    #     placement_plan['usage_guide'] = [
+    #         "📸 이미지 배치 가이드라인:",
+    #         "1. 각 섹션마다 2-3문장의 설명 후 이미지 삽입",
+    #         "2. 이미지마다 간단한 설명 텍스트 추가",
+    #         "3. 음식 사진은 가장 맛있어 보이는 각도로 배치",
+    #         "4. 마지막에 전체적인 분위기를 보여주는 사진으로 마무리"
+    #     ]
+    #
+    #     return placement_plan
 
     def _create_platform_specific_prompt(self, request: SnsContentGetRequest, image_analysis: Dict[str, Any],
                                          image_placement_plan: Dict[str, Any] = None) -> str:
