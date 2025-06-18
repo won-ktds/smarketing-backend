@@ -45,7 +45,14 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/api/member/register", "/api/member/check-duplicate/**", 
                                "/api/member/validate-password", "/swagger-ui/**", "/v3/api-docs/**",
-                               "/swagger-resources/**", "/webjars/**", "/actuator/**", "/health/**", "/error").permitAll()
+                               "/swagger-resources/**", "/webjars/**", "/actuator/**", "/health/**", "/error"
+                ).permitAll()
+                // Rewrite된 경로들 허용 (새로 추가!)
+                .requestMatchers("/login", "/register", "/auth/**").permitAll()  // Member 서비스
+                .requestMatchers("/stores", "/stores/**").permitAll()           // Store 서비스
+                .requestMatchers("/content", "/content/**").permitAll()         // Content 서비스
+                .requestMatchers("/recommend", "/recommend/**").permitAll()     // AI Recommend 서비스
+
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
