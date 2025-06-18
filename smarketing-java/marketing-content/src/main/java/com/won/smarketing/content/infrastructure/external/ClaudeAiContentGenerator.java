@@ -63,7 +63,7 @@ public class ClaudeAiContentGenerator implements AiContentGenerator {
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(Map.class)
-                .timeout(Duration.ofSeconds(30))
+                .timeout(Duration.ofSeconds(60))
                 .block();
 
         String content = "";
