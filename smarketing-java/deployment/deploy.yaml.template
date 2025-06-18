@@ -462,6 +462,7 @@ spec:
   type: ClusterIP
 
 ---
+# deploy.yaml.template의 Ingress 부분 - 완전한 설정
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -478,6 +479,7 @@ spec:
     - host: smarketing.20.249.184.228.nip.io
       http:
         paths:
+          # Member 서비스 - 인증 관련
           - path: /api/auth(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -485,6 +487,15 @@ spec:
                 name: member
                 port:
                   number: 80
+          # Member 서비스 - 회원 관리 (누락된 경로!)
+          - path: /api/member(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: member
+                port:
+                  number: 80
+          # Store 서비스
           - path: /api/store(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -492,6 +503,31 @@ spec:
                 name: store
                 port:
                   number: 80
+          # Store 서비스 - 매출 관련
+          - path: /api/sales(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: store
+                port:
+                  number: 80
+          # Store 서비스 - 메뉴 관련
+          - path: /api/menu(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: store
+                port:
+                  number: 80
+          # Store 서비스 - 이미지 업로드
+          - path: /api/images(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: store
+                port:
+                  number: 80
+          # Marketing Content 서비스
           - path: /api/content(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -499,6 +535,7 @@ spec:
                 name: marketing-content
                 port:
                   number: 80
+          # AI Recommend 서비스
           - path: /api/recommend(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
