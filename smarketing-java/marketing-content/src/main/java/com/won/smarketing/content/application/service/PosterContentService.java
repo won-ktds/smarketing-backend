@@ -6,30 +6,41 @@ import com.won.smarketing.content.domain.model.ContentStatus;
 import com.won.smarketing.content.domain.model.ContentType;
 import com.won.smarketing.content.domain.model.CreationConditions;
 import com.won.smarketing.content.domain.model.Platform;
+import com.won.smarketing.content.domain.model.store.StoreWithMenuData;
 import com.won.smarketing.content.domain.repository.ContentRepository;
 import com.won.smarketing.content.domain.service.AiPosterGenerator;
+import com.won.smarketing.content.domain.service.BlobStorageService;
+import com.won.smarketing.content.domain.service.StoreDataProvider;
 import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 import com.won.smarketing.content.presentation.dto.PosterContentCreateResponse;
 import com.won.smarketing.content.presentation.dto.PosterContentSaveRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 /**
  * 포스터 콘텐츠 서비스 구현체
  * 홍보 포스터 생성 및 저장 기능 구현
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PosterContentService implements PosterContentUseCase {
 
+    @Value("${azure.storage.container.poster-images:poster-images}")
+    private String posterImageContainer;
+
     private final ContentRepository contentRepository;
     private final AiPosterGenerator aiPosterGenerator;
+    private final BlobStorageService blobStorageService;
+    private final StoreDataProvider storeDataProvider;
 
     /**
      * 포스터 콘텐츠 생성
@@ -39,26 +50,24 @@ public class PosterContentService implements PosterContentUseCase {
      */
     @Override
     @Transactional
-    public PosterContentCreateResponse generatePosterContent(PosterContentCreateRequest request) {
+    public PosterContentCreateResponse generatePosterContent(List<MultipartFile> images, PosterContentCreateRequest request) {
 
-        String generatedPoster = aiPosterGenerator.generatePoster(request);
+        // 1. 이미지 blob storage에 저장하고 request 저장
+        List<String> imageUrls = blobStorageService.uploadImage(images, posterImageContainer);
+        request.setImages(imageUrls);
+        
+        // 매장 정보 호출
+        String userId = getCurrentUserId();
+        StoreWithMenuData storeWithMenuData = storeDataProvider.getStoreWithMenuData(userId);
 
-        // 생성 조건 정보 구성
-        CreationConditions conditions = CreationConditions.builder()
-                .category(request.getCategory())
-                .requirement(request.getRequirement())
-                .eventName(request.getEventName())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .photoStyle(request.getPhotoStyle())
-                .build();
+        // 2. AI 요청
+        String generatedPoster = aiPosterGenerator.generatePoster(request, storeWithMenuData);
 
         return PosterContentCreateResponse.builder()
                 .contentId(null) // 임시 생성이므로 ID 없음
                 .contentType(ContentType.POSTER.name())
                 .title(request.getTitle())
-                .posterImage(generatedPoster)
-                .posterSizes(new HashMap<>()) // 빈 맵 반환 (사이즈 변환 안함)
+                .content(generatedPoster)
                 .status(ContentStatus.DRAFT.name())
                 .build();
     }
@@ -68,7 +77,6 @@ public class PosterContentService implements PosterContentUseCase {
      *
      * @param request 포스터 콘텐츠 저장 요청
      */
-    @Override
     @Transactional
     public void savePosterContent(PosterContentSaveRequest request) {
         // 생성 조건 구성
@@ -95,5 +103,12 @@ public class PosterContentService implements PosterContentUseCase {
 
         // 저장
         contentRepository.save(content);
+    }
+
+    /**
+     * 현재 로그인된 사용자 ID 조회
+     */
+    private String getCurrentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

@@ -54,3 +54,5 @@ info:
     name: ${APP_NAME:smarketing-member}
     version: "1.0.0-MVP"
     description: "AI 마케팅 서비스 MVP - member"
+
+allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}

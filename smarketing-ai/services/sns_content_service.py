@@ -1380,7 +1380,7 @@ class SnsContentService:
                 'call_to_action': ['방문', '예약', '문의', '공감', '이웃추가'],
                 'image_placement_strategy': [
                     '매장 외관 → 인테리어 → 메뉴판 → 음식 → 분위기',
-                    '텍스트 2-3문장마다 이미지 배치',
+                    '텍스트 2-3문장마다 입력받은 이미지 배치',
                     '이미지 설명은 간결하고 매력적으로',
                     '마지막에 대표 이미지로 마무리'
                 ]
@@ -1560,6 +1560,9 @@ class SnsContentService:
         if not images:
             return None
 
+        # 🔥 핵심 수정: 실제 이미지 개수 계산
+        actual_image_count = len(request.images) if request.images else 0
+
         # 이미지 타입별 분류
         categorized_images = {
             '매장외관': [],
@@ -1603,35 +1606,68 @@ class SnsContentService:
                 }
             ],
             'image_sequence': [],
-            'usage_guide': []
+            'usage_guide': [],
+            'actual_image_count': actual_image_count # 🔥 실제 이미지 수 추가
         }
 
-        # 각 섹션에 적절한 이미지 배정
-        # 인트로: 매장외관 또는 대표 음식
-        if categorized_images['매장외관']:
-            placement_plan['structure'][0]['recommended_images'].extend(categorized_images['매장외관'][:1])
-        elif categorized_images['음식']:
-            placement_plan['structure'][0]['recommended_images'].extend(categorized_images['음식'][:1])
+        # 🔥 핵심: 실제 이미지 수에 따라 배치 전략 조정
+        if actual_image_count == 1:
+            # 이미지 1개: 가장 대표적인 위치에 배치
+            if categorized_images['음식']:
+                placement_plan['structure'][2]['recommended_images'].extend(categorized_images['음식'][:1])
+            elif categorized_images['매장외관']:
+                placement_plan['structure'][0]['recommended_images'].extend(categorized_images['매장외관'][:1])
+            else:
+                placement_plan['structure'][0]['recommended_images'].extend(images[:1])
 
-        # 매장 정보: 외관 + 인테리어
-        placement_plan['structure'][1]['recommended_images'].extend(categorized_images['매장외관'])
-        placement_plan['structure'][1]['recommended_images'].extend(categorized_images['인테리어'])
+        elif actual_image_count == 2:
+            # 이미지 2개: 인트로와 메뉴 소개에 각각 배치
+            if categorized_images['매장외관'] and categorized_images['음식']:
+                placement_plan['structure'][0]['recommended_images'].extend(categorized_images['매장외관'][:1])
+                placement_plan['structure'][2]['recommended_images'].extend(categorized_images['음식'][:1])
+            else:
+                placement_plan['structure'][0]['recommended_images'].extend(images[:1])
+                placement_plan['structure'][2]['recommended_images'].extend(images[1:2])
 
-        # 메뉴 소개: 메뉴판 + 음식
-        placement_plan['structure'][2]['recommended_images'].extend(categorized_images['메뉴판'])
-        placement_plan['structure'][2]['recommended_images'].extend(categorized_images['음식'])
+        elif actual_image_count == 3:
+            # 이미지 3개: 인트로, 매장 정보, 메뉴 소개에 각각 배치
+            placement_plan['structure'][0]['recommended_images'].extend(images[:1])
+            placement_plan['structure'][1]['recommended_images'].extend(images[1:2])
+            placement_plan['structure'][2]['recommended_images'].extend(images[2:3])
 
-        # 총평: 남은 음식 사진 또는 기타
-        remaining_food = [img for img in categorized_images['음식']
-                          if img not in placement_plan['structure'][2]['recommended_images']]
-        placement_plan['structure'][3]['recommended_images'].extend(remaining_food[:1])
-        placement_plan['structure'][3]['recommended_images'].extend(categorized_images['기타'][:1])
+        else:
+            # 이미지 4개 이상: 기존 로직 유지하되 실제 이미지 수로 제한
+            remaining_images = images[:]
 
-        # 전체 이미지 순서 생성
+            # 인트로: 매장외관 또는 대표 음식
+            if categorized_images['매장외관'] and remaining_images:
+                img = categorized_images['매장외관'][0]
+                placement_plan['structure'][0]['recommended_images'].append(img)
+                if img in remaining_images:
+                    remaining_images.remove(img)
+            elif categorized_images['음식'] and remaining_images:
+                img = categorized_images['음식'][0]
+                placement_plan['structure'][0]['recommended_images'].append(img)
+                if img in remaining_images:
+                    remaining_images.remove(img)
+
+            # 나머지 이미지를 순서대로 배치
+            section_index = 1
+            for img in remaining_images:
+                if section_index < len(placement_plan['structure']):
+                    placement_plan['structure'][section_index]['recommended_images'].append(img)
+                    section_index += 1
+                else:
+                    break
+
+        # 전체 이미지 순서 생성 (실제 사용될 이미지만)
         for section in placement_plan['structure']:
             for img in section['recommended_images']:
                 if img not in placement_plan['image_sequence']:
                     placement_plan['image_sequence'].append(img)
+
+        # 🔥 핵심 수정: 실제 이미지 수만큼만 유지
+        placement_plan['image_sequence'] = placement_plan['image_sequence'][:actual_image_count]
 
         # 사용 가이드 생성
         placement_plan['usage_guide'] = [
@@ -1674,6 +1710,15 @@ class SnsContentService:
         """
         category_hashtags = self.category_keywords.get(request.category, {}).get('인스타그램', [])
 
+        # 🔥 핵심 추가: 실제 이미지 개수 계산
+        actual_image_count = len(request.images) if request.images else 0
+
+        # 🔥 핵심 추가: 이미지 태그 사용법에 개수 제한 명시
+        image_tag_usage = f"""**이미지 태그 사용법 (반드시 준수):**
+        - 총 {actual_image_count}개의 이미지만 사용 가능
+        - [IMAGE_{actual_image_count}]까지만 사용
+        - {actual_image_count}개를 초과하는 [IMAGE_X] 태그는 절대 사용 금지"""
+
         prompt = f"""
 당신은 인스타그램 마케팅 전문가입니다. 소상공인 음식점을 위한 매력적인 인스타그램 게시물을 작성해주세요.
 **🍸 가게 정보:**
@@ -1687,6 +1732,8 @@ class SnsContentService:
 - 메뉴명: {request.menuName or '특별 메뉴'}
 - 이벤트: {request.eventName or '특별 이벤트'}
 - 독자층: {request.target}
+
+{image_tag_usage}
 
 **📱 인스타그램 특화 요구사항:**
 - 글 구조: {platform_spec['content_structure']}
@@ -1709,9 +1756,20 @@ class SnsContentService:
 1. 첫 문장은 반드시 관심을 끄는 후킹 문장으로 시작
 2. 이모티콘을 적절히 활용하여 시각적 재미 추가
 3. 스토리텔링을 통해 감정적 연결 유도
-4. 명확한 행동 유도 문구 포함 (팔로우, 댓글, 저장, 방문 등)
-5. 줄바꿈을 활용하여 가독성 향상
-6. 해시태그는 본문과 자연스럽게 연결되도록 배치
+4. 각 섹션마다 적절한 위치에 [IMAGE_X] 태그로 이미지 배치 위치 표시
+5. 명확한 행동 유도 문구 포함 (팔로우, 댓글, 저장, 방문 등)
+6. 줄바꿈을 활용하여 가독성 향상
+7. 해시태그는 본문과 자연스럽게 연결되도록 배치
+
+**⚠️ 중요한 제약사항:**
+- 반드시 제공된 {actual_image_count}개의 이미지 개수를 초과하지 마세요
+- [IMAGE_{actual_image_count}]까지만 사용하세요
+- 더 많은 이미지 태그를 사용하면 오류가 발생합니다
+
+**이미지 태그 사용법:**
+- [IMAGE_1]: 첫 번째 이미지 배치 위치
+- [IMAGE_2]: 두 번째 이미지 배치 위치  
+- 각 이미지 태그 다음 줄에 이미지 설명 문구 작성
 
 **필수 요구사항:**
 {request.requirement} or '고객의 관심을 끌고 방문을 유도하는 매력적인 게시물'
@@ -1728,6 +1786,9 @@ class SnsContentService:
         """
         category_keywords = self.category_keywords.get(request.category, {}).get('네이버 블로그', [])
         seo_keywords = platform_spec['seo_keywords']
+
+        # 🔥 핵심: 실제 이미지 개수 계산
+        actual_image_count = len(request.images) if request.images else 0
 
         # 이미지 배치 정보 추가
         image_placement_info = ""
@@ -1777,14 +1838,13 @@ class SnsContentService:
 1. 검색자의 궁금증을 해결하는 정보 중심 작성
 2. 구체적인 가격, 위치, 운영시간 등 실용 정보 포함
 3. 개인적인 경험과 솔직한 후기 작성
-4. 각 섹션마다 적절한 위치에 [IMAGE_X] 태그로 이미지 배치 위치 표시
-5. 이미지마다 간단한 설명 문구 추가
-6. 지역 정보와 접근성 정보 포함
+4. 이미지마다 간단한 설명 문구 추가
+5. 지역 정보와 접근성 정보 포함
 
-**이미지 태그 사용법:**
-- [IMAGE_1]: 첫 번째 이미지 배치 위치
-- [IMAGE_2]: 두 번째 이미지 배치 위치  
-- 각 이미지 태그 다음 줄에 이미지 설명 문구 작성
+**⚠️ 중요한 제약사항:**
+- 반드시 제공된 {actual_image_count}개의 이미지 개수를 초과하지 마세요
+- [IMAGE_{actual_image_count}]까지만 사용하세요
+- {actual_image_count}개를 초과하는 [IMAGE_X] 태그는 절대 사용 금지
 
 **필수 요구사항:**
 {request.requirement} or '유용한 정보를 제공하여 방문을 유도하는 신뢰성 있는 후기'
@@ -1792,6 +1852,7 @@ class SnsContentService:
 네이버 검색에서 상위 노출되고, 실제로 도움이 되는 정보를 제공하는 블로그 포스트를 작성해주세요.
 필수 요구사항을 반드시 참고하여 작성해주세요.
 이미지 배치 위치를 [IMAGE_X] 태그로 명확히 표시해주세요.
+
 """
         return prompt
 
@@ -1810,6 +1871,14 @@ class SnsContentService:
         인스타그램 콘텐츠 후처리
         """
         import re
+
+        # 🔥 핵심 추가: 실제 이미지 개수 계산
+        actual_image_count = len(request.images) if request.images else 0
+
+        # 🔥 핵심 추가: [IMAGE_X] 패턴 찾기 및 초과 태그 제거
+        image_tags = re.findall(r'\[IMAGE_(\d+)\]', content)
+        found_tag_numbers = [int(tag) for tag in image_tags]
+        removed_tags = []
 
         # 해시태그 개수 조정
         hashtags = re.findall(r'#[\w가-힣]+', content)
@@ -1866,6 +1935,14 @@ class SnsContentService:
 
             # 이미지를 콘텐츠 맨 앞에 추가
             content = images_html_content + content
+
+            # 🔥 핵심 수정: 인스타그램 본문에서 [IMAGE_X] 태그 모두 제거
+            import re
+            content = re.sub(r'\[IMAGE_\d+\]', '', content)
+
+            # 🔥 추가: 태그 제거 후 남은 빈 줄 정리
+            content = re.sub(r'\n\s*\n\s*\n', '\n\n', content)  # 3개 이상의 연속 줄바꿈을 2개로
+            content = re.sub(r'<br>\s*<br>\s*<br>', '<br><br>', content)  # 3개 이상의 연속 <br>을 2개로 
 
         # 2. 네이버 블로그인 경우 이미지 태그를 실제 이미지로 변환
         elif request.platform == '네이버 블로그' and image_placement_plan:

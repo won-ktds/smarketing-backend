@@ -50,9 +50,7 @@ public class PosterContentCreateRequest {
     @Schema(description = "이미지 스타일", example = "모던")
     private String imageStyle;
 
-    @Schema(description = "업로드된 이미지 URL 목록", required = true)
-    @NotNull(message = "이미지는 1개 이상 필수입니다")
-    @Size(min = 1, message = "이미지는 1개 이상 업로드해야 합니다")
+    @Schema(description = "업로드된 이미지 URL 목록")
     private List<String> images;
 
     @Schema(description = "콘텐츠 카테고리", example = "이벤트")

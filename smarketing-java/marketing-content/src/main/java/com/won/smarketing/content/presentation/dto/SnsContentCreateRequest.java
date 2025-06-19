@@ -68,18 +68,6 @@ public class SnsContentCreateRequest {
     @Schema(description = "콘텐츠 타입", example = "SNS 게시물")
     private String contentType;
 
-//    @Schema(description = "톤앤매너",
-//            example = "친근함",
-//            allowableValues = {"친근함", "전문적", "유머러스", "감성적", "트렌디"})
-//    private String toneAndManner;
-
-//    @Schema(description = "감정 강도",
-//            example = "보통",
-//            allowableValues = {"약함", "보통", "강함"})
-//    private String emotionIntensity;
-
-    // ==================== 이벤트 정보 ====================
-
     @Schema(description = "이벤트명 (이벤트 콘텐츠인 경우)",
             example = "신메뉴 출시 이벤트")
     @Size(max = 200, message = "이벤트명은 200자 이하로 입력해주세요")

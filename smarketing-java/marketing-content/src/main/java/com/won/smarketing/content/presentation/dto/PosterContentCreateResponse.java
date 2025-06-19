@@ -31,19 +31,9 @@ public class PosterContentCreateResponse {
     @Schema(description = "생성된 포스터 타입")
     private String contentType;
 
-    @Schema(description = "포스터 이미지 URL")
-    private String posterImage;
-
-    @Schema(description = "원본 이미지 URL 목록")
-    private List<String> originalImages;
-
     @Schema(description = "이미지 스타일", example = "모던")
     private String imageStyle;
 
     @Schema(description = "생성 상태", example = "DRAFT")
     private String status;
-    
-    @Schema(description = "포스터사이즈", example = "800x600")
-    private Map<String, String> posterSizes;
-    
 }

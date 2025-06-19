@@ -43,11 +43,11 @@ public class StoreUpdateRequest {
     @Schema(description = "좌석 수", example = "20")
     private Integer seatCount;
     
-    @Schema(description = "인스타 계정 정보", example = "인스타그램: @mystore")
+    @Schema(description = "인스타 계정 정보", example = "@mystore")
     @Size(max = 500, message = "인스타 계정 정보는 500자 이하여야 합니다")
     private String instaAccounts;
 
-    @Schema(description = "블로그 계정 정보", example = "블로그: mystore")
+    @Schema(description = "블로그 계정 정보", example = "mystore")
     @Size(max = 500, message = "SNS 계정 정보는 500자 이하여야 합니다")
     private String blogAccounts;
     

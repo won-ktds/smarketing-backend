@@ -17,7 +17,7 @@ public interface BlobStorageService {
      * @param file 업로드할 파일
      * @return 업로드된 파일의 URL
      */
-    List<String> uploadImage(List<MultipartFile> file);
+    List<String> uploadImage(List<MultipartFile> file, String containerName);
 
 
     /**

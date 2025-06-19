@@ -73,8 +73,8 @@ class PosterService:
             # 메인 이미지 분석
             main_image_analysis = self._analyze_main_image(main_image_url)
 
-            # 포스터 생성 프롬프트 생성 (예시 링크 10개 포함)
-            prompt = self._create_poster_prompt_v3(request, main_image_analysis)
+            # 포스터 생성 프롬프트 생성
+            prompt = self._create_poster_prompt(request, main_image_analysis)
 
             # OpenAI로 이미지 생성
             image_url = self.ai_client.generate_image_with_openai(prompt, "1024x1536")
@@ -92,7 +92,7 @@ class PosterService:
 
     def _analyze_main_image(self, image_url: str) -> Dict[str, Any]:
         """
-        메인 메뉴 이미지 분석
+        메인 메뉴 이미지 분석 시작
         """
         temp_files = []
         try:
@@ -101,7 +101,7 @@ class PosterService:
             if temp_path:
                 temp_files.append(temp_path)
 
-                # 이미지 분석
+                # 이미지 분석 시작
                 image_info = self.image_processor.get_image_info(temp_path)
                 image_description = self.ai_client.analyze_image(temp_path)
                 colors = self.image_processor.analyze_colors(temp_path, 5)
@@ -125,13 +125,27 @@ class PosterService:
                 'error': str(e)
             }
 
-    def _create_poster_prompt_v3(self, request: PosterContentGetRequest,
-                                 main_analysis: Dict[str, Any]) -> str:
+    def _create_poster_prompt(self, request: PosterContentGetRequest,
+                              main_analysis: Dict[str, Any]) -> str:
+        """
+        카테고리에 따른 포스터 생성 프롬프트 분기
+        """
+        if request.category == "음식":
+            return self._create_food_poster_prompt(request, main_analysis)
+        elif request.category == "이벤트":
+            return self._create_event_poster_prompt(request, main_analysis)
+        else:
+            # 기본값으로 음식 프롬프트 사용
+            return self._create_food_poster_prompt(request, main_analysis)
+
+    def _create_food_poster_prompt(self, request: PosterContentGetRequest,
+                                   main_analysis: Dict[str, Any]) -> str:
         """
         포스터 생성을 위한 AI 프롬프트 생성 (한글, 글자 완전 제외, 메인 이미지 기반 + 예시 링크 7개 포함)
         """
 
         # 메인 이미지 정보 활용
+        main_image = main_analysis.get('url')
         main_description = main_analysis.get('description', '맛있는 음식')
         main_colors = main_analysis.get('dominant_colors', [])
         image_info = main_analysis.get('info', {})
@@ -150,21 +164,16 @@ class PosterService:
         example_links = "\n".join([f"- {link}" for link in self.example_images])
 
         prompt = f"""
-        ## 카페 홍보 포스터 디자인 요청
+        ## {main_image}를 활용한 홍보 포스터 디자인 요청
         
         ### 📋 기본 정보
-        카테고리: {request.category}
-        콘텐츠 타입: {request.contentType}
+        메뉴 이미지 : {main_image}
         메뉴명: {request.menuName or '없음'}
         메뉴 정보: {main_description}
         
-        ### 📅 이벤트 기간
-        시작일: {request.startDate or '지금'}
-        종료일: {request.endDate or '한정 기간'}
-        이벤트 시작일과 종료일은 필수로 포스터에 명시해주세요.
-        
         ### 🎨 디자인 요구사항
         메인 이미지 처리
+        - {main_image}는 변경 없이 그대로 사용해주세요.
         - 기존 메인 이미지는 변경하지 않고 그대로 유지
         - 포스터 전체 크기의 1/3 이하로 배치
         - 이미지와 조화로운 작은 장식 이미지 추가
@@ -196,7 +205,78 @@ class PosterService:
         톤앤매너: 맛있어 보이는 색상, 방문 유도하는 비주얼
         
         ### 🎯 최종 목표
-        고객들이 "이 카페에 가보고 싶다!"라고 생각하게 만드는 시각적으로 매력적인 홍보 포스터 제작
+        고객들이 이 음식을 먹고싶다 생각하게 만드는 시각적으로 매력적인 홍보 포스터 제작
         """
+
+        return prompt
+
+
+    def _create_event_poster_prompt(self, request: PosterContentGetRequest,
+                                    main_analysis: Dict[str, Any]) -> str:
+        """
+        이벤트 카테고리 포스터 생성을 위한 AI 프롬프트 생성
+        """
+        # 메인 이미지 정보 활용
+        main_image = main_analysis.get('url')
+        main_description = main_analysis.get('description', '특별 이벤트')
+        main_colors = main_analysis.get('dominant_colors', [])
+        image_info = main_analysis.get('info', {})
+
+        # 이미지 크기 및 비율 정보
+        aspect_ratio = image_info.get('aspect_ratio', 1.0) if image_info else 1.0
+        image_orientation = "가로형" if aspect_ratio > 1.2 else "세로형" if aspect_ratio < 0.8 else "정사각형"
+
+        # 색상 정보를 텍스트로 변환
+        color_description = ""
+        if main_colors:
+            color_rgb = main_colors[:3]  # 상위 3개 색상
+            color_description = f"주요 색상 RGB 값: {color_rgb}를 기반으로 한 임팩트 있는 색감"
+
+        # 예시 이미지 링크들을 문자열로 변환
+        example_links = "\n".join([f"- {link}" for link in self.example_images])
+
+        prompt = f"""
+            ## {main_image}를 활용한 이벤트 홍보 포스터 디자인 요청
+            메인 이미지에서 최대한 배경만 변경하는 식으로 활용하기
+            
+    
+            ### 📋 기본 정보
+            이벤트 이미지 : {main_image}
+            메뉴명: {request.menuName or '없음'}
+            이벤트명: {request.requirement or '특별 이벤트'} {request.requirement}가 이벤트와 관련이 있다면 활용
+            이벤트 정보: {main_description}
+    
+            ### 📅 이벤트 기간 (중요!)
+            시작일: {request.startDate or '지금'}
+            종료일: {request.endDate or '한정 기간'}
+            ⚠️ 이벤트 기간은 가장 눈에 띄게 크고 강조하여 표시해주세요!
+    
+            ### 🎨 이벤트 특화 디자인 요구사항
+            메인 이미지 처리
+            - {main_image}는 변경 없이 그대로 사용해주세요.
+            - AI가 그린 것 같지 않은, 현실적인 사진으로 사용
+            - 이벤트의 핵심 내용을 시각적으로 강조
+            - 포스터 전체 크기의 30% 영역에 배치 (텍스트 공간 확보)
+            - 이벤트 분위기에 맞는 역동적인 배치
+            - 크기: {image_orientation}
+    
+            텍스트 요소 (이벤트 전용)
+            - 이벤트명을 가장 크고 임팩트 있게 표시
+            - 둥글둥글한 폰트 활용
+            - 이벤트 기간을 박스나 강조 영역으로 처리
+            - 메뉴명과 이벤트명만 기입해주고 나머지 텍스트는 기입하지 않음.
+            - 한글로 작성 필수이고, 절대 한글이 깨지지 않게 만들어주세요. 만약 깨질 것 같다면 그냥 빼주세요.
+    
+            이벤트 포스터만의 특별 요소
+            - 이미지에 맞는 임팩트 및 패턴 강조
+            - 할인이나 혜택을 강조하는 스티커 효과    
+    
+            색상 가이드
+            - {color_description}과 비슷한 톤으로 생성
+            
+    
+            ### 🎯 최종 목표
+            고객들이 "지금 당장 가서 이 이벤트에 참여해야겠다!"라고 생각하게 만드는 강렬하고 화려한 이벤트 홍보 포스터 제작
+            """
 
         return prompt

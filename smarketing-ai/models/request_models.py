@@ -33,16 +33,23 @@ class PosterContentGetRequest:
     """홍보 포스터 생성 요청 모델"""
     title: str
     category: str
-    contentType: str
     images: List[str]  # 이미지 URL 리스트
-    photoStyle: Optional[str] = None
     requirement: Optional[str] = None
-    toneAndManner: Optional[str] = None
-    emotionIntensity: Optional[str] = None
     menuName: Optional[str] = None
-    eventName: Optional[str] = None
     startDate: Optional[date] = None  # LocalDate -> date
     endDate: Optional[date] = None  # LocalDate -> date
+    store_name: Optional[str] = None
+    business_type: Optional[str] = None
+    location: Optional[str] = None
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "store_name": "더블샷 카페",
+                "business_type": "카페",
+                "location": "서울시 강남구 역삼동",
+            }
+        }
 
 
 # 기존 모델들은 유지
