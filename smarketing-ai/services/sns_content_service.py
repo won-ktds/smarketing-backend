@@ -1942,7 +1942,7 @@ class SnsContentService:
 
             # 🔥 추가: 태그 제거 후 남은 빈 줄 정리
             content = re.sub(r'\n\s*\n\s*\n', '\n\n', content)  # 3개 이상의 연속 줄바꿈을 2개로
-            content = re.sub(r'<br>\s*<br>\s*<br>', '<br><br>', content)  # 3개 이상의 연속 <br>을 2개로
+            content = re.sub(r'<br>\s*<br>\s*<br>', '<br><br>', content)  # 3개 이상의 연속 <br>을 2개로 
 
         # 2. 네이버 블로그인 경우 이미지 태그를 실제 이미지로 변환
         elif request.platform == '네이버 블로그' and image_placement_plan:
