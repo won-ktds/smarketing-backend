@@ -2007,7 +2007,7 @@ class SnsContentService:
                         image_description = f"🏠 {description}"
                     elif img_type == '메뉴판':
                         image_description = f"📋 {description}"
-                    else:
+                    else: 
                         image_description = f"📸 {description}"
 
                 # HTML 이미지 태그로 변환
