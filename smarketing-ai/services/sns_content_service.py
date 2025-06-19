@@ -1610,8 +1610,6 @@ class SnsContentService:
             'actual_image_count': actual_image_count # 🔥 실제 이미지 수 추가
         }
 
-        # 각 섹션에 적절한 이미지 배정
-        # 인트로: 매장외관 또는 대표 음식
         # 🔥 핵심: 실제 이미지 수에 따라 배치 전략 조정
         if actual_image_count == 1:
             # 이미지 1개: 가장 대표적인 위치에 배치
@@ -1662,22 +1660,7 @@ class SnsContentService:
                 else:
                     break
 
-                    
-        # 매장 정보: 외관 + 인테리어
-        placement_plan['structure'][1]['recommended_images'].extend(categorized_images['매장외관'])
-        placement_plan['structure'][1]['recommended_images'].extend(categorized_images['인테리어'])
-
-        # 메뉴 소개: 메뉴판 + 음식
-        placement_plan['structure'][2]['recommended_images'].extend(categorized_images['메뉴판'])
-        placement_plan['structure'][2]['recommended_images'].extend(categorized_images['음식'])
-
-        # 총평: 남은 음식 사진 또는 기타
-        remaining_food = [img for img in categorized_images['음식']
-                          if img not in placement_plan['structure'][2]['recommended_images']]
-        placement_plan['structure'][3]['recommended_images'].extend(remaining_food[:1])
-        placement_plan['structure'][3]['recommended_images'].extend(categorized_images['기타'][:1])
-
-        # 전체 이미지 순서 생성
+        # 전체 이미지 순서 생성 (실제 사용될 이미지만)
         for section in placement_plan['structure']:
             for img in section['recommended_images']:
                 if img not in placement_plan['image_sequence']:
