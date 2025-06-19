@@ -51,7 +51,7 @@ public class ClaudeAiContentGenerator implements AiContentGenerator {
 
         // Python AI 서비스 호출
         Map<String, Object> response = webClient
-                .method(HttpMethod.GET)
+                .method(HttpMethod.POST)
                 .uri(aiServiceBaseUrl + "/api/ai/sns")
                 .header("Content-Type", "application/json")
                 .bodyValue(requestBody)
