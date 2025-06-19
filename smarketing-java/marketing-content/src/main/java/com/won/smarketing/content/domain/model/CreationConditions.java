@@ -33,9 +33,6 @@ public class CreationConditions {
     private String photoStyle;
     private String promotionType;
 
-    public CreationConditions(String category, String requirement, String toneAndManner, String emotionIntensity, String eventName, LocalDate startDate, LocalDate endDate, String photoStyle, String promotionType) {
-    }
-
     /**
      * 이벤트 기간 유효성 검증
      * @return 시작일이 종료일보다 이전이거나 같으면 true

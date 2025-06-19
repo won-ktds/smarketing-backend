@@ -22,11 +22,6 @@ def create_app():
     # CORS 설정
     CORS(app)
 
-    # 업로드 폴더 생성
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'temp'), exist_ok=True)
-    os.makedirs('templates/poster_templates', exist_ok=True)
-
     # 서비스 인스턴스 생성
     poster_service = PosterService()
     sns_content_service = SnsContentService()

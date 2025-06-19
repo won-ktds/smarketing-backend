@@ -1,5 +1,3 @@
-// smarketing-backend/smarketing-java/deployment/Jenkinsfile
-
 def PIPELINE_ID = "${env.BUILD_NUMBER}"
 
 def getImageTag() {
@@ -42,6 +40,13 @@ podTemplate(
                 echo "Image Tag: ${imageTag}"
                 echo "Registry: ${props.registry}"
                 echo "Image Org: ${props.image_org}"
+                
+                // Azure Blob Storage 환경변수 확인
+                echo "=== Azure Blob Storage Configuration ==="
+                echo "Storage Account: ${props.AZURE_STORAGE_ACCOUNT_NAME}"
+                echo "Storage Container: ${props.AZURE_STORAGE_CONTAINER_NAME}"
+                echo "Menu Container: ${props.AZURE_STORAGE_MENU_CONTAINER}"
+                echo "Store Container: ${props.AZURE_STORAGE_STORE_CONTAINER}"
             }
 
             stage("Check Changes") {
@@ -168,11 +173,32 @@ podTemplate(
                                 sh """
                                     cd manifest-repo
                                     
-                                    echo "=== ${service} 이미지 태그 업데이트 ==="
+                                    echo "=== ${service} Deployment 파일 업데이트 ==="
                                     if [ -f "${deploymentFile}" ]; then
-                                        # 이미지 태그 업데이트 (sed 사용)
+                                        # 이미지 태그 업데이트
                                         sed -i 's|image: ${props.registry}/${props.image_org}/${service}:.*|image: ${fullImageName}|g' "${deploymentFile}"
                                         echo "Updated ${deploymentFile} with new image: ${fullImageName}"
+                                        
+                                        # Azure Blob Storage 환경변수 업데이트 (ConfigMap/Secret에 있는 경우)
+                                        # ConfigMap 업데이트
+                                        if [ -f "smarketing/configmaps/${service}-configmap.yaml" ]; then
+                                            echo "=== ${service} ConfigMap 업데이트 ==="
+                                            # ConfigMap에서 Azure Storage 관련 설정 업데이트
+                                            sed -i 's|AZURE_STORAGE_ACCOUNT_NAME:.*|AZURE_STORAGE_ACCOUNT_NAME: "${props.AZURE_STORAGE_ACCOUNT_NAME}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_CONTAINER_NAME:.*|AZURE_STORAGE_CONTAINER_NAME: "${props.AZURE_STORAGE_CONTAINER_NAME}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_MENU_CONTAINER:.*|AZURE_STORAGE_MENU_CONTAINER: "${props.AZURE_STORAGE_MENU_CONTAINER}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_STORE_CONTAINER:.*|AZURE_STORAGE_STORE_CONTAINER: "${props.AZURE_STORAGE_STORE_CONTAINER}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_ENDPOINT:.*|AZURE_STORAGE_ENDPOINT: "${props.AZURE_STORAGE_ENDPOINT}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_MAX_FILE_SIZE:.*|AZURE_STORAGE_MAX_FILE_SIZE: "${props.AZURE_STORAGE_MAX_FILE_SIZE}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                        fi
+                                        
+                                        # Secret 업데이트
+                                        if [ -f "smarketing/secrets/${service}-secret.yaml" ]; then
+                                            echo "=== ${service} Secret 업데이트 ==="
+                                            # Base64 인코딩된 Azure Storage Account Key 업데이트
+                                            ENCODED_KEY=\$(echo -n "${props.AZURE_STORAGE_ACCOUNT_KEY}" | base64 -w 0)
+                                            sed -i "s|AZURE_STORAGE_ACCOUNT_KEY:.*|AZURE_STORAGE_ACCOUNT_KEY: \$ENCODED_KEY|g" "smarketing/secrets/${service}-secret.yaml"
+                                        fi
                                         
                                         # 변경사항 확인
                                         echo "=== 변경된 내용 확인 ==="
@@ -193,9 +219,9 @@ podTemplate(
                                 # 변경사항이 있으면 커밋 및 푸시
                                 if [ -n "\$(git status --porcelain)" ]; then
                                     git add .
-                                    git commit -m "Update SMarketing services to ${imageTag} - Build ${env.BUILD_NUMBER}"
+                                    git commit -m "Update SMarketing services to ${imageTag} with Azure Storage config - Build ${env.BUILD_NUMBER}"
                                     git push origin main
-                                    echo "✅ Successfully updated manifest repository"
+                                    echo "✅ Successfully updated manifest repository with Azure Storage configuration"
                                 else
                                     echo "ℹ️ No changes to commit"
                                 fi
@@ -213,9 +239,16 @@ podTemplate(
 📦 빌드된 이미지들:
 ${services.collect { "- ${props.registry}/${props.image_org}/${it}:${imageTag}" }.join('\n')}
 
+🔧 Azure Blob Storage 설정 업데이트:
+- Storage Account: ${props.AZURE_STORAGE_ACCOUNT_NAME}
+- Container: ${props.AZURE_STORAGE_CONTAINER_NAME}
+- Menu Container: ${props.AZURE_STORAGE_MENU_CONTAINER}
+- Store Container: ${props.AZURE_STORAGE_STORE_CONTAINER}
+
 🔄 ArgoCD 동작:
 - ArgoCD가 manifest repository 변경사항을 자동으로 감지합니다
 - 각 서비스별 Application이 새로운 이미지로 동기화됩니다
+- Azure Blob Storage 환경변수가 ConfigMap/Secret에 반영됩니다
 - ArgoCD UI에서 배포 상태를 모니터링하세요
 
 🌐 ArgoCD UI: [ArgoCD 접속 URL]
@@ -228,6 +261,7 @@ ${services.collect { "- ${props.registry}/${props.image_org}/${it}:${imageTag}" 
             echo """
 ✅ CI Pipeline 성공!
 🏷️ 새로운 이미지 태그: ${imageTag}
+🔧 Azure Blob Storage 설정 업데이트 완료
 🔄 ArgoCD가 자동으로 배포를 시작합니다
             """
 

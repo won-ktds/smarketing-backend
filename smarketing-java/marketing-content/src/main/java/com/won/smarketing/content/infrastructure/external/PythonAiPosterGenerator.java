@@ -1,9 +1,8 @@
 package com.won.smarketing.content.infrastructure.external;
 
-import com.won.smarketing.content.domain.model.store.MenuData;
 import com.won.smarketing.content.domain.model.store.StoreData;
 import com.won.smarketing.content.domain.model.store.StoreWithMenuData;
-import com.won.smarketing.content.domain.service.AiPosterGenerator; // 도메인 인터페이스 import
+import com.won.smarketing.content.domain.service.AiPosterGenerator;
 import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Claude AI를 활용한 포스터 생성 구현체
@@ -78,33 +75,15 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
     /**
      * Python AI 서비스 요청 데이터 구성
      * Python 서비스의 PosterContentGetRequest 모델에 맞춤
-     * 카테고리,
      */
     private Map<String, Object> buildRequestBody(PosterContentCreateRequest request, StoreWithMenuData storeWithMenuData) {
         Map<String, Object> requestBody = new HashMap<>();
 
-//      TODO : 매장 정보 호출 후 request
-        
-//        StoreData storeData = storeWithMenuData.getStoreData();
-//        List<MenuData> menuDataList = storeWithMenuData.getMenuDataList();
-//
-//        List<Map<String, Object>> menuList = menuDataList.stream()
-//                .map(menu -> {
-//                    Map<String, Object> menuMap = new HashMap<>();
-//                    menuMap.put("menu_id", menu.getMenuId());
-//                    menuMap.put("menu_name", menu.getMenuName());
-//                    menuMap.put("category", menu.getCategory());
-//                    menuMap.put("price", menu.getPrice());
-//                    menuMap.put("description", menu.getDescription());
-//                    return menuMap;
-//                })
-//                .collect(Collectors.toList());
-//
-//        requestBody.put("store_name", storeData.getStoreName());
-//        requestBody.put("business_type", storeData.getBusinessType());
-//        requestBody.put("location", storeData.getLocation());
-//        requestBody.put("seat_count", storeData.getSeatCount());
-//        requestBody.put("menu_list", menuList);
+        StoreData storeData = storeWithMenuData.getStoreData();
+
+        requestBody.put("store_name", storeData.getStoreName());
+        requestBody.put("business_type", storeData.getBusinessType());
+        requestBody.put("location", storeData.getLocation());
 
         // 기본 정보
         requestBody.put("title", request.getTitle());
@@ -113,11 +92,6 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
         // 이미지 정보
         if (request.getImages() != null && !request.getImages().isEmpty()) {
             requestBody.put("images", request.getImages());
-        }
-
-        // 스타일 정보
-        if (request.getPhotoStyle() != null) {
-            requestBody.put("photoStyle", request.getPhotoStyle());
         }
 
         // 요구사항
@@ -130,9 +104,8 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
             requestBody.put("menuName", request.getMenuName());
         }
 
-        // 이벤트 정보
-        if (request.getEventName() != null) {
-            requestBody.put("eventName", request.getEventName());
+        if (request.getStartDate() != null) {
+            requestBody.put("startDate", request.getEndDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
         }
 
         if (request.getEndDate() != null) {
