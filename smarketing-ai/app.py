@@ -45,7 +45,7 @@ def create_app():
 
     # ===== 새로운 API 엔드포인트 =====
 
-    @app.route('/api/ai/sns', methods=['GET'])
+    @app.route('/api/ai/sns', methods=['POST'])
     def generate_sns_content():
         """
         SNS 게시물 생성 API (새로운 요구사항)
