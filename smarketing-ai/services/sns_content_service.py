@@ -1610,28 +1610,57 @@ class SnsContentService:
             'actual_image_count': actual_image_count # 🔥 실제 이미지 수 추가
         }
 
-        # 각 섹션에 적절한 이미지 배정
-        # 인트로: 매장외관 또는 대표 음식
-        if categorized_images['매장외관']:
-            placement_plan['structure'][0]['recommended_images'].extend(categorized_images['매장외관'][:1])
-        elif categorized_images['음식']:
-            placement_plan['structure'][0]['recommended_images'].extend(categorized_images['음식'][:1])
+        # 🔥 핵심: 실제 이미지 수에 따라 배치 전략 조정
+        if actual_image_count == 1:
+            # 이미지 1개: 가장 대표적인 위치에 배치
+            if categorized_images['음식']:
+                placement_plan['structure'][2]['recommended_images'].extend(categorized_images['음식'][:1])
+            elif categorized_images['매장외관']:
+                placement_plan['structure'][0]['recommended_images'].extend(categorized_images['매장외관'][:1])
+            else:
+                placement_plan['structure'][0]['recommended_images'].extend(images[:1])
 
-        # 매장 정보: 외관 + 인테리어
-        placement_plan['structure'][1]['recommended_images'].extend(categorized_images['매장외관'])
-        placement_plan['structure'][1]['recommended_images'].extend(categorized_images['인테리어'])
+        elif actual_image_count == 2:
+            # 이미지 2개: 인트로와 메뉴 소개에 각각 배치
+            if categorized_images['매장외관'] and categorized_images['음식']:
+                placement_plan['structure'][0]['recommended_images'].extend(categorized_images['매장외관'][:1])
+                placement_plan['structure'][2]['recommended_images'].extend(categorized_images['음식'][:1])
+            else:
+                placement_plan['structure'][0]['recommended_images'].extend(images[:1])
+                placement_plan['structure'][2]['recommended_images'].extend(images[1:2])
 
-        # 메뉴 소개: 메뉴판 + 음식
-        placement_plan['structure'][2]['recommended_images'].extend(categorized_images['메뉴판'])
-        placement_plan['structure'][2]['recommended_images'].extend(categorized_images['음식'])
+        elif actual_image_count == 3:
+            # 이미지 3개: 인트로, 매장 정보, 메뉴 소개에 각각 배치
+            placement_plan['structure'][0]['recommended_images'].extend(images[:1])
+            placement_plan['structure'][1]['recommended_images'].extend(images[1:2])
+            placement_plan['structure'][2]['recommended_images'].extend(images[2:3])
 
-        # 총평: 남은 음식 사진 또는 기타
-        remaining_food = [img for img in categorized_images['음식']
-                          if img not in placement_plan['structure'][2]['recommended_images']]
-        placement_plan['structure'][3]['recommended_images'].extend(remaining_food[:1])
-        placement_plan['structure'][3]['recommended_images'].extend(categorized_images['기타'][:1])
+        else:
+            # 이미지 4개 이상: 기존 로직 유지하되 실제 이미지 수로 제한
+            remaining_images = images[:]
 
-        # 전체 이미지 순서 생성
+            # 인트로: 매장외관 또는 대표 음식
+            if categorized_images['매장외관'] and remaining_images:
+                img = categorized_images['매장외관'][0]
+                placement_plan['structure'][0]['recommended_images'].append(img)
+                if img in remaining_images:
+                    remaining_images.remove(img)
+            elif categorized_images['음식'] and remaining_images:
+                img = categorized_images['음식'][0]
+                placement_plan['structure'][0]['recommended_images'].append(img)
+                if img in remaining_images:
+                    remaining_images.remove(img)
+
+            # 나머지 이미지를 순서대로 배치
+            section_index = 1
+            for img in remaining_images:
+                if section_index < len(placement_plan['structure']):
+                    placement_plan['structure'][section_index]['recommended_images'].append(img)
+                    section_index += 1
+                else:
+                    break
+
+        # 전체 이미지 순서 생성 (실제 사용될 이미지만)
         for section in placement_plan['structure']:
             for img in section['recommended_images']:
                 if img not in placement_plan['image_sequence']:
@@ -1978,7 +2007,7 @@ class SnsContentService:
                         image_description = f"🏠 {description}"
                     elif img_type == '메뉴판':
                         image_description = f"📋 {description}"
-                    else:
+                    else: 
                         image_description = f"📸 {description}"
 
                 # HTML 이미지 태그로 변환
