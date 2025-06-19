@@ -1,5 +1,7 @@
 package com.won.smarketing.content.infrastructure.external;
 
+import com.won.smarketing.content.domain.model.store.MenuData;
+import com.won.smarketing.content.domain.model.store.StoreData;
 import com.won.smarketing.content.domain.model.store.StoreWithMenuData;
 import com.won.smarketing.content.domain.service.AiPosterGenerator; // 도메인 인터페이스 import
 import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
@@ -12,7 +14,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Claude AI를 활용한 포스터 생성 구현체
@@ -47,12 +51,12 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
             // Python AI 서비스 호출
             Map<String, Object> response = webClient
                     .post()
-                    .uri("http://localhost:5001" + "/api/ai/poster")
+                    .uri(aiServiceBaseUrl + "/api/ai/poster")
                     .header("Content-Type", "application/json")
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(Map.class)
-                    .timeout(Duration.ofSeconds(90)) // 포스터 생성은 시간이 오래 걸릴 수 있음
+                    .timeout(Duration.ofSeconds(90))
                     .block();
 
             // 응답에서 content(이미지 URL) 추출
@@ -78,6 +82,29 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
      */
     private Map<String, Object> buildRequestBody(PosterContentCreateRequest request, StoreWithMenuData storeWithMenuData) {
         Map<String, Object> requestBody = new HashMap<>();
+
+//      TODO : 매장 정보 호출 후 request
+        
+//        StoreData storeData = storeWithMenuData.getStoreData();
+//        List<MenuData> menuDataList = storeWithMenuData.getMenuDataList();
+//
+//        List<Map<String, Object>> menuList = menuDataList.stream()
+//                .map(menu -> {
+//                    Map<String, Object> menuMap = new HashMap<>();
+//                    menuMap.put("menu_id", menu.getMenuId());
+//                    menuMap.put("menu_name", menu.getMenuName());
+//                    menuMap.put("category", menu.getCategory());
+//                    menuMap.put("price", menu.getPrice());
+//                    menuMap.put("description", menu.getDescription());
+//                    return menuMap;
+//                })
+//                .collect(Collectors.toList());
+//
+//        requestBody.put("store_name", storeData.getStoreName());
+//        requestBody.put("business_type", storeData.getBusinessType());
+//        requestBody.put("location", storeData.getLocation());
+//        requestBody.put("seat_count", storeData.getSeatCount());
+//        requestBody.put("menu_list", menuList);
 
         // 기본 정보
         requestBody.put("title", request.getTitle());
