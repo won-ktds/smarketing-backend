@@ -8,6 +8,7 @@ registry=acrdigitalgarage02.azurecr.io
 image_org=smarketing
 
 # Application Settings
+ingress_host=smarketing.20.249.184.228.nip.io
 replicas=1
 allowed_origins=http://20.249.154.194
 
