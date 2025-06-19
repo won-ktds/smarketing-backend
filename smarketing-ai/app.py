@@ -149,7 +149,7 @@ def create_app():
                 endDate=end_date
             )
 
-            # 포스터 생성 (V3 사용)
+            # 포스터 생성
             result = poster_service.generate_poster(poster_request)
 
             if result['success']:
