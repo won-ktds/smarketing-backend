@@ -1710,6 +1710,15 @@ class SnsContentService:
         """
         category_hashtags = self.category_keywords.get(request.category, {}).get('인스타그램', [])
 
+        # 🔥 핵심 추가: 실제 이미지 개수 계산
+        actual_image_count = len(request.images) if request.images else 0
+
+        # 🔥 핵심 추가: 이미지 태그 사용법에 개수 제한 명시
+        image_tag_usage = f"""**이미지 태그 사용법 (반드시 준수):**
+        - 총 {actual_image_count}개의 이미지만 사용 가능
+        - [IMAGE_{actual_image_count}]까지만 사용
+        - {actual_image_count}개를 초과하는 [IMAGE_X] 태그는 절대 사용 금지"""
+
         prompt = f"""
 당신은 인스타그램 마케팅 전문가입니다. 소상공인 음식점을 위한 매력적인 인스타그램 게시물을 작성해주세요.
 **🍸 가게 정보:**
@@ -1723,6 +1732,8 @@ class SnsContentService:
 - 메뉴명: {request.menuName or '특별 메뉴'}
 - 이벤트: {request.eventName or '특별 이벤트'}
 - 독자층: {request.target}
+
+{image_tag_usage}
 
 **📱 인스타그램 특화 요구사항:**
 - 글 구조: {platform_spec['content_structure']}
@@ -1749,6 +1760,11 @@ class SnsContentService:
 5. 명확한 행동 유도 문구 포함 (팔로우, 댓글, 저장, 방문 등)
 6. 줄바꿈을 활용하여 가독성 향상
 7. 해시태그는 본문과 자연스럽게 연결되도록 배치
+
+**⚠️ 중요한 제약사항:**
+- 반드시 제공된 {actual_image_count}개의 이미지 개수를 초과하지 마세요
+- [IMAGE_{actual_image_count}]까지만 사용하세요
+- 더 많은 이미지 태그를 사용하면 오류가 발생합니다
 
 **이미지 태그 사용법:**
 - [IMAGE_1]: 첫 번째 이미지 배치 위치
@@ -1855,6 +1871,14 @@ class SnsContentService:
         인스타그램 콘텐츠 후처리
         """
         import re
+
+        # 🔥 핵심 추가: 실제 이미지 개수 계산
+        actual_image_count = len(request.images) if request.images else 0
+
+        # 🔥 핵심 추가: [IMAGE_X] 패턴 찾기 및 초과 태그 제거
+        image_tags = re.findall(r'\[IMAGE_(\d+)\]', content)
+        found_tag_numbers = [int(tag) for tag in image_tags]
+        removed_tags = []
 
         # 해시태그 개수 조정
         hashtags = re.findall(r'#[\w가-힣]+', content)
@@ -2007,7 +2031,7 @@ class SnsContentService:
                         image_description = f"🏠 {description}"
                     elif img_type == '메뉴판':
                         image_description = f"📋 {description}"
-                    else: 
+                    else:
                         image_description = f"📸 {description}"
 
                 # HTML 이미지 태그로 변환
