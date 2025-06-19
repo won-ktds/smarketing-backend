@@ -1946,7 +1946,13 @@ class SnsContentService:
 
         # 2. 네이버 블로그인 경우 이미지 태그를 실제 이미지로 변환
         elif request.platform == '네이버 블로그' and image_placement_plan:
-            content = self._replace_image_tags_with_html(content, image_placement_plan, request.images)
+            if image_placement_plan and request.images:
+                content = self._replace_image_tags_with_html(content, image_placement_plan, request.images)
+            else:
+                # 🔥 추가: 이미지가 없는 경우 [IMAGE_X] 태그 제거
+                import re
+                content = re.sub(r'\[IMAGE_\d+\]', '', content)
+                content = re.sub(r'\n\s*\n\s*\n', '\n\n', content)  # 빈 줄 정리
 
         # 3. 실제 줄바꿈을 <br> 태그로 변환
         content = content.replace('\n', '<br>')
