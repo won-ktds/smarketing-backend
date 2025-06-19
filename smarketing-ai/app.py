@@ -141,10 +141,8 @@ def create_app():
                 title=data.get('title'),
                 category=data.get('category'),
                 images=data.get('images', []),
-                photoStyle=data.get('photoStyle'),
                 requirement=data.get('requirement'),
                 menuName=data.get('menuName'),
-                eventName=data.get('eventName'),
                 startDate=start_date,
                 endDate=end_date
             )
