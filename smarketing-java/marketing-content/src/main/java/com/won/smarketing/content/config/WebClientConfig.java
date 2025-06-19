@@ -1,4 +1,3 @@
-// marketing-content/src/main/java/com/won/smarketing/content/config/WebClientConfig.java
 package com.won.smarketing.content.config;
 
 import org.springframework.context.annotation.Bean;
@@ -20,8 +19,8 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient() {
         HttpClient httpClient = HttpClient.create()
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 50000)
-                .responseTimeout(Duration.ofMillis(300000));
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15000)  // 연결 타임아웃: 15초
+                .responseTimeout(Duration.ofMinutes(5));              // 응답 타임아웃: 5분
 
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))

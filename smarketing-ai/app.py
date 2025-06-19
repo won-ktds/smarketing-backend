@@ -98,7 +98,7 @@ def create_app():
             app.logger.error(traceback.format_exc())
             return jsonify({'error': f'SNS 콘텐츠 생성 중 오류가 발생했습니다: {str(e)}'}), 500
 
-    @app.route('/api/ai/poster', methods=['GET'])
+    @app.route('/api/ai/poster', methods=['POST'])
     def generate_poster_content():
         """
         홍보 포스터 생성 API
@@ -114,7 +114,7 @@ def create_app():
                 return jsonify({'error': '요청 데이터가 없습니다.'}), 400
 
             # 필수 필드 검증
-            required_fields = ['title', 'category', 'contentType', 'images']
+            required_fields = ['title', 'category', 'images']
             for field in required_fields:
                 if field not in data:
                     return jsonify({'error': f'필수 필드가 누락되었습니다: {field}'}), 400
@@ -140,12 +140,9 @@ def create_app():
             poster_request = PosterContentGetRequest(
                 title=data.get('title'),
                 category=data.get('category'),
-                contentType=data.get('contentType'),
                 images=data.get('images', []),
                 photoStyle=data.get('photoStyle'),
                 requirement=data.get('requirement'),
-                toneAndManner=data.get('toneAndManner'),
-                emotionIntensity=data.get('emotionIntensity'),
                 menuName=data.get('menuName'),
                 eventName=data.get('eventName'),
                 startDate=start_date,

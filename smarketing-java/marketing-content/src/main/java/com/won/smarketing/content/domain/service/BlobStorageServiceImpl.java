@@ -34,12 +34,6 @@ public class BlobStorageServiceImpl implements BlobStorageService {
 
     private final BlobServiceClient blobServiceClient;
 
-    @Value("${azure.storage.container.poster-images:poster-images}")
-    private String posterImageContainer;
-
-    @Value("${azure.storage.container.content-images:content-images}")
-    private String contentImageContainer;
-
     @Value("${azure.storage.max-file-size:10485760}") // 10MB
     private long maxFileSize;
 
@@ -60,7 +54,7 @@ public class BlobStorageServiceImpl implements BlobStorageService {
      * @return 업로드된 파일의 URL
      */
     @Override
-    public List<String> uploadImage(List<MultipartFile> files) {
+    public List<String> uploadImage(List<MultipartFile> files, String containerName) {
         // 파일 유효성 검증
         validateImageFile(files);
         List<String> urls = new ArrayList<>();
@@ -70,10 +64,10 @@ public class BlobStorageServiceImpl implements BlobStorageService {
             for(MultipartFile file : files) {
                 String fileName = generateMenuImageFileName(file.getOriginalFilename());
 
-                ensureContainerExists(posterImageContainer);
+                ensureContainerExists(containerName);
 
                 // Blob 클라이언트 생성
-                BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(posterImageContainer);
+                BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(containerName);
                 BlobClient blobClient = containerClient.getBlobClient(fileName);
 
                 // 파일 업로드 (간단한 방식)
@@ -158,12 +152,12 @@ public class BlobStorageServiceImpl implements BlobStorageService {
      * @param files 검증할 파일
      */
     private void validateImageFile(List<MultipartFile> files) {
-        for (MultipartFile file : files) {
-            // 파일 존재 여부 확인
-            if (file == null || file.isEmpty()) {
-                throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
-            }
+        // 파일 존재 여부 확인
+        if (files == null || files.isEmpty()) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
+        }
 
+        for (MultipartFile file : files) {
             // 파일 크기 확인
             if (file.getSize() > maxFileSize) {
                 throw new BusinessException(ErrorCode.FILE_SIZE_EXCEEDED);
