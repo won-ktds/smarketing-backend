@@ -1,0 +1,254 @@
+// smarketing-backend/smarketing-java/deployment/Jenkinsfile_ArgoCD
+
+def PIPELINE_ID = "${env.BUILD_NUMBER}"
+
+def getImageTag() {
+    def dateFormat = new java.text.SimpleDateFormat('yyyyMMddHHmmss')
+    def currentDate = new Date()
+    return dateFormat.format(currentDate)
+}
+
+podTemplate(
+    label: "${PIPELINE_ID}",
+    serviceAccount: 'jenkins',
+    containers: [
+        containerTemplate(name: 'gradle', image: 'gradle:jdk17', ttyEnabled: true, command: 'cat'),
+        containerTemplate(name: 'docker', image: 'docker:20.10.16-dind', ttyEnabled: true, privileged: true),
+        containerTemplate(name: 'git', image: 'alpine/git:latest', command: 'cat', ttyEnabled: true)
+    ],
+    volumes: [
+        emptyDirVolume(mountPath: '/home/gradle/.gradle', memory: false),
+        emptyDirVolume(mountPath: '/var/run', memory: false)
+    ]
+) {
+    node(PIPELINE_ID) {
+        def props
+        def imageTag = getImageTag()
+        def services = ['member', 'store', 'marketing-content', 'ai-recommend']
+        
+        // Manifest Repository 설정
+        def MANIFEST_REPO = 'https://github.com/won-ktds/smarketing-manifest.git'
+        def MANIFEST_CREDENTIAL_ID = 'github-credentials-smarketing'
+
+        stage("Get Source") {
+            checkout scm
+            
+            // smarketing-java 하위에 있는 설정 파일 읽기
+            props = readProperties file: "smarketing-java/deployment/deploy_env_vars"
+
+            echo "=== Build Information ==="
+            echo "Services: ${services}"
+            echo "Image Tag: ${imageTag}"
+            echo "Registry: ${props.registry}"
+            echo "Image Org: ${props.image_org}"
+        }
+
+        stage("Check Changes") {
+            script {
+                def changes = sh(
+                    script: "git diff --name-only HEAD~1 HEAD",
+                    returnStdout: true
+                ).trim()
+
+                if (!changes.contains("smarketing-java/")) {
+                    echo "No changes in smarketing-java, skipping build"
+                    currentBuild.result = 'SUCCESS'
+                    error("Stopping pipeline - no changes detected")
+                }
+
+                echo "Changes detected in smarketing-java, proceeding with build"
+            }
+        }
+
+        stage('Build Applications') {
+            container('gradle') {
+                sh """
+                    echo "=== smarketing-java 디렉토리로 이동 ==="
+                    cd smarketing-java
+                    
+                    echo "=== gradlew 권한 설정 ==="
+                    chmod +x gradlew
+                    
+                    echo "=== 전체 서비스 빌드 ==="
+                    ./gradlew :member:clean :member:build -x test
+                    ./gradlew :store:clean :store:build -x test
+                    ./gradlew :marketing-content:clean :marketing-content:build -x test
+                    ./gradlew :ai-recommend:clean :ai-recommend:build -x test
+                    
+                    echo "=== 빌드 결과 확인 ==="
+                    find . -name "*.jar" -path "*/build/libs/*" | grep -v 'plain.jar'
+                """
+            }
+        }
+
+        stage('Build & Push Images') {
+            container('docker') {
+                sh """
+                    echo "=== Docker 데몬 시작 대기 ==="
+                    timeout 30 sh -c 'until docker info; do sleep 1; done'
+                """
+
+                // ACR Credential을 Jenkins에서 직접 사용
+                withCredentials([usernamePassword(
+                    credentialsId: 'acr-credentials',
+                    usernameVariable: 'ACR_USERNAME',
+                    passwordVariable: 'ACR_PASSWORD'
+                )]) {
+                    sh """
+                        echo "=== Docker로 ACR 로그인 ==="
+                        echo "\$ACR_PASSWORD" | docker login ${props.registry} --username \$ACR_USERNAME --password-stdin
+                    """
+
+                    services.each { service ->
+                        script {
+                            def buildDir = "smarketing-java/${service}"
+                            def fullImageName = "${props.registry}/${props.image_org}/${service}:${imageTag}"
+
+                            echo "Building image for ${service}: ${fullImageName}"
+                            
+                            // 실제 JAR 파일명 동적 탐지
+                            def actualJarFile = sh(
+                                script: """
+                                    cd ${buildDir}/build/libs
+                                    ls *.jar | grep -v 'plain.jar' | head -1
+                                """,
+                                returnStdout: true
+                            ).trim()
+                            
+                            if (!actualJarFile) {
+                                error "${service} JAR 파일을 찾을 수 없습니다"
+                            }
+                            
+                            echo "발견된 JAR 파일: ${actualJarFile}"
+
+                            sh """
+                                echo "=== ${service} 이미지 빌드 ==="
+                                docker build \\
+                                    --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \\
+                                    --build-arg ARTIFACTORY_FILE="${actualJarFile}" \\
+                                    -f smarketing-java/deployment/container/Dockerfile \\
+                                    -t ${fullImageName} .
+
+                                echo "=== ${service} 이미지 푸시 ==="
+                                docker push ${fullImageName}
+                                
+                                echo "Successfully built and pushed: ${fullImageName}"
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Update Manifest Repository') {
+            container('git') {
+                script {
+                    // Manifest Repository Clone
+                    withCredentials([usernamePassword(
+                        credentialsId: MANIFEST_CREDENTIAL_ID,
+                        usernameVariable: 'GIT_USERNAME',
+                        passwordVariable: 'GIT_PASSWORD'
+                    )]) {
+                        sh """
+                            echo "=== Git 설정 ==="
+                            git config --global user.name "Jenkins CI"
+                            git config --global user.email "jenkins@company.com"
+                            
+                            echo "=== Manifest Repository Clone ==="
+                            rm -rf manifest-repo
+                            git clone https://\$GIT_USERNAME:\$GIT_PASSWORD@github.com/won-ktds/smarketing-manifest.git manifest-repo
+                            cd manifest-repo
+                        """
+                        
+                        services.each { service ->
+                            def fullImageName = "${props.registry}/${props.image_org}/${service}:${imageTag}"
+                            def deploymentFile = "smarketing/deployments/${service}/${service}-deployment.yaml"
+                            
+                            sh """
+                                cd manifest-repo
+                                
+                                echo "=== ${service} 이미지 태그 업데이트 ==="
+                                if [ -f "${deploymentFile}" ]; then
+                                    # 이미지 태그 업데이트 (sed 사용)
+                                    sed -i 's|image: ${props.registry}/${props.image_org}/${service}:.*|image: ${fullImageName}|g' "${deploymentFile}"
+                                    echo "Updated ${deploymentFile} with new image: ${fullImageName}"
+                                    
+                                    # 변경사항 확인
+                                    echo "=== 변경된 내용 확인 ==="
+                                    grep "image: ${props.registry}/${props.image_org}/${service}" "${deploymentFile}" || echo "이미지 태그 업데이트 확인 실패"
+                                else
+                                    echo "Warning: ${deploymentFile} not found"
+                                fi
+                            """
+                        }
+                        
+                        sh """
+                            cd manifest-repo
+                            
+                            echo "=== Git 변경사항 확인 ==="
+                            git status
+                            git diff
+                            
+                            # 변경사항이 있으면 커밋 및 푸시
+                            if [ -n "\$(git status --porcelain)" ]; then
+                                git add .
+                                git commit -m "Update SMarketing services to ${imageTag}
+                                
+                                Services updated:
+                                ${services.collect { "- ${it}: ${props.registry}/${props.image_org}/${it}:${imageTag}" }.join('\n')}
+                                
+                                Build: ${env.BUILD_NUMBER}
+                                Commit: ${env.GIT_COMMIT}"
+                                
+                                git push origin main
+                                echo "✅ Successfully updated manifest repository"
+                            else
+                                echo "ℹ️ No changes to commit"
+                            fi
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Trigger ArgoCD Sync') {
+            steps {
+                script {
+                    echo """
+                    🎯 CI Pipeline 완료!
+                    
+                    📦 빌드된 이미지들:
+                    ${services.collect { "- ${props.registry}/${props.image_org}/${it}:${imageTag}" }.join('\n')}
+                    
+                    🔄 ArgoCD 동작:
+                    - ArgoCD가 manifest repository 변경사항을 자동으로 감지합니다
+                    - 각 서비스별 Application이 새로운 이미지로 동기화됩니다
+                    - ArgoCD UI에서 배포 상태를 모니터링하세요
+                    
+                    🌐 ArgoCD UI: [ArgoCD 접속 URL]
+                    📁 Manifest Repo: ${MANIFEST_REPO}
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            container('docker') {
+                sh 'docker system prune -f || true'
+            }
+            sh 'rm -rf manifest-repo || true'
+        }
+        success {
+            echo """
+            ✅ CI Pipeline 성공!
+            🏷️ 새로운 이미지 태그: ${imageTag}
+            🔄 ArgoCD가 자동으로 배포를 시작합니다
+            """
+        }
+        failure {
+            echo "❌ CI Pipeline 실패!"
+        }
+    }
+}
