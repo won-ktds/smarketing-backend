@@ -18,7 +18,7 @@ import jakarta.validation.Valid;
 @Tag(name = "AI 추천", description = "AI 기반 마케팅 팁 추천 API")
 @Slf4j
 @RestController
-@RequestMapping("/api/recommendations")
+@RequestMapping("/api/recommend")
 @RequiredArgsConstructor
 public class RecommendationController {
 
