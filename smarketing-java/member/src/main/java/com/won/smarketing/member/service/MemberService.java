@@ -10,7 +10,7 @@ import com.won.smarketing.member.dto.ValidationResponse;
 public interface MemberService {
     
     /**
-     * 회원 등록
+     * 회원 등록  
      * 
      * @param request 회원가입 요청 정보
      */

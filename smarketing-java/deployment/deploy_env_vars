@@ -32,3 +32,12 @@ POSTGRES_PASSWORD=DG_Won!
 REDIS_HOST=redis-digitalgarage-02.redis.cache.windows.net
 REDIS_PASSWORD=bOpPbvYhUF8toxgHDfOJlG62HTtgX2AwxAzCaDajg2w=
 REDIS_PORT=6380
+
+# Azure Blob Storage 설정 (추가된 부분)
+AZURE_STORAGE_ACCOUNT_NAME=stdigitalgarage02
+AZURE_STORAGE_ACCOUNT_KEY=1cgMMGgonc5frC84eGM9bxgXYL7NtOUkzgCD/fH6MEnyo7O+bscMfVfmKQBfrvCC8/NnYGndZubm+AStZEDUpw==
+AZURE_STORAGE_ENDPOINT=https://stdigitalgarage02.blob.core.windows.net
+AZURE_STORAGE_CONTAINER_NAME=ai-content
+AZURE_STORAGE_MENU_CONTAINER=smarketing-menu-images
+AZURE_STORAGE_STORE_CONTAINER=smarketing-store-images
+AZURE_STORAGE_MAX_FILE_SIZE=10485760

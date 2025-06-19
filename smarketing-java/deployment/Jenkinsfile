@@ -12,290 +12,269 @@ podTemplate(
     containers: [
         containerTemplate(name: 'gradle', image: 'gradle:jdk17', ttyEnabled: true, command: 'cat'),
         containerTemplate(name: 'docker', image: 'docker:20.10.16-dind', ttyEnabled: true, privileged: true),
-        containerTemplate(name: 'azure-cli', image: 'hiondal/azure-kubectl:latest', command: 'cat', ttyEnabled: true),
-        containerTemplate(name: 'envsubst', image: "hiondal/envsubst", command: 'sleep', args: '1h')
+        containerTemplate(name: 'git', image: 'alpine/git:latest', command: 'cat', ttyEnabled: true)
     ],
     volumes: [
         emptyDirVolume(mountPath: '/home/gradle/.gradle', memory: false),
-        emptyDirVolume(mountPath: '/root/.azure', memory: false),
         emptyDirVolume(mountPath: '/var/run', memory: false)
     ]
 ) {
     node(PIPELINE_ID) {
         def props
         def imageTag = getImageTag()
-        def manifest = "deploy.yaml"
-        def namespace
         def services = ['member', 'store', 'marketing-content', 'ai-recommend']
+        
+        // Manifest Repository 설정
+        def MANIFEST_REPO = 'https://github.com/won-ktds/smarketing-manifest.git'
+        def MANIFEST_CREDENTIAL_ID = 'github-credentials-smarketing'
 
-        stage("Get Source") {
-            checkout scm
-            
-            // smarketing-java 하위에 있는 설정 파일 읽기
-            props = readProperties file: "smarketing-java/deployment/deploy_env_vars"
-            namespace = "${props.namespace}"
+        try {
+            stage("Get Source") {
+                checkout scm
+                
+                // smarketing-java 하위에 있는 설정 파일 읽기
+                props = readProperties file: "smarketing-java/deployment/deploy_env_vars"
 
-            echo "=== Build Information ==="
-            echo "Services: ${services}"
-            echo "Namespace: ${namespace}"
-            echo "Image Tag: ${imageTag}"
-            echo "Registry: ${props.registry}"
-            echo "Image Org: ${props.image_org}"
-        }
-
-        stage("Check Changes") {
-            script {
-                def changes = sh(
-                    script: "git diff --name-only HEAD~1 HEAD",
-                    returnStdout: true
-                ).trim()
-
-                if (!changes.contains("smarketing-java/")) {
-                    echo "No changes in smarketing-java, skipping build"
-                    currentBuild.result = 'SUCCESS'
-                    error("Stopping pipeline - no changes detected")
-                }
-
-                echo "Changes detected in smarketing-java, proceeding with build"
+                echo "=== Build Information ==="
+                echo "Services: ${services}"
+                echo "Image Tag: ${imageTag}"
+                echo "Registry: ${props.registry}"
+                echo "Image Org: ${props.image_org}"
+                
+                // Azure Blob Storage 환경변수 확인
+                echo "=== Azure Blob Storage Configuration ==="
+                echo "Storage Account: ${props.AZURE_STORAGE_ACCOUNT_NAME}"
+                echo "Storage Container: ${props.AZURE_STORAGE_CONTAINER_NAME}"
+                echo "Menu Container: ${props.AZURE_STORAGE_MENU_CONTAINER}"
+                echo "Store Container: ${props.AZURE_STORAGE_STORE_CONTAINER}"
             }
-        }
 
-        stage("Setup AKS") {
-            container('azure-cli') {
-                withCredentials([azureServicePrincipal('azure-credentials')]) {
+            stage("Check Changes") {
+                script {
+                    def changes = sh(
+                        script: "git diff --name-only HEAD~1 HEAD",
+                        returnStdout: true
+                    ).trim()
+
+                    if (!changes.contains("smarketing-java/")) {
+                        echo "No changes in smarketing-java, skipping build"
+                        currentBuild.result = 'SUCCESS'
+                        error("Stopping pipeline - no changes detected")
+                    }
+
+                    echo "Changes detected in smarketing-java, proceeding with build"
+                }
+            }
+
+            stage('Build Applications') {
+                container('gradle') {
                     sh """
-                        echo "=== Azure 로그인 ==="
-                        az login --service-principal -u \$AZURE_CLIENT_ID -p \$AZURE_CLIENT_SECRET -t \$AZURE_TENANT_ID
-                        az account set --subscription 2513dd36-7978-48e3-9a7c-b221d4874f66
+                        echo "=== smarketing-java 디렉토리로 이동 ==="
+                        cd smarketing-java
                         
-                        echo "=== AKS 인증정보 가져오기 (rg-digitalgarage-02) ==="
-                        az aks get-credentials --resource-group rg-digitalgarage-02 --name aks-digitalgarage-02 --overwrite-existing
+                        echo "=== gradlew 권한 설정 ==="
+                        chmod +x gradlew
                         
-                        echo "=== 네임스페이스 생성 ==="
-                        kubectl create namespace ${namespace} --dry-run=client -o yaml | kubectl apply -f -
+                        echo "=== 전체 서비스 빌드 ==="
+                        ./gradlew :member:clean :member:build -x test
+                        ./gradlew :store:clean :store:build -x test
+                        ./gradlew :marketing-content:clean :marketing-content:build -x test
+                        ./gradlew :ai-recommend:clean :ai-recommend:build -x test
                         
-                        echo "=== Image Pull Secret 생성 ==="
-                        kubectl create secret docker-registry acr-secret \\
-                            --docker-server=${props.registry} \\
-                            --docker-username=acrdigitalgarage02 \\
-                            --docker-password=\$(az acr credential show --name acrdigitalgarage02 --query passwords[0].value -o tsv) \\
-                            --namespace=${namespace} \\
-                            --dry-run=client -o yaml | kubectl apply -f -
-                            
-                        echo "=== 클러스터 상태 확인 ==="
-                        kubectl get nodes
-                        kubectl get ns ${namespace}
-                        
-                        echo "=== 현재 연결된 클러스터 확인 ==="
-                        kubectl config current-context
+                        echo "=== 빌드 결과 확인 ==="
+                        find . -name "*.jar" -path "*/build/libs/*" | grep -v 'plain.jar'
                     """
                 }
             }
-        }
 
-        stage('Build Applications') {
-            container('gradle') {
-                sh """
-                    echo "=== smarketing-java 디렉토리로 이동 ==="
-                    cd smarketing-java
-                    
-                    echo "=== gradlew 권한 설정 ==="
-                    chmod +x gradlew
-                    
-                    echo "=== 전체 서비스 빌드 ==="
-                    ./gradlew :member:clean :member:build -x test
-                    ./gradlew :store:clean :store:build -x test
-                    ./gradlew :marketing-content:clean :marketing-content:build -x test
-                    ./gradlew :ai-recommend:clean :ai-recommend:build -x test
-                    
-                    echo "=== 빌드 결과 확인 ==="
-                    find . -name "*.jar" -path "*/build/libs/*" | grep -v 'plain.jar'
-                """
-            }
-        }
-
-        stage('Build & Push Images') {
-            container('docker') {
-                sh """
-                    echo "=== Docker 데몬 시작 대기 ==="
-                    timeout 30 sh -c 'until docker info; do sleep 1; done'
-                """
-
-                // ACR Credential을 Jenkins에서 직접 사용
-                withCredentials([usernamePassword(
-                    credentialsId: 'acr-credentials',
-                    usernameVariable: 'ACR_USERNAME',
-                    passwordVariable: 'ACR_PASSWORD'
-                )]) {
+            stage('Build & Push Images') {
+                container('docker') {
                     sh """
-                        echo "=== Docker로 ACR 로그인 ==="
-                        echo "\$ACR_PASSWORD" | docker login ${props.registry} --username \$ACR_USERNAME --password-stdin
+                        echo "=== Docker 데몬 시작 대기 ==="
+                        timeout 30 sh -c 'until docker info; do sleep 1; done'
                     """
 
-                    services.each { service ->
-                        script {
-                            def buildDir = "smarketing-java/${service}"
-                            def fullImageName = "${props.registry}/${props.image_org}/${service}:${imageTag}"
+                    // ACR Credential을 Jenkins에서 직접 사용
+                    withCredentials([usernamePassword(
+                        credentialsId: 'acr-credentials',
+                        usernameVariable: 'ACR_USERNAME',
+                        passwordVariable: 'ACR_PASSWORD'
+                    )]) {
+                        sh """
+                            echo "=== Docker로 ACR 로그인 ==="
+                            echo "\$ACR_PASSWORD" | docker login ${props.registry} --username \$ACR_USERNAME --password-stdin
+                        """
 
-                            echo "Building image for ${service}: ${fullImageName}"
+                        services.each { service ->
+                            script {
+                                def buildDir = "smarketing-java/${service}"
+                                def fullImageName = "${props.registry}/${props.image_org}/${service}:${imageTag}"
+
+                                echo "Building image for ${service}: ${fullImageName}"
+                                
+                                // 실제 JAR 파일명 동적 탐지
+                                def actualJarFile = sh(
+                                    script: """
+                                        cd ${buildDir}/build/libs
+                                        ls *.jar | grep -v 'plain.jar' | head -1
+                                    """,
+                                    returnStdout: true
+                                ).trim()
+                                
+                                if (!actualJarFile) {
+                                    error "${service} JAR 파일을 찾을 수 없습니다"
+                                }
+                                
+                                echo "발견된 JAR 파일: ${actualJarFile}"
+
+                                sh """
+                                    echo "=== ${service} 이미지 빌드 ==="
+                                    docker build \\
+                                        --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \\
+                                        --build-arg ARTIFACTORY_FILE="${actualJarFile}" \\
+                                        -f smarketing-java/deployment/container/Dockerfile \\
+                                        -t ${fullImageName} .
+
+                                    echo "=== ${service} 이미지 푸시 ==="
+                                    docker push ${fullImageName}
+                                    
+                                    echo "Successfully built and pushed: ${fullImageName}"
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+
+            stage('Update Manifest Repository') {
+                container('git') {
+                    script {
+                        // Manifest Repository Clone
+                        withCredentials([usernamePassword(
+                            credentialsId: MANIFEST_CREDENTIAL_ID,
+                            usernameVariable: 'GIT_USERNAME',
+                            passwordVariable: 'GIT_PASSWORD'
+                        )]) {
+                            sh """
+                                echo "=== Git 설정 ==="
+                                git config --global user.name "Jenkins CI"
+                                git config --global user.email "jenkins@company.com"
+                                
+                                echo "=== Manifest Repository Clone ==="
+                                rm -rf manifest-repo
+                                git clone https://\$GIT_USERNAME:\$GIT_PASSWORD@github.com/won-ktds/smarketing-manifest.git manifest-repo
+                                cd manifest-repo
+                            """
                             
-                            // 실제 JAR 파일명 동적 탐지
-                            def actualJarFile = sh(
-                                script: """
-                                    cd ${buildDir}/build/libs
-                                    ls *.jar | grep -v 'plain.jar' | head -1
-                                """,
-                                returnStdout: true
-                            ).trim()
-                            
-                            if (!actualJarFile) {
-                                error "${service} JAR 파일을 찾을 수 없습니다"
+                            services.each { service ->
+                                def fullImageName = "${props.registry}/${props.image_org}/${service}:${imageTag}"
+                                def deploymentFile = "smarketing/deployments/${service}/${service}-deployment.yaml"
+                                
+                                sh """
+                                    cd manifest-repo
+                                    
+                                    echo "=== ${service} Deployment 파일 업데이트 ==="
+                                    if [ -f "${deploymentFile}" ]; then
+                                        # 이미지 태그 업데이트
+                                        sed -i 's|image: ${props.registry}/${props.image_org}/${service}:.*|image: ${fullImageName}|g' "${deploymentFile}"
+                                        echo "Updated ${deploymentFile} with new image: ${fullImageName}"
+                                        
+                                        # Azure Blob Storage 환경변수 업데이트 (ConfigMap/Secret에 있는 경우)
+                                        # ConfigMap 업데이트
+                                        if [ -f "smarketing/configmaps/${service}-configmap.yaml" ]; then
+                                            echo "=== ${service} ConfigMap 업데이트 ==="
+                                            # ConfigMap에서 Azure Storage 관련 설정 업데이트
+                                            sed -i 's|AZURE_STORAGE_ACCOUNT_NAME:.*|AZURE_STORAGE_ACCOUNT_NAME: "${props.AZURE_STORAGE_ACCOUNT_NAME}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_CONTAINER_NAME:.*|AZURE_STORAGE_CONTAINER_NAME: "${props.AZURE_STORAGE_CONTAINER_NAME}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_MENU_CONTAINER:.*|AZURE_STORAGE_MENU_CONTAINER: "${props.AZURE_STORAGE_MENU_CONTAINER}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_STORE_CONTAINER:.*|AZURE_STORAGE_STORE_CONTAINER: "${props.AZURE_STORAGE_STORE_CONTAINER}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_ENDPOINT:.*|AZURE_STORAGE_ENDPOINT: "${props.AZURE_STORAGE_ENDPOINT}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                            sed -i 's|AZURE_STORAGE_MAX_FILE_SIZE:.*|AZURE_STORAGE_MAX_FILE_SIZE: "${props.AZURE_STORAGE_MAX_FILE_SIZE}"|g' "smarketing/configmaps/${service}-configmap.yaml"
+                                        fi
+                                        
+                                        # Secret 업데이트
+                                        if [ -f "smarketing/secrets/${service}-secret.yaml" ]; then
+                                            echo "=== ${service} Secret 업데이트 ==="
+                                            # Base64 인코딩된 Azure Storage Account Key 업데이트
+                                            ENCODED_KEY=\$(echo -n "${props.AZURE_STORAGE_ACCOUNT_KEY}" | base64 -w 0)
+                                            sed -i "s|AZURE_STORAGE_ACCOUNT_KEY:.*|AZURE_STORAGE_ACCOUNT_KEY: \$ENCODED_KEY|g" "smarketing/secrets/${service}-secret.yaml"
+                                        fi
+                                        
+                                        # 변경사항 확인
+                                        echo "=== 변경된 내용 확인 ==="
+                                        grep "image: ${props.registry}/${props.image_org}/${service}" "${deploymentFile}" || echo "이미지 태그 업데이트 확인 실패"
+                                    else
+                                        echo "Warning: ${deploymentFile} not found"
+                                    fi
+                                """
                             }
                             
-                            echo "발견된 JAR 파일: ${actualJarFile}"
-
                             sh """
-                                echo "=== ${service} 이미지 빌드 ==="
-                                docker build \\
-                                    --build-arg BUILD_LIB_DIR="${buildDir}/build/libs" \\
-                                    --build-arg ARTIFACTORY_FILE="${actualJarFile}" \\
-                                    -f smarketing-java/deployment/container/Dockerfile \\
-                                    -t ${fullImageName} .
-
-                                echo "=== ${service} 이미지 푸시 ==="
-                                docker push ${fullImageName}
+                                cd manifest-repo
                                 
-                                echo "Successfully built and pushed: ${fullImageName}"
+                                echo "=== Git 변경사항 확인 ==="
+                                git status
+                                git diff
+                                
+                                # 변경사항이 있으면 커밋 및 푸시
+                                if [ -n "\$(git status --porcelain)" ]; then
+                                    git add .
+                                    git commit -m "Update SMarketing services to ${imageTag} with Azure Storage config - Build ${env.BUILD_NUMBER}"
+                                    git push origin main
+                                    echo "✅ Successfully updated manifest repository with Azure Storage configuration"
+                                else
+                                    echo "ℹ️ No changes to commit"
+                                fi
                             """
                         }
                     }
                 }
             }
-        }
 
-        stage('Generate & Apply Manifest') {
-            container('envsubst') {
-                sh """
-                    echo "=== 환경변수 설정 ==="
-                    export namespace=${namespace}
-                    export allowed_origins='${props.allowed_origins}'
-                    export jwt_secret_key='${props.jwt_secret_key}'
-                    export postgres_user='${props.POSTGRES_USER}'
-                    export postgres_password='${props.POSTGRES_PASSWORD}'
-                    export replicas=${props.replicas}
-                    
-                    # PostgreSQL 환경변수 추가 (올바른 DB명으로 수정)
-                    export postgres_host='${props.POSTGRES_HOST}'
-                    export postgres_port='5432'
-                    export postgres_db_member='MemberDB'
-                    export postgres_db_store='StoreDB'
-                    export postgres_db_marketing_content='MarketingContentDB'
-                    export postgres_db_ai_recommend='AiRecommendationDB'
-                    
-                    # Redis 환경변수 추가
-                    export redis_host='${props.REDIS_HOST}'
-                    export redis_port='6380'
-                    export redis_password='${props.REDIS_PASSWORD}'
-                    
-                    # 리소스 요구사항
-                    export resources_requests_cpu='${props.resources_requests_cpu}'
-                    export resources_requests_memory='${props.resources_requests_memory}'
-                    export resources_limits_cpu='${props.resources_limits_cpu}'
-                    export resources_limits_memory='${props.resources_limits_memory}'
+            stage('Trigger ArgoCD Sync') {
+                script {
+                    echo """
+🎯 CI Pipeline 완료!
 
-                    # 이미지 경로 환경변수 설정
-                    export member_image_path='${props.registry}/${props.image_org}/member:${imageTag}'
-                    export store_image_path='${props.registry}/${props.image_org}/store:${imageTag}'
-                    export marketing_content_image_path='${props.registry}/${props.image_org}/marketing-content:${imageTag}'
-                    export ai_recommend_image_path='${props.registry}/${props.image_org}/ai-recommend:${imageTag}'
+📦 빌드된 이미지들:
+${services.collect { "- ${props.registry}/${props.image_org}/${it}:${imageTag}" }.join('\n')}
 
-                    echo "=== 환경변수 확인 ==="
-                    echo "namespace: \$namespace"
-                    echo "postgres_host: \$postgres_host"
-                    echo "postgres_port: \$postgres_port"
-                    echo "postgres_user: \$postgres_user"
-                    echo "postgres_db_member: \$postgres_db_member"
-                    echo "postgres_db_store: \$postgres_db_store"
-                    echo "postgres_db_marketing_content: \$postgres_db_marketing_content"
-                    echo "postgres_db_ai_recommend: \$postgres_db_ai_recommend"
-                    echo "redis_host: \$redis_host"
-                    echo "redis_port: \$redis_port"
-                    echo "replicas: \$replicas"
+🔧 Azure Blob Storage 설정 업데이트:
+- Storage Account: ${props.AZURE_STORAGE_ACCOUNT_NAME}
+- Container: ${props.AZURE_STORAGE_CONTAINER_NAME}
+- Menu Container: ${props.AZURE_STORAGE_MENU_CONTAINER}
+- Store Container: ${props.AZURE_STORAGE_STORE_CONTAINER}
 
-                    echo "=== Manifest 생성 ==="
-                    envsubst < smarketing-java/deployment/${manifest}.template > smarketing-java/deployment/${manifest}
-                    
-                    echo "=== Generated Manifest File ==="
-                    cat smarketing-java/deployment/${manifest}
-                    echo "==============================="
-                """
+🔄 ArgoCD 동작:
+- ArgoCD가 manifest repository 변경사항을 자동으로 감지합니다
+- 각 서비스별 Application이 새로운 이미지로 동기화됩니다
+- Azure Blob Storage 환경변수가 ConfigMap/Secret에 반영됩니다
+- ArgoCD UI에서 배포 상태를 모니터링하세요
+
+🌐 ArgoCD UI: [ArgoCD 접속 URL]
+📁 Manifest Repo: ${MANIFEST_REPO}
+                    """
+                }
             }
 
-            container('azure-cli') {
-                sh """
-                    echo "=== 현재 연결된 클러스터 재확인 ==="
-                    kubectl config current-context
-                    kubectl cluster-info | head -3
-                    
-                    echo "=== 기존 ConfigMap 삭제 (타입 충돌 해결) ==="
-                    kubectl delete configmap member-config store-config marketing-content-config ai-recommend-config -n ${namespace} --ignore-not-found=true
-                    
-                    echo "=== PostgreSQL 서비스 확인 ==="
-                    kubectl get svc -n ${namespace} | grep postgresql || echo "PostgreSQL 서비스를 찾을 수 없습니다."
-                    
-                    echo "=== Redis 서비스 확인 ==="
-                    kubectl get svc -n ${namespace} | grep redis || echo "Redis 서비스를 찾을 수 없습니다."
-                    
-                    echo "=== Manifest 적용 ==="
-                    kubectl apply -f smarketing-java/deployment/${manifest}
+            // 성공 시 처리
+            echo """
+✅ CI Pipeline 성공!
+🏷️ 새로운 이미지 태그: ${imageTag}
+🔧 Azure Blob Storage 설정 업데이트 완료
+🔄 ArgoCD가 자동으로 배포를 시작합니다
+            """
 
-                    echo "=== 배포 상태 확인 (30초 대기) ==="
-                    sleep 30
-                    kubectl -n ${namespace} get deployments
-                    kubectl -n ${namespace} get pods
-                    
-                    echo "=== ConfigMap 확인 ==="
-                    kubectl -n ${namespace} get configmap member-config -o yaml | grep -A 10 "data:"
-                    kubectl -n ${namespace} get configmap ai-recommend-config -o yaml | grep -A 10 "data:"
-                    
-                    echo "=== Secret 확인 ==="
-                    kubectl -n ${namespace} get secret member-secret -o yaml | grep -A 5 "data:"
-                    
-                    echo "=== 각 서비스 배포 대기 (120초 timeout) ==="
-                    timeout 120 kubectl -n ${namespace} wait --for=condition=available deployment/member --timeout=120s || echo "member deployment 대기 타임아웃"
-                    timeout 120 kubectl -n ${namespace} wait --for=condition=available deployment/store --timeout=120s || echo "store deployment 대기 타임아웃"
-                    timeout 120 kubectl -n ${namespace} wait --for=condition=available deployment/marketing-content --timeout=120s || echo "marketing-content deployment 대기 타임아웃"
-                    timeout 120 kubectl -n ${namespace} wait --for=condition=available deployment/ai-recommend --timeout=120s || echo "ai-recommend deployment 대기 타임아웃"
-                    
-                    echo "=== 최종 배포 상태 ==="
-                    kubectl -n ${namespace} get all
-                    
-                    echo "=== 각 서비스 Pod 로그 확인 (최근 20라인) ==="
-                    for service in member store marketing-content ai-recommend; do
-                        echo "=== \$service 서비스 로그 ==="
-                        kubectl -n ${namespace} logs deployment/\$service --tail=20 || echo "\$service 로그를 가져올 수 없습니다"
-                        echo ""
-                    done
-                    
-                    echo "=== 실패한 Pod 상세 정보 ==="
-                    for pod in \$(kubectl -n ${namespace} get pods --field-selector=status.phase!=Running -o name 2>/dev/null || true); do
-                        if [ ! -z "\$pod" ]; then
-                            echo "=== 실패한 Pod: \$pod ==="
-                            kubectl -n ${namespace} describe \$pod | tail -30
-                            echo "=== Pod 로그: \$pod ==="
-                            kubectl -n ${namespace} logs \$pod --tail=50 || echo "로그를 가져올 수 없습니다"
-                            echo "=========================================="
-                        fi
-                    done
-                    
-                    echo "=== Ingress 상태 확인 ==="
-                    kubectl -n ${namespace} get ingress
-                    kubectl -n ${namespace} describe ingress smarketing-backend || echo "Ingress를 찾을 수 없습니다"
-                    
-                    echo "=== 서비스 Endpoint 확인 ==="
-                    kubectl -n ${namespace} get endpoints
-                """
+        } catch (Exception e) {
+            // 실패 시 처리
+            echo "❌ CI Pipeline 실패: ${e.getMessage()}"
+            throw e
+        } finally {
+            // 정리 작업 (항상 실행)
+            container('docker') {
+                sh 'docker system prune -f || true'
             }
+            sh 'rm -rf manifest-repo || true'
         }
     }
 }

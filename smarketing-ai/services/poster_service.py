@@ -77,7 +77,7 @@ class PosterService:
             if temp_path:
                 temp_files.append(temp_path)
 
-                # 이미지 분석
+                # 이미지 분석 시작
                 image_info = self.image_processor.get_image_info(temp_path)
                 image_description = self.ai_client.analyze_image(temp_path)
                 colors = self.image_processor.analyze_colors(temp_path, 5)
