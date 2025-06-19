@@ -92,7 +92,7 @@ class PosterService:
 
     def _analyze_main_image(self, image_url: str) -> Dict[str, Any]:
         """
-        메인 메뉴 이미지 분석
+        메인 메뉴 이미지 분석 시작
         """
         temp_files = []
         try:
