@@ -6,20 +6,22 @@ import com.won.smarketing.content.domain.model.ContentStatus;
 import com.won.smarketing.content.domain.model.ContentType;
 import com.won.smarketing.content.domain.model.CreationConditions;
 import com.won.smarketing.content.domain.model.Platform;
+import com.won.smarketing.content.domain.model.store.StoreWithMenuData;
 import com.won.smarketing.content.domain.repository.ContentRepository;
 import com.won.smarketing.content.domain.service.AiPosterGenerator;
 import com.won.smarketing.content.domain.service.BlobStorageService;
+import com.won.smarketing.content.domain.service.StoreDataProvider;
 import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 import com.won.smarketing.content.presentation.dto.PosterContentCreateResponse;
 import com.won.smarketing.content.presentation.dto.PosterContentSaveRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -38,6 +40,7 @@ public class PosterContentService implements PosterContentUseCase {
     private final ContentRepository contentRepository;
     private final AiPosterGenerator aiPosterGenerator;
     private final BlobStorageService blobStorageService;
+    private final StoreDataProvider storeDataProvider;
 
     /**
      * 포스터 콘텐츠 생성
@@ -52,9 +55,13 @@ public class PosterContentService implements PosterContentUseCase {
         // 1. 이미지 blob storage에 저장하고 request 저장
         List<String> imageUrls = blobStorageService.uploadImage(images, posterImageContainer);
         request.setImages(imageUrls);
+        
+        // 매장 정보 호출
+        String userId = getCurrentUserId();
+        StoreWithMenuData storeWithMenuData = storeDataProvider.getStoreWithMenuData(userId);
 
         // 2. AI 요청
-        String generatedPoster = aiPosterGenerator.generatePoster(request);
+        String generatedPoster = aiPosterGenerator.generatePoster(request, storeWithMenuData);
 
         return PosterContentCreateResponse.builder()
                 .contentId(null) // 임시 생성이므로 ID 없음
@@ -71,7 +78,7 @@ public class PosterContentService implements PosterContentUseCase {
      * @param request 포스터 콘텐츠 저장 요청
      */
     @Transactional
-    public Content savePosterContent(PosterContentSaveRequest request) {
+    public void savePosterContent(PosterContentSaveRequest request) {
         // 생성 조건 구성
         CreationConditions conditions = CreationConditions.builder()
                 .category(request.getCategory())
@@ -87,7 +94,7 @@ public class PosterContentService implements PosterContentUseCase {
                 .contentType(ContentType.POSTER)
                 .platform(Platform.POSTER)
                 .title(request.getTitle())
-//                .content(request.gen)
+                .content(request.getContent())
                 .images(request.getImages())
                 .status(ContentStatus.PUBLISHED)
                 .creationConditions(conditions)
@@ -95,6 +102,13 @@ public class PosterContentService implements PosterContentUseCase {
                 .build();
 
         // 저장
-        return contentRepository.save(content);
+        contentRepository.save(content);
+    }
+
+    /**
+     * 현재 로그인된 사용자 ID 조회
+     */
+    private String getCurrentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

@@ -1,5 +1,6 @@
 package com.won.smarketing.content.domain.service;
 
+import com.won.smarketing.content.domain.model.store.StoreWithMenuData;
 import com.won.smarketing.content.presentation.dto.PosterContentCreateRequest;
 
 import java.util.Map;
@@ -16,5 +17,5 @@ public interface AiPosterGenerator {
      * @param request 포스터 생성 요청
      * @return 생성된 포스터 이미지 URL
      */
-    String generatePoster(PosterContentCreateRequest request);
+    String generatePoster(PosterContentCreateRequest request, StoreWithMenuData storeWithMenuData);
 }

@@ -26,5 +26,5 @@ public interface PosterContentUseCase {
      * 포스터 콘텐츠 저장
      * @param request 포스터 콘텐츠 저장 요청
      */
-    Content savePosterContent(PosterContentSaveRequest request);
+    void savePosterContent(PosterContentSaveRequest request);
 }

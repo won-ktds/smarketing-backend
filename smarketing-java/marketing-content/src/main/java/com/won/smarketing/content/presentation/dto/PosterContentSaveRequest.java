@@ -29,9 +29,6 @@ public class PosterContentSaveRequest {
     @Schema(description = "선택된 포스터 이미지 URL")
     private List<String> images;
 
-    @Schema(description = "발행 상태", example = "PUBLISHED")
-    private String status;
-
     @Schema(description = "콘텐츠 카테고리", example = "이벤트")
     private String category;
 
