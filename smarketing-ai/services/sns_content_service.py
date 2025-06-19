@@ -1560,6 +1560,9 @@ class SnsContentService:
         if not images:
             return None
 
+        # 🔥 핵심 수정: 실제 이미지 개수 계산
+        actual_image_count = len(request.images) if request.images else 0
+
         # 이미지 타입별 분류
         categorized_images = {
             '매장외관': [],
@@ -1603,7 +1606,8 @@ class SnsContentService:
                 }
             ],
             'image_sequence': [],
-            'usage_guide': []
+            'usage_guide': [],
+            'actual_image_count': actual_image_count # 🔥 실제 이미지 수 추가
         }
 
         # 각 섹션에 적절한 이미지 배정
@@ -1632,6 +1636,9 @@ class SnsContentService:
             for img in section['recommended_images']:
                 if img not in placement_plan['image_sequence']:
                     placement_plan['image_sequence'].append(img)
+
+        # 🔥 핵심 수정: 실제 이미지 수만큼만 유지
+        placement_plan['image_sequence'] = placement_plan['image_sequence'][:actual_image_count]
 
         # 사용 가이드 생성
         placement_plan['usage_guide'] = [
@@ -1735,6 +1742,9 @@ class SnsContentService:
         category_keywords = self.category_keywords.get(request.category, {}).get('네이버 블로그', [])
         seo_keywords = platform_spec['seo_keywords']
 
+        # 🔥 핵심: 실제 이미지 개수 계산
+        actual_image_count = len(request.images) if request.images else 0
+
         # 이미지 배치 정보 추가
         image_placement_info = ""
         if image_placement_plan:
@@ -1786,12 +1796,18 @@ class SnsContentService:
 4. 이미지마다 간단한 설명 문구 추가
 5. 지역 정보와 접근성 정보 포함
 
+**⚠️ 중요한 제약사항:**
+- 반드시 제공된 {actual_image_count}개의 이미지 개수를 초과하지 마세요
+- [IMAGE_{actual_image_count}]까지만 사용하세요
+- {actual_image_count}개를 초과하는 [IMAGE_X] 태그는 절대 사용 금지
+
 **필수 요구사항:**
 {request.requirement} or '유용한 정보를 제공하여 방문을 유도하는 신뢰성 있는 후기'
 
 네이버 검색에서 상위 노출되고, 실제로 도움이 되는 정보를 제공하는 블로그 포스트를 작성해주세요.
 필수 요구사항을 반드시 참고하여 작성해주세요.
 이미지 배치 위치를 [IMAGE_X] 태그로 명확히 표시해주세요.
+
 """
         return prompt
 
