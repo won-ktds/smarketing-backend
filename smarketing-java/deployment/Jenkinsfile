@@ -192,8 +192,7 @@ podTemplate(
                             # 변경사항이 있으면 커밋 및 푸시
                             if [ -n "\$(git status --porcelain)" ]; then
                                 git add .
-                                git commit -m "Update SMarketing services to ${imageTag}
-                                                                
+                                git commit -m "Update SMarketing services to ${imageTag} - Build ${env.BUILD_NUMBER}"
                                 git push origin main
                                 echo "✅ Successfully updated manifest repository"
                             else
