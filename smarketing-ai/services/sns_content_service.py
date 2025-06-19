@@ -1854,6 +1854,10 @@ class SnsContentService:
 이미지 배치 위치를 [IMAGE_X] 태그로 명확히 표시해주세요.
 
 """
+        # 🔥 간단한 해결책: 이미지가 0개면 태그 사용 금지 문구 추가
+        if actual_image_count == 0:
+            prompt += "\n\n**⚠️ 중요: 이미지가 없으므로 [IMAGE_X] 태그를 절대 사용하지 마세요. 텍스트만으로 작성해주세요.**"
+
         return prompt
 
     def _post_process_content(self, content: str, request: SnsContentGetRequest) -> str:
