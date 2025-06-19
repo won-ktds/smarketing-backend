@@ -1337,7 +1337,7 @@ class SnsContentService:
         
         # 플랫폼별 콘텐츠 특성 정의 (대폭 개선)
         self.platform_specs = {
-            '인스타그램': {
+            'INSTAGRAM': {
                 'max_length': 2200,
                 'hashtag_count': 15,
                 'style': '감성적이고 시각적',
@@ -1359,7 +1359,7 @@ class SnsContentService:
                 ],
                 'call_to_action': ['팔로우', '댓글', '저장', '공유', '방문']
             },
-            '네이버 블로그': {
+            'NAVER_BLOG': {
                 'max_length': 3000,
                 'hashtag_count': 10,
                 'style': '정보성과 친근함',
@@ -1410,16 +1410,16 @@ class SnsContentService:
         # 카테고리별 플랫폼 특화 키워드
         self.category_keywords = {
             '음식': {
-                '인스타그램': ['#맛스타그램', '#음식스타그램', '#먹스타그램', '#맛집', '#foodstagram'],
-                '네이버 블로그': ['맛집 리뷰', '음식 후기', '메뉴 추천', '맛집 탐방', '식당 정보']
+                'INSTAGRAM': ['#맛스타그램', '#음식스타그램', '#먹스타그램', '#맛집', '#foodstagram'],
+                'NAVER_BLOG': ['맛집 리뷰', '음식 후기', '메뉴 추천', '맛집 탐방', '식당 정보']
             },
             '매장': {
-                '인스타그램': ['#카페스타그램', '#인테리어', '#분위기맛집', '#데이트장소'],
-                '네이버 블로그': ['카페 추천', '분위기 좋은 곳', '인테리어 구경', '모임장소']
+                'INSTAGRAM': ['#카페스타그램', '#인테리어', '#분위기맛집', '#데이트장소'],
+                'NAVER_BLOG': ['카페 추천', '분위기 좋은 곳', '인테리어 구경', '모임장소']
             },
             '이벤트': {
-                '인스타그램': ['#이벤트', '#프로모션', '#할인', '#특가'],
-                '네이버 블로그': ['이벤트 소식', '할인 정보', '프로모션 안내', '특별 혜택']
+                'INSTAGRAM': ['#이벤트', '#프로모션', '#할인', '#특가'],
+                'NAVER_BLOG': ['이벤트 소식', '할인 정보', '프로모션 안내', '특별 혜택']
             }
         }
 
@@ -1450,14 +1450,14 @@ class SnsContentService:
 
             # 네이버 블로그인 경우 이미지 배치 계획 생성
             image_placement_plan = None
-            if request.platform == '네이버 블로그':
+            if request.platform == 'NAVER_BLOG':
                 image_placement_plan = self._create_image_placement_plan(image_analysis, request)
 
             # 플랫폼별 특화 프롬프트 생성
             prompt = self._create_platform_specific_prompt(request, image_analysis, image_placement_plan)
 
             # blog_example을 프롬프트에 추가
-            if request.platform == '네이버 블로그' and hasattr(self, 'blog_example') and self.blog_example:
+            if request.platform == 'NAVER_BLOG' and hasattr(self, 'blog_example') and self.blog_example:
                 prompt += f"\n\n**참고 예시:**\n{str(self.blog_example)}\n위 예시를 참고하여 점주의 입장에서 가게 홍보 게시물을 작성해주세요."
             elif hasattr(self, 'insta_example') and self.insta_example :
                 prompt += f"\n\n**참고 예시:**\n{str(self.insta_example)}\n위 예시를 참고하여 점주의 입장에서 가게 홍보 게시물을 작성해주세요."
@@ -1477,7 +1477,7 @@ class SnsContentService:
             }
 
             # 네이버 블로그인 경우 이미지 배치 가이드라인 추가
-            if request.platform == '네이버 블로그' and image_placement_plan:
+            if request.platform == 'NAVER_BLOG' and image_placement_plan:
                 result['image_placement_guide'] = image_placement_plan
 
             return result
@@ -1685,7 +1685,7 @@ class SnsContentService:
         """
         플랫폼별 특화 프롬프트 생성
         """
-        platform_spec = self.platform_specs.get(request.platform, self.platform_specs['인스타그램'])
+        platform_spec = self.platform_specs.get(request.platform, self.platform_specs['INSTAGRAM'])
         #tone_style = self.tone_styles.get(request.toneAndManner, {}).get(request.platform, '친근하고 자연스러운 어조')
 
         # 이미지 설명 추출
@@ -1695,9 +1695,9 @@ class SnsContentService:
                 image_descriptions.append(result['description'])
 
         # 플랫폼별 특화 프롬프트 생성
-        if request.platform == '인스타그램':
+        if request.platform == 'INSTAGRAM':
             return self._create_instagram_prompt(request, platform_spec, image_descriptions)
-        elif request.platform == '네이버 블로그':
+        elif request.platform == 'NAVER_BLOG':
             return self._create_naver_blog_prompt(request, platform_spec, image_descriptions,
                                                   image_placement_plan)
         else:
@@ -1708,7 +1708,7 @@ class SnsContentService:
         """
         인스타그램 특화 프롬프트
         """
-        category_hashtags = self.category_keywords.get(request.category, {}).get('인스타그램', [])
+        category_hashtags = self.category_keywords.get(request.category, {}).get('INSTAGRAM', [])
 
         # 🔥 핵심 추가: 실제 이미지 개수 계산
         actual_image_count = len(request.images) if request.images else 0
@@ -1784,7 +1784,7 @@ class SnsContentService:
         """
         네이버 블로그 특화 프롬프트 (이미지 배치 계획 포함)
         """
-        category_keywords = self.category_keywords.get(request.category, {}).get('네이버 블로그', [])
+        category_keywords = self.category_keywords.get(request.category, {}).get('NAVER_BLOG', [])
         seo_keywords = platform_spec['seo_keywords']
 
         # 🔥 핵심: 실제 이미지 개수 계산
@@ -1864,9 +1864,9 @@ class SnsContentService:
         """
         플랫폼별 후처리
         """
-        if request.platform == '인스타그램':
+        if request.platform == 'INSTAGRAM':
             return self._post_process_instagram(content, request)
-        elif request.platform == '네이버 블로그':
+        elif request.platform == 'NAVER_BLOG':
             return self._post_process_naver_blog(content, request)
         return content
 
@@ -1930,7 +1930,7 @@ class SnsContentService:
 
         # 2. 인스타그램인 경우 첫 번째 이미지를 맨 위에 배치 ⭐ 새로 추가!
         images_html_content = ""
-        if request.platform == '인스타그램' and request.images and len(request.images) > 0:
+        if request.platform == 'INSTAGRAM' and request.images and len(request.images) > 0:
             # 모든 이미지를 통일된 크기로 HTML 변환 (한 줄로 작성!)
             for i, image_url in enumerate(request.images):
                 # ⭐ 핵심: 모든 HTML을 한 줄로 작성해서 <br> 변환 문제 방지
@@ -1949,7 +1949,7 @@ class SnsContentService:
             content = re.sub(r'<br>\s*<br>\s*<br>', '<br><br>', content)  # 3개 이상의 연속 <br>을 2개로 
 
         # 2. 네이버 블로그인 경우 이미지 태그를 실제 이미지로 변환
-        elif request.platform == '네이버 블로그' and image_placement_plan:
+        elif request.platform == 'NAVER_BLOG' and image_placement_plan:
             if image_placement_plan and request.images:
                 content = self._replace_image_tags_with_html(content, image_placement_plan, request.images)
             else:
@@ -1989,9 +1989,9 @@ class SnsContentService:
 
         # 플랫폼별 헤더 스타일
         platform_style = ""
-        if request.platform == '인스타그램':
+        if request.platform == 'INSTAGRAM':
             platform_style = "background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);"
-        elif request.platform == '네이버 블로그':
+        elif request.platform == 'NAVER_BLOG':
             platform_style = "background: linear-gradient(135deg, #1EC800 0%, #00B33C 100%);"
         else:
             platform_style = "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"
