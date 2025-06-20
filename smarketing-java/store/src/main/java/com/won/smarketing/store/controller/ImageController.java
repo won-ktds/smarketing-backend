@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 메뉴 이미지, 매장 이미지 업로드 기능 제공
  */
 @RestController
-@RequestMapping("/api/images")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "이미지 업로드 API", description = "메뉴 및 매장 이미지 업로드 관리")
@@ -40,7 +40,7 @@ public class ImageController {
      * @param file 업로드할 이미지 파일
      * @return 업로드 결과
      */
-    @PostMapping(value = "/menu/{menuId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/menu/images/{menuId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "메뉴 이미지 업로드", description = "메뉴의 이미지를 Azure Blob Storage에 업로드합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "이미지 업로드 성공",
@@ -69,7 +69,7 @@ public class ImageController {
      * @param file 업로드할 이미지 파일
      * @return 업로드 결과
      */
-    @PostMapping(value = "/store/{storeId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/store/images/store/{storeId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "매장 이미지 업로드", description = "매장의 이미지를 Azure Blob Storage에 업로드합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "이미지 업로드 성공",
