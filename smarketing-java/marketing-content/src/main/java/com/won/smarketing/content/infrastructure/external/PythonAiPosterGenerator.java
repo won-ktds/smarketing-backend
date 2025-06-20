@@ -56,7 +56,7 @@ public class PythonAiPosterGenerator implements AiPosterGenerator {
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(Map.class)
-                    .timeout(Duration.ofSeconds(90))
+                    .timeout(Duration.ofSeconds(300))
                     .block();
 
             // 응답에서 content(이미지 URL) 추출
