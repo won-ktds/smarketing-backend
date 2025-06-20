@@ -48,7 +48,7 @@ public class SecurityConfig
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/api/member/register", "/api/member/check-duplicate/**",
-                               "/api/member/validate-password", "/swagger-ui/**", "/v3/api-docs/**",
+                               "/api/member/validate-password", "/api/images/**","/api/menu/**","/swagger-ui/**", "/v3/api-docs/**",
                                "/swagger-resources/**", "/webjars/**", "/actuator/**", "/health/**", "/error"
                 ).permitAll()
                 .anyRequest().authenticated()
