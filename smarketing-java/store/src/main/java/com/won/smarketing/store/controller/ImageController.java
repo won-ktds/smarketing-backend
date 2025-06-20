@@ -40,7 +40,7 @@ public class ImageController {
      * @param file 업로드할 이미지 파일
      * @return 업로드 결과
      */
-    @PostMapping(value = "/menu/images/{menuId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/menu/images/menu/{menuId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "메뉴 이미지 업로드", description = "메뉴의 이미지를 Azure Blob Storage에 업로드합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "이미지 업로드 성공",
